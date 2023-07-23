@@ -11,12 +11,13 @@ void main() {
 	float occlusion;
 	float specular;
 	vec3 emissionCol;
-	basecol = vec3(0.800000011920929, 0.800000011920929, 0.800000011920929);
+	basecol = vec3(0.7760767936706543, 0.8000000715255737, 0.8000000715255737);
 	roughness = 0.5;
 	metallic = 0.0;
 	occlusion = 1.0;
 	specular = 0.5;
 	emissionCol = vec3(0.0);
+	if (!gl_FrontFacing) n *= -1;
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
 	n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 	const uint matid = 0;

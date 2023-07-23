@@ -21,9 +21,11 @@
 		<class path="..\Sources" />
 		<class path="..\..\armsdk\armory\Sources" />
 		<class path="..\..\armsdk\iron\Sources" />
+		<class path="..\..\armsdk\lib\haxebullet\Sources" />
 		<class path="..\..\armsdk\lib\zui\Sources" />
 		<class path="..\..\armsdk\armory" />
 		<class path="..\..\armsdk\iron" />
+		<class path="..\..\armsdk\lib\haxebullet" />
 		<class path="..\..\armsdk\lib\zui" />
 	</classpaths>
 	<!-- Build options -->
@@ -33,7 +35,7 @@
 		<option noInlineOnDebug="False" />
 		<option mainClass="Main" />
 		<option enabledebug="False" />
-		<option additional="-D hxcpp_smart_strings&#xA;-D C:/Workspace/armsdk/armory&#xA;-D C:/Workspace/armsdk/iron&#xA;-D C:/Workspace/armsdk/lib/zui&#xA;-D arm_deferred&#xA;-D arm_csm&#xA;-D rp_hdr&#xA;-D rp_renderer=Deferred&#xA;-D rp_shadowmap&#xA;-D rp_shadowmap_cascade=1024&#xA;-D rp_shadowmap_cube=512&#xA;-D rp_background=World&#xA;-D rp_render_to_texture&#xA;-D rp_compositornodes&#xA;-D rp_antialiasing=SMAA&#xA;-D rp_supersampling=1&#xA;-D rp_ssgi=SSAO&#xA;-D js-es=6&#xA;-D arm_assert_level=Warning&#xA;-D arm_noembed&#xA;-D arm_soundcompress&#xA;-D arm_audio&#xA;-D arm_ui&#xA;-D arm_skin&#xA;-D arm_morph_target&#xA;-D arm_particles&#xA;-D armory&#xA;-D sys_g1&#xA;-D sys_g2&#xA;-D sys_g3&#xA;-D sys_a1&#xA;-D sys_a2&#xA;-D kha_js&#xA;-D kha_g1&#xA;-D kha_g2&#xA;-D kha_g3&#xA;-D kha_a1&#xA;-D kha_a2&#xA;-D canvas_id=khanvas&#xA;-D script_name=kha&#xA;-D sys_g4&#xA;-D kha_g4&#xA;-D kha_webgl&#xA;-D sys_debug-html5&#xA;-D kha_debug-html5&#xA;-D kha_debug-html5_js&#xA;-D sys_html5&#xA;-D kha_html5&#xA;-D kha_html5_js&#xA;-D sys_debug_html5&#xA;-D kha_debug_html5&#xA;-D kha_html5&#xA;-D kha&#xA;-D kha_version=1810&#xA;-D kha_project_name=Game_1_0_0&#xA;-D kha_output=&quot;c:\Workspace\VisitingHagiVaga\build\debug-html5\kha.js&quot;&#xA;armory.trait.internal.UniformsManager&#xA;--macro keep(&apos;armory.trait.internal.UniformsManager&apos;)&#xA;-debug&#xA;" />
+		<option additional="-D hxcpp_smart_strings&#xA;-D C:/Workspace/armsdk/armory&#xA;-D C:/Workspace/armsdk/iron&#xA;-D C:/Workspace/armsdk/lib/haxebullet&#xA;-D C:/Workspace/armsdk/lib/zui&#xA;-D arm_deferred&#xA;-D arm_csm&#xA;-D rp_hdr&#xA;-D rp_renderer=Deferred&#xA;-D rp_shadowmap&#xA;-D rp_shadowmap_cascade=1024&#xA;-D rp_shadowmap_cube=512&#xA;-D rp_background=World&#xA;-D rp_render_to_texture&#xA;-D rp_compositornodes&#xA;-D rp_antialiasing=SMAA&#xA;-D rp_supersampling=1&#xA;-D rp_ssgi=Off&#xA;-D js-es=6&#xA;-D arm_physics&#xA;-D arm_bullet&#xA;-D arm_assert_level=Warning&#xA;-D arm_noembed&#xA;-D arm_soundcompress&#xA;-D arm_audio&#xA;-D arm_ui&#xA;-D arm_skin&#xA;-D arm_morph_target&#xA;-D arm_particles&#xA;-D armory&#xA;-D sys_g1&#xA;-D sys_g2&#xA;-D sys_g3&#xA;-D sys_a1&#xA;-D sys_a2&#xA;-D kha_js&#xA;-D kha_g1&#xA;-D kha_g2&#xA;-D kha_g3&#xA;-D kha_a1&#xA;-D kha_a2&#xA;-D canvas_id=khanvas&#xA;-D script_name=kha&#xA;-D sys_g4&#xA;-D kha_g4&#xA;-D kha_webgl&#xA;-D sys_debug-html5&#xA;-D kha_debug-html5&#xA;-D kha_debug-html5_js&#xA;-D sys_html5&#xA;-D kha_html5&#xA;-D kha_html5_js&#xA;-D sys_debug_html5&#xA;-D kha_debug_html5&#xA;-D kha_html5&#xA;-D kha&#xA;-D kha_version=1810&#xA;-D kha_project_name=Game_1_0_0&#xA;-D kha_output=&quot;c:\Workspace\VisitingHagiVaga\build\debug-html5\kha.js&quot;&#xA;arm.FirstPersonController&#xA;--macro keep(&apos;arm.FirstPersonController&apos;)&#xA;armory.trait.internal.UniformsManager&#xA;--macro keep(&apos;armory.trait.internal.UniformsManager&apos;)&#xA;armory.trait.physics.bullet.RigidBody&#xA;--macro keep(&apos;armory.trait.physics.bullet.RigidBody&apos;)&#xA;armory.trait.physics.bullet.PhysicsWorld&#xA;--macro keep(&apos;armory.trait.physics.bullet.PhysicsWorld&apos;)&#xA;-debug&#xA;" />
 	</build>
 	<!-- haxelib libraries -->
 	<haxelib>

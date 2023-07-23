@@ -3,13 +3,16 @@
 -cp C:\Workspace\VisitingHagiVaga\Sources
 -cp C:\Workspace\armsdk\armory\Sources
 -cp C:\Workspace\armsdk\iron\Sources
+-cp C:\Workspace\armsdk\lib\haxebullet\Sources
 -cp C:\Workspace\armsdk\lib\zui\Sources
 -cp C:/Workspace/armsdk/armory
 -cp C:/Workspace/armsdk/iron
+-cp C:/Workspace/armsdk/lib/haxebullet
 -cp C:/Workspace/armsdk/lib/zui
 -D hxcpp_smart_strings
 -D C:/Workspace/armsdk/armory
 -D C:/Workspace/armsdk/iron
+-D C:/Workspace/armsdk/lib/haxebullet
 -D C:/Workspace/armsdk/lib/zui
 -D arm_deferred
 -D arm_csm
@@ -23,8 +26,10 @@
 -D rp_compositornodes
 -D rp_antialiasing=SMAA
 -D rp_supersampling=1
--D rp_ssgi=SSAO
+-D rp_ssgi=Off
 -D js-es=6
+-D arm_physics
+-D arm_bullet
 -D arm_assert_level=Warning
 -D arm_noembed
 -D arm_soundcompress
@@ -55,6 +60,12 @@
 -D kha_version=1810
 -D kha_project_name=Game_1_0_0
 -js krom\krom.js.temp
+arm.FirstPersonController
+--macro keep('arm.FirstPersonController')
 armory.trait.internal.UniformsManager
 --macro keep('armory.trait.internal.UniformsManager')
+armory.trait.physics.bullet.RigidBody
+--macro keep('armory.trait.physics.bullet.RigidBody')
+armory.trait.physics.bullet.PhysicsWorld
+--macro keep('armory.trait.physics.bullet.PhysicsWorld')
 -main Main

@@ -1,9 +1,11 @@
+static bool gl_FrontFacing;
 static float3 wnormal;
 static float4 fragColor[2];
 
 struct SPIRV_Cross_Input
 {
     float3 wnormal : TEXCOORD0;
+    bool gl_FrontFacing : SV_IsFrontFace;
 };
 
 struct SPIRV_Cross_Output
@@ -31,29 +33,34 @@ float packFloat2(float f1, float f2)
 void frag_main()
 {
     float3 n = normalize(wnormal);
-    float3 basecol = 0.800000011920928955078125f.xxx;
+    float3 basecol = float3(0.776076793670654296875f, 0.80000007152557373046875f, 0.80000007152557373046875f);
     float roughness = 0.5f;
     float metallic = 0.0f;
     float occlusion = 1.0f;
     float specular = 0.5f;
     float3 emissionCol = 0.0f.xxx;
+    if (!gl_FrontFacing)
+    {
+        n *= (-1.0f);
+    }
     n /= ((abs(n.x) + abs(n.y)) + abs(n.z)).xxx;
-    float2 _102;
+    float2 _111;
     if (n.z >= 0.0f)
     {
-        _102 = n.xy;
+        _111 = n.xy;
     }
     else
     {
-        _102 = octahedronWrap(n.xy);
+        _111 = octahedronWrap(n.xy);
     }
-    n = float3(_102.x, _102.y, n.z);
+    n = float3(_111.x, _111.y, n.z);
     fragColor[0] = float4(n.xy, roughness, packFloatInt16(metallic, 0u));
     fragColor[1] = float4(basecol, packFloat2(occlusion, specular));
 }
 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
+    gl_FrontFacing = stage_input.gl_FrontFacing;
     wnormal = stage_input.wnormal;
     frag_main();
     SPIRV_Cross_Output stage_output;

@@ -298,6 +298,334 @@ class UInt {
 		}
 	}
 }
+class iron_Trait {
+	constructor() {
+		if(iron_Trait._hx_skip_constructor) {
+			return;
+		}
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this._render2D = null;
+		this._render = null;
+		this._lateUpdate = null;
+		this._update = null;
+		this._remove = null;
+		this._init = null;
+		this._add = null;
+		this.name = "";
+	}
+	remove() {
+		this.object.removeTrait(this);
+	}
+	notifyOnAdd(f) {
+		if(this._add == null) {
+			this._add = [];
+		}
+		this._add.push(f);
+	}
+	notifyOnInit(f) {
+		if(this._init == null) {
+			this._init = [];
+		}
+		this._init.push(f);
+		iron_App.notifyOnInit(f);
+	}
+	notifyOnRemove(f) {
+		if(this._remove == null) {
+			this._remove = [];
+		}
+		this._remove.push(f);
+	}
+	notifyOnUpdate(f) {
+		if(this._update == null) {
+			this._update = [];
+		}
+		this._update.push(f);
+		iron_App.notifyOnUpdate(f);
+	}
+	removeUpdate(f) {
+		HxOverrides.remove(this._update,f);
+		iron_App.removeUpdate(f);
+	}
+	notifyOnLateUpdate(f) {
+		if(this._lateUpdate == null) {
+			this._lateUpdate = [];
+		}
+		this._lateUpdate.push(f);
+		iron_App.notifyOnLateUpdate(f);
+	}
+	removeLateUpdate(f) {
+		HxOverrides.remove(this._lateUpdate,f);
+		iron_App.removeLateUpdate(f);
+	}
+	notifyOnRender(f) {
+		if(this._render == null) {
+			this._render = [];
+		}
+		this._render.push(f);
+		iron_App.notifyOnRender(f);
+	}
+	removeRender(f) {
+		HxOverrides.remove(this._render,f);
+		iron_App.removeRender(f);
+	}
+	notifyOnRender2D(f) {
+		if(this._render2D == null) {
+			this._render2D = [];
+		}
+		this._render2D.push(f);
+		iron_App.notifyOnRender2D(f);
+	}
+	removeRender2D(f) {
+		HxOverrides.remove(this._render2D,f);
+		iron_App.removeRender2D(f);
+	}
+}
+$hxClasses["iron.Trait"] = iron_Trait;
+iron_Trait.__name__ = true;
+Object.assign(iron_Trait.prototype, {
+	__class__: iron_Trait
+	,name: null
+	,object: null
+	,_add: null
+	,_init: null
+	,_remove: null
+	,_update: null
+	,_lateUpdate: null
+	,_render: null
+	,_render2D: null
+});
+class armory_trait_internal_CameraController extends iron_Trait {
+	constructor() {
+		if(iron_Trait._hx_skip_constructor) {
+			super();
+			return;
+		}
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.jump = false;
+		this.moveRight = false;
+		this.moveLeft = false;
+		this.moveBackward = false;
+		this.moveForward = false;
+		super._hx_constructor();
+		let _gthis = this;
+		iron_Scene.active.notifyOnInit(function() {
+			_gthis.transform = _gthis.object.transform;
+			_gthis.body = _gthis.object.getTrait(armory_trait_physics_bullet_RigidBody);
+			_gthis.camera = js_Boot.__cast(_gthis.object.getChildOfType(iron_object_CameraObject) , iron_object_CameraObject);
+		});
+		this.notifyOnUpdate(function() {
+			let keyboard = iron_system_Input.getKeyboard();
+			_gthis.moveForward = keyboard.down("w");
+			_gthis.moveRight = keyboard.down("d");
+			_gthis.moveBackward = keyboard.down("s");
+			_gthis.moveLeft = keyboard.down("a");
+			_gthis.jump = keyboard.started("space");
+		});
+	}
+}
+$hxClasses["armory.trait.internal.CameraController"] = armory_trait_internal_CameraController;
+armory_trait_internal_CameraController.__name__ = true;
+armory_trait_internal_CameraController.__super__ = iron_Trait;
+Object.assign(armory_trait_internal_CameraController.prototype, {
+	__class__: armory_trait_internal_CameraController
+	,transform: null
+	,body: null
+	,camera: null
+	,moveForward: null
+	,moveBackward: null
+	,moveLeft: null
+	,moveRight: null
+	,jump: null
+});
+class arm_FirstPersonController extends armory_trait_internal_CameraController {
+	constructor() {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.dir = new iron_math_Vec4();
+		this.zVec = new iron_math_Vec4(0.0,0.0,1.0);
+		this.xVec = new iron_math_Vec4(1.0,0.0,0.0);
+		this.speed = 4;
+		super._hx_constructor();
+		iron_Scene.active.notifyOnInit($bind(this,this.init));
+	}
+	init() {
+		this.head = this.object.getChildOfType(iron_object_CameraObject);
+		armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.preUpdate));
+		this.notifyOnUpdate($bind(this,this.update));
+		this.notifyOnRemove($bind(this,this.removed));
+	}
+	preUpdate() {
+		if(iron_system_Input.occupied || !this.body.ready) {
+			return;
+		}
+		let mouse = iron_system_Input.getMouse();
+		let kb = iron_system_Input.getKeyboard();
+		if(mouse.started() && !mouse.locked) {
+			mouse.lock();
+		} else if(kb.started("escape") && mouse.locked) {
+			mouse.unlock();
+		}
+		if(mouse.locked || mouse.down()) {
+			this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * 2.0);
+			this.transform.rotate(this.zVec,-mouse.movementX / 250 * 2.0);
+			this.body.syncTransform();
+		}
+	}
+	removed() {
+		armory_trait_physics_bullet_PhysicsWorld.active.removePreUpdate($bind(this,this.preUpdate));
+	}
+	update() {
+		if(!this.body.ready) {
+			return;
+		}
+		let _this = this.dir;
+		_this.x = 0;
+		_this.y = 0;
+		_this.z = 0;
+		_this.w = 1.0;
+		if(this.moveForward) {
+			let _this = this.dir;
+			let _this1 = this.transform.world;
+			let x = _this1.self._10;
+			let y = _this1.self._11;
+			let z = _this1.self._12;
+			if(z == null) {
+				z = 0.0;
+			}
+			if(y == null) {
+				y = 0.0;
+			}
+			if(x == null) {
+				x = 0.0;
+			}
+			let v_x = x;
+			let v_y = y;
+			let v_z = z;
+			let v_w = 1.0;
+			_this.x += v_x;
+			_this.y += v_y;
+			_this.z += v_z;
+		}
+		if(this.moveBackward) {
+			let _this = this.dir;
+			let _this1 = this.transform.world;
+			let x = _this1.self._10;
+			let y = _this1.self._11;
+			let z = _this1.self._12;
+			if(z == null) {
+				z = 0.0;
+			}
+			if(y == null) {
+				y = 0.0;
+			}
+			if(x == null) {
+				x = 0.0;
+			}
+			let v_x = x;
+			let v_y = y;
+			let v_z = z;
+			let v_w = 1.0;
+			v_x *= -1;
+			v_y *= -1;
+			v_z *= -1;
+			_this.x += v_x;
+			_this.y += v_y;
+			_this.z += v_z;
+		}
+		if(this.moveLeft) {
+			let _this = this.dir;
+			let _this1 = this.transform.world;
+			let x = _this1.self._00;
+			let y = _this1.self._01;
+			let z = _this1.self._02;
+			if(z == null) {
+				z = 0.0;
+			}
+			if(y == null) {
+				y = 0.0;
+			}
+			if(x == null) {
+				x = 0.0;
+			}
+			let v_x = x;
+			let v_y = y;
+			let v_z = z;
+			let v_w = 1.0;
+			v_x *= -1;
+			v_y *= -1;
+			v_z *= -1;
+			_this.x += v_x;
+			_this.y += v_y;
+			_this.z += v_z;
+		}
+		if(this.moveRight) {
+			let _this = this.dir;
+			let _this1 = this.transform.world;
+			let x = _this1.self._00;
+			let y = _this1.self._01;
+			let z = _this1.self._02;
+			if(z == null) {
+				z = 0.0;
+			}
+			if(y == null) {
+				y = 0.0;
+			}
+			if(x == null) {
+				x = 0.0;
+			}
+			let v_x = x;
+			let v_y = y;
+			let v_z = z;
+			let v_w = 1.0;
+			_this.x += v_x;
+			_this.y += v_y;
+			_this.z += v_z;
+		}
+		let btvec = this.body.getLinearVelocity();
+		this.body.setLinearVelocity(0.0,0.0,btvec.z - 1.0);
+		if(this.moveForward || this.moveBackward || this.moveLeft || this.moveRight) {
+			let _this = this.dir;
+			let n = Math.sqrt(_this.x * _this.x + _this.y * _this.y + _this.z * _this.z);
+			if(n > 0.0) {
+				let invN = 1.0 / n;
+				_this.x *= invN;
+				_this.y *= invN;
+				_this.z *= invN;
+			}
+			let dirN = _this;
+			let f = this.speed;
+			dirN.x *= f;
+			dirN.y *= f;
+			dirN.z *= f;
+			this.body.activate();
+			this.body.setLinearVelocity(dirN.x,dirN.y,btvec.z - 1.0);
+		}
+		this.body.setAngularFactor(0,0,0);
+		this.camera.buildMatrix();
+	}
+}
+$hxClasses["arm.FirstPersonController"] = arm_FirstPersonController;
+arm_FirstPersonController.__name__ = true;
+arm_FirstPersonController.__super__ = armory_trait_internal_CameraController;
+Object.assign(arm_FirstPersonController.prototype, {
+	__class__: arm_FirstPersonController
+	,head: null
+	,speed: null
+	,xVec: null
+	,zVec: null
+	,dir: null
+});
 class armory_data_Config {
 	static load(done) {
 		try {
@@ -1503,41 +1831,22 @@ class armory_renderpath_RenderPathDeferred {
 		t3.scale = armory_renderpath_Inc.superSample;
 		armory_renderpath_RenderPathDeferred.path.createRenderTarget(t3);
 		armory_renderpath_RenderPathDeferred.path.loadShader("shader_datas/deferred_light/deferred_light");
-		armory_renderpath_RenderPathDeferred.path.loadShader("shader_datas/ssao_pass/ssao_pass");
-		armory_renderpath_RenderPathDeferred.path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-		armory_renderpath_RenderPathDeferred.path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		let t4 = new iron_RenderTargetRaw();
-		t4.name = "singlea";
+		t4.name = "bufa";
 		t4.width = 0;
 		t4.height = 0;
 		t4.displayp = null;
-		t4.format = "R8";
+		t4.format = "RGBA32";
 		t4.scale = armory_renderpath_Inc.superSample;
 		armory_renderpath_RenderPathDeferred.path.createRenderTarget(t4);
 		let t5 = new iron_RenderTargetRaw();
-		t5.name = "singleb";
+		t5.name = "bufb";
 		t5.width = 0;
 		t5.height = 0;
 		t5.displayp = null;
-		t5.format = "R8";
+		t5.format = "RGBA32";
 		t5.scale = armory_renderpath_Inc.superSample;
 		armory_renderpath_RenderPathDeferred.path.createRenderTarget(t5);
-		let t6 = new iron_RenderTargetRaw();
-		t6.name = "bufa";
-		t6.width = 0;
-		t6.height = 0;
-		t6.displayp = null;
-		t6.format = "RGBA32";
-		t6.scale = armory_renderpath_Inc.superSample;
-		armory_renderpath_RenderPathDeferred.path.createRenderTarget(t6);
-		let t7 = new iron_RenderTargetRaw();
-		t7.name = "bufb";
-		t7.width = 0;
-		t7.height = 0;
-		t7.displayp = null;
-		t7.format = "RGBA32";
-		t7.scale = armory_renderpath_Inc.superSample;
-		armory_renderpath_RenderPathDeferred.path.createRenderTarget(t7);
 		armory_renderpath_RenderPathDeferred.path.loadShader("shader_datas/compositor_pass/compositor_pass");
 		armory_renderpath_RenderPathDeferred.path.loadShader("shader_datas/smaa_edge_detect/smaa_edge_detect");
 		armory_renderpath_RenderPathDeferred.path.loadShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
@@ -1548,31 +1857,12 @@ class armory_renderpath_RenderPathDeferred {
 		armory_renderpath_RenderPathDeferred.path.clearTarget(null,1.0);
 		armory_renderpath_RenderPathCreator.setTargetMeshes();
 		armory_renderpath_RenderPathCreator.drawMeshes();
-		if(armory_data_Config.raw.rp_ssgi != false) {
-			armory_renderpath_RenderPathDeferred.path.setTarget("singlea");
-			armory_renderpath_RenderPathDeferred.path.bindTarget("_main","gbufferD");
-			armory_renderpath_RenderPathDeferred.path.bindTarget("gbuffer0","gbuffer0");
-			armory_renderpath_RenderPathDeferred.path.drawShader("shader_datas/ssao_pass/ssao_pass");
-			armory_renderpath_RenderPathDeferred.path.setTarget("singleb");
-			armory_renderpath_RenderPathDeferred.path.bindTarget("singlea","tex");
-			armory_renderpath_RenderPathDeferred.path.bindTarget("gbuffer0","gbuffer0");
-			armory_renderpath_RenderPathDeferred.path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-			armory_renderpath_RenderPathDeferred.path.setTarget("singlea");
-			armory_renderpath_RenderPathDeferred.path.bindTarget("singleb","tex");
-			armory_renderpath_RenderPathDeferred.path.bindTarget("gbuffer0","gbuffer0");
-			armory_renderpath_RenderPathDeferred.path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-		}
 		armory_renderpath_Inc.drawShadowMap();
 		armory_renderpath_RenderPathDeferred.path.setDepthFrom("tex","gbuffer1");
 		armory_renderpath_RenderPathDeferred.path.setTarget("tex");
 		armory_renderpath_RenderPathDeferred.path.bindTarget("_main","gbufferD");
 		armory_renderpath_RenderPathDeferred.path.bindTarget("gbuffer0","gbuffer0");
 		armory_renderpath_RenderPathDeferred.path.bindTarget("gbuffer1","gbuffer1");
-		if(armory_data_Config.raw.rp_ssgi != false) {
-			armory_renderpath_RenderPathDeferred.path.bindTarget("singlea","ssaotex");
-		} else {
-			armory_renderpath_RenderPathDeferred.path.bindTarget("empty_white","ssaotex");
-		}
 		let voxelao_pass = false;
 		armory_renderpath_Inc.bindShadowMap();
 		if(voxelao_pass) {
@@ -1873,111 +2163,21 @@ class armory_system_Starter {
 				}
 			}
 		};
+		let loadLibAmmo = function(name) {
+			kha_Assets.loadBlobFromPath(name,function(b) {
+				(1,eval)(b.toString());
+				Ammo({print:function(s){iron.log(s);}}).then(function(){ tasks--; start();});
+			},null,{ fileName : "Sources/armory/system/Starter.hx", lineNumber : 78, className : "armory.system.Starter", methodName : "main"});
+		};
 		tasks = 1;
+		tasks += 1;
+		loadLibAmmo("ammo.js");
 		tasks -= 1;
 		start();
 	}
 }
 $hxClasses["armory.system.Starter"] = armory_system_Starter;
 armory_system_Starter.__name__ = true;
-class iron_Trait {
-	constructor() {
-		if(iron_Trait._hx_skip_constructor) {
-			return;
-		}
-		this._hx_constructor();
-	}
-	_hx_constructor() {
-		this._render2D = null;
-		this._render = null;
-		this._lateUpdate = null;
-		this._update = null;
-		this._remove = null;
-		this._init = null;
-		this._add = null;
-		this.name = "";
-	}
-	remove() {
-		this.object.removeTrait(this);
-	}
-	notifyOnAdd(f) {
-		if(this._add == null) {
-			this._add = [];
-		}
-		this._add.push(f);
-	}
-	notifyOnInit(f) {
-		if(this._init == null) {
-			this._init = [];
-		}
-		this._init.push(f);
-		iron_App.notifyOnInit(f);
-	}
-	notifyOnRemove(f) {
-		if(this._remove == null) {
-			this._remove = [];
-		}
-		this._remove.push(f);
-	}
-	notifyOnUpdate(f) {
-		if(this._update == null) {
-			this._update = [];
-		}
-		this._update.push(f);
-		iron_App.notifyOnUpdate(f);
-	}
-	removeUpdate(f) {
-		HxOverrides.remove(this._update,f);
-		iron_App.removeUpdate(f);
-	}
-	notifyOnLateUpdate(f) {
-		if(this._lateUpdate == null) {
-			this._lateUpdate = [];
-		}
-		this._lateUpdate.push(f);
-		iron_App.notifyOnLateUpdate(f);
-	}
-	removeLateUpdate(f) {
-		HxOverrides.remove(this._lateUpdate,f);
-		iron_App.removeLateUpdate(f);
-	}
-	notifyOnRender(f) {
-		if(this._render == null) {
-			this._render = [];
-		}
-		this._render.push(f);
-		iron_App.notifyOnRender(f);
-	}
-	removeRender(f) {
-		HxOverrides.remove(this._render,f);
-		iron_App.removeRender(f);
-	}
-	notifyOnRender2D(f) {
-		if(this._render2D == null) {
-			this._render2D = [];
-		}
-		this._render2D.push(f);
-		iron_App.notifyOnRender2D(f);
-	}
-	removeRender2D(f) {
-		HxOverrides.remove(this._render2D,f);
-		iron_App.removeRender2D(f);
-	}
-}
-$hxClasses["iron.Trait"] = iron_Trait;
-iron_Trait.__name__ = true;
-Object.assign(iron_Trait.prototype, {
-	__class__: iron_Trait
-	,name: null
-	,object: null
-	,_add: null
-	,_init: null
-	,_remove: null
-	,_update: null
-	,_lateUpdate: null
-	,_render: null
-	,_render2D: null
-});
 class armory_trait_internal_UniformsManager extends iron_Trait {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
@@ -2319,6 +2519,4747 @@ armory_trait_internal_UniformsManager.__super__ = iron_Trait;
 Object.assign(armory_trait_internal_UniformsManager.prototype, {
 	__class__: armory_trait_internal_UniformsManager
 	,uniformExists: null
+});
+class armory_trait_physics_bullet_DebugDrawHelper {
+	constructor(physicsWorld) {
+		this.debugMode = 0;
+		this.font = null;
+		this.texts = [];
+		this.lines = [];
+		this.physicsWorld = physicsWorld;
+		let _gthis = this;
+		iron_data_Data.getFont("font_default.ttf",function(defaultFont) {
+			_gthis.font = defaultFont;
+		});
+		iron_App.notifyOnRender2D($bind(this,this.onRender));
+	}
+	drawLine(from,to,color) {
+		from = Ammo.wrapPointer(from, Ammo.btVector3);
+		to = Ammo.wrapPointer(to, Ammo.btVector3);
+		color = Ammo.wrapPointer(color, Ammo.btVector3);
+		let x = from.x();
+		let y = from.y();
+		let z = from.z();
+		let w = 1.0;
+		if(w == null) {
+			w = 1.0;
+		}
+		if(z == null) {
+			z = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		let fromScreenSpace_x = x;
+		let fromScreenSpace_y = y;
+		let fromScreenSpace_z = z;
+		let fromScreenSpace_w = w;
+		let cam = iron_Scene.active.camera;
+		fromScreenSpace_w = 1.0;
+		let m = cam.VP;
+		let x1 = fromScreenSpace_x;
+		let y1 = fromScreenSpace_y;
+		let z1 = fromScreenSpace_z;
+		let d = 1.0 / (m.self._03 * x1 + m.self._13 * y1 + m.self._23 * z1 + m.self._33);
+		fromScreenSpace_x = (m.self._00 * x1 + m.self._10 * y1 + m.self._20 * z1 + m.self._30) * d;
+		fromScreenSpace_y = (m.self._01 * x1 + m.self._11 * y1 + m.self._21 * z1 + m.self._31) * d;
+		fromScreenSpace_z = (m.self._02 * x1 + m.self._12 * y1 + m.self._22 * z1 + m.self._32) * d;
+		if(fromScreenSpace_z < -1 || fromScreenSpace_z > 1) {
+			fromScreenSpace_w = 0.0;
+		} else {
+			fromScreenSpace_x = (fromScreenSpace_x + 1) * 0.5 * kha_System.windowWidth();
+			fromScreenSpace_y = (1 - fromScreenSpace_y) * 0.5 * kha_System.windowHeight();
+			fromScreenSpace_w = 1.0;
+		}
+		let x2 = to.x();
+		let y2 = to.y();
+		let z2 = to.z();
+		let w1 = 1.0;
+		if(w1 == null) {
+			w1 = 1.0;
+		}
+		if(z2 == null) {
+			z2 = 0.0;
+		}
+		if(y2 == null) {
+			y2 = 0.0;
+		}
+		if(x2 == null) {
+			x2 = 0.0;
+		}
+		let toScreenSpace_x = x2;
+		let toScreenSpace_y = y2;
+		let toScreenSpace_z = z2;
+		let toScreenSpace_w = w1;
+		let cam1 = iron_Scene.active.camera;
+		toScreenSpace_w = 1.0;
+		let m1 = cam1.VP;
+		let x3 = toScreenSpace_x;
+		let y3 = toScreenSpace_y;
+		let z3 = toScreenSpace_z;
+		let d1 = 1.0 / (m1.self._03 * x3 + m1.self._13 * y3 + m1.self._23 * z3 + m1.self._33);
+		toScreenSpace_x = (m1.self._00 * x3 + m1.self._10 * y3 + m1.self._20 * z3 + m1.self._30) * d1;
+		toScreenSpace_y = (m1.self._01 * x3 + m1.self._11 * y3 + m1.self._21 * z3 + m1.self._31) * d1;
+		toScreenSpace_z = (m1.self._02 * x3 + m1.self._12 * y3 + m1.self._22 * z3 + m1.self._32) * d1;
+		if(toScreenSpace_z < -1 || toScreenSpace_z > 1) {
+			toScreenSpace_w = 0.0;
+		} else {
+			toScreenSpace_x = (toScreenSpace_x + 1) * 0.5 * kha_System.windowWidth();
+			toScreenSpace_y = (1 - toScreenSpace_y) * 0.5 * kha_System.windowHeight();
+			toScreenSpace_w = 1.0;
+		}
+		if(fromScreenSpace_w == 1 && toScreenSpace_w == 1) {
+			this.lines.push(new armory_trait_physics_bullet_LineData(fromScreenSpace_x,fromScreenSpace_y,toScreenSpace_x,toScreenSpace_y,kha_Color.fromFloats(color.x(),color.y(),color.z(),1.0)));
+		}
+	}
+	drawContactPoint(pointOnB,normalOnB,distance,lifeTime,color) {
+		pointOnB = Ammo.wrapPointer(pointOnB, Ammo.btVector3);
+		normalOnB = Ammo.wrapPointer(normalOnB, Ammo.btVector3);
+		color = Ammo.wrapPointer(color, Ammo.btVector3);
+		let x = pointOnB.x();
+		let y = pointOnB.y();
+		let z = pointOnB.z();
+		let w = 1.0;
+		if(w == null) {
+			w = 1.0;
+		}
+		if(z == null) {
+			z = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		let contactPointScreenSpace_x = x;
+		let contactPointScreenSpace_y = y;
+		let contactPointScreenSpace_z = z;
+		let contactPointScreenSpace_w = w;
+		let cam = iron_Scene.active.camera;
+		contactPointScreenSpace_w = 1.0;
+		let m = cam.VP;
+		let x1 = contactPointScreenSpace_x;
+		let y1 = contactPointScreenSpace_y;
+		let z1 = contactPointScreenSpace_z;
+		let d = 1.0 / (m.self._03 * x1 + m.self._13 * y1 + m.self._23 * z1 + m.self._33);
+		contactPointScreenSpace_x = (m.self._00 * x1 + m.self._10 * y1 + m.self._20 * z1 + m.self._30) * d;
+		contactPointScreenSpace_y = (m.self._01 * x1 + m.self._11 * y1 + m.self._21 * z1 + m.self._31) * d;
+		contactPointScreenSpace_z = (m.self._02 * x1 + m.self._12 * y1 + m.self._22 * z1 + m.self._32) * d;
+		if(contactPointScreenSpace_z < -1 || contactPointScreenSpace_z > 1) {
+			contactPointScreenSpace_w = 0.0;
+		} else {
+			contactPointScreenSpace_x = (contactPointScreenSpace_x + 1) * 0.5 * kha_System.windowWidth();
+			contactPointScreenSpace_y = (1 - contactPointScreenSpace_y) * 0.5 * kha_System.windowHeight();
+			contactPointScreenSpace_w = 1.0;
+		}
+		let x2 = pointOnB.x() + normalOnB.x() * distance;
+		let y2 = pointOnB.y() + normalOnB.y() * distance;
+		let z2 = pointOnB.z() + normalOnB.z() * distance;
+		let w1 = 1.0;
+		if(w1 == null) {
+			w1 = 1.0;
+		}
+		if(z2 == null) {
+			z2 = 0.0;
+		}
+		if(y2 == null) {
+			y2 = 0.0;
+		}
+		if(x2 == null) {
+			x2 = 0.0;
+		}
+		let toScreenSpace_x = x2;
+		let toScreenSpace_y = y2;
+		let toScreenSpace_z = z2;
+		let toScreenSpace_w = w1;
+		let cam1 = iron_Scene.active.camera;
+		toScreenSpace_w = 1.0;
+		let m1 = cam1.VP;
+		let x3 = toScreenSpace_x;
+		let y3 = toScreenSpace_y;
+		let z3 = toScreenSpace_z;
+		let d1 = 1.0 / (m1.self._03 * x3 + m1.self._13 * y3 + m1.self._23 * z3 + m1.self._33);
+		toScreenSpace_x = (m1.self._00 * x3 + m1.self._10 * y3 + m1.self._20 * z3 + m1.self._30) * d1;
+		toScreenSpace_y = (m1.self._01 * x3 + m1.self._11 * y3 + m1.self._21 * z3 + m1.self._31) * d1;
+		toScreenSpace_z = (m1.self._02 * x3 + m1.self._12 * y3 + m1.self._22 * z3 + m1.self._32) * d1;
+		if(toScreenSpace_z < -1 || toScreenSpace_z > 1) {
+			toScreenSpace_w = 0.0;
+		} else {
+			toScreenSpace_x = (toScreenSpace_x + 1) * 0.5 * kha_System.windowWidth();
+			toScreenSpace_y = (1 - toScreenSpace_y) * 0.5 * kha_System.windowHeight();
+			toScreenSpace_w = 1.0;
+		}
+		if(contactPointScreenSpace_w == 1) {
+			let color1 = kha_Color.fromFloats(color.x(),color.y(),color.z(),1.0);
+			this.lines.push(new armory_trait_physics_bullet_LineData(contactPointScreenSpace_x - 4,contactPointScreenSpace_y - 4,contactPointScreenSpace_x + 4,contactPointScreenSpace_y + 4,color1));
+			this.lines.push(new armory_trait_physics_bullet_LineData(contactPointScreenSpace_x - 4,contactPointScreenSpace_y + 4,contactPointScreenSpace_x + 4,contactPointScreenSpace_y - 4,color1));
+			if(toScreenSpace_w == 1) {
+				this.lines.push(new armory_trait_physics_bullet_LineData(contactPointScreenSpace_x,contactPointScreenSpace_y,toScreenSpace_x,toScreenSpace_y,-1));
+			}
+			if(this.font != null) {
+				this.texts.push(new armory_trait_physics_bullet_TextData(contactPointScreenSpace_x,contactPointScreenSpace_y,color1,lifeTime == null ? "null" : "" + lifeTime));
+			}
+		}
+	}
+	reportErrorWarning(warningString) {
+		haxe_Log.trace(StringTools.trim(bullet_BulletString.js_UTF8ToString(warningString,warningString)),{ fileName : "Sources/armory/trait/physics/bullet/DebugDrawHelper.hx", lineNumber : 116, className : "armory.trait.physics.bullet.DebugDrawHelper", methodName : "reportErrorWarning"});
+	}
+	draw3dText(location,textString) {
+		if(this.font == null) {
+			return;
+		}
+		location = Ammo.wrapPointer(location, Ammo.btVector3);
+		let x = location.x();
+		let y = location.y();
+		let z = location.z();
+		let w = 1.0;
+		if(w == null) {
+			w = 1.0;
+		}
+		if(z == null) {
+			z = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		let locationScreenSpace_x = x;
+		let locationScreenSpace_y = y;
+		let locationScreenSpace_z = z;
+		let locationScreenSpace_w = w;
+		let cam = iron_Scene.active.camera;
+		locationScreenSpace_w = 1.0;
+		let m = cam.VP;
+		let x1 = locationScreenSpace_x;
+		let y1 = locationScreenSpace_y;
+		let z1 = locationScreenSpace_z;
+		let d = 1.0 / (m.self._03 * x1 + m.self._13 * y1 + m.self._23 * z1 + m.self._33);
+		locationScreenSpace_x = (m.self._00 * x1 + m.self._10 * y1 + m.self._20 * z1 + m.self._30) * d;
+		locationScreenSpace_y = (m.self._01 * x1 + m.self._11 * y1 + m.self._21 * z1 + m.self._31) * d;
+		locationScreenSpace_z = (m.self._02 * x1 + m.self._12 * y1 + m.self._22 * z1 + m.self._32) * d;
+		if(locationScreenSpace_z < -1 || locationScreenSpace_z > 1) {
+			locationScreenSpace_w = 0.0;
+		} else {
+			locationScreenSpace_x = (locationScreenSpace_x + 1) * 0.5 * kha_System.windowWidth();
+			locationScreenSpace_y = (1 - locationScreenSpace_y) * 0.5 * kha_System.windowHeight();
+			locationScreenSpace_w = 1.0;
+		}
+		this.texts.push(new armory_trait_physics_bullet_TextData(locationScreenSpace_x,locationScreenSpace_y,kha_Color.fromFloats(0.0,0.0,0.0,1.0),bullet_BulletString.js_UTF8ToString(textString,textString)));
+	}
+	setDebugMode(debugMode) {
+		this.debugMode = debugMode;
+	}
+	getDebugMode() {
+		return this.debugMode;
+	}
+	onRender(g) {
+		if(this.getDebugMode() == 0) {
+			return;
+		}
+		this.physicsWorld.world.debugDrawWorld();
+		g.set_opacity(1.0);
+		let _g = 0;
+		let _g1 = this.lines;
+		while(_g < _g1.length) {
+			let line = _g1[_g];
+			++_g;
+			g.set_color(line.color);
+			g.drawLine(line.fromX,line.fromY,line.toX,line.toY,1.0);
+		}
+		this.lines.length = 0;
+		if(this.font != null) {
+			g.set_font(this.font);
+			g.set_fontSize(12);
+			let _g = 0;
+			let _g1 = this.texts;
+			while(_g < _g1.length) {
+				let text = _g1[_g];
+				++_g;
+				g.set_color(text.color);
+				g.drawString(text.text,text.x,text.y);
+			}
+			this.texts.length = 0;
+		}
+	}
+	worldToScreenFast(loc) {
+		let cam = iron_Scene.active.camera;
+		loc.w = 1.0;
+		let m = cam.VP;
+		let x = loc.x;
+		let y = loc.y;
+		let z = loc.z;
+		let d = 1.0 / (m.self._03 * x + m.self._13 * y + m.self._23 * z + m.self._33);
+		loc.x = (m.self._00 * x + m.self._10 * y + m.self._20 * z + m.self._30) * d;
+		loc.y = (m.self._01 * x + m.self._11 * y + m.self._21 * z + m.self._31) * d;
+		loc.z = (m.self._02 * x + m.self._12 * y + m.self._22 * z + m.self._32) * d;
+		if(loc.z < -1 || loc.z > 1) {
+			loc.w = 0.0;
+		} else {
+			loc.x = (loc.x + 1) * 0.5 * kha_System.windowWidth();
+			loc.y = (1 - loc.y) * 0.5 * kha_System.windowHeight();
+			loc.w = 1.0;
+		}
+		return loc;
+	}
+}
+$hxClasses["armory.trait.physics.bullet.DebugDrawHelper"] = armory_trait_physics_bullet_DebugDrawHelper;
+armory_trait_physics_bullet_DebugDrawHelper.__name__ = true;
+Object.assign(armory_trait_physics_bullet_DebugDrawHelper.prototype, {
+	__class__: armory_trait_physics_bullet_DebugDrawHelper
+	,physicsWorld: null
+	,lines: null
+	,texts: null
+	,font: null
+	,debugMode: null
+});
+class armory_trait_physics_bullet_LineData {
+	constructor(fromX,fromY,toX,toY,color) {
+		this.fromX = fromX;
+		this.fromY = fromY;
+		this.toX = toX;
+		this.toY = toY;
+		this.color = color;
+	}
+}
+$hxClasses["armory.trait.physics.bullet.LineData"] = armory_trait_physics_bullet_LineData;
+armory_trait_physics_bullet_LineData.__name__ = true;
+Object.assign(armory_trait_physics_bullet_LineData.prototype, {
+	__class__: armory_trait_physics_bullet_LineData
+	,fromX: null
+	,fromY: null
+	,toX: null
+	,toY: null
+	,color: null
+});
+class armory_trait_physics_bullet_TextData {
+	constructor(x,y,color,text) {
+		this.x = x;
+		this.y = y;
+		this.color = color;
+		this.text = text;
+	}
+}
+$hxClasses["armory.trait.physics.bullet.TextData"] = armory_trait_physics_bullet_TextData;
+armory_trait_physics_bullet_TextData.__name__ = true;
+Object.assign(armory_trait_physics_bullet_TextData.prototype, {
+	__class__: armory_trait_physics_bullet_TextData
+	,x: null
+	,y: null
+	,color: null
+	,text: null
+});
+class armory_trait_physics_bullet_PhysicsConstraint extends iron_Trait {
+	constructor(body1,body2,type,disableCollisions,breakingThreshold,limits) {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor(body1,body2,type,disableCollisions,breakingThreshold,limits);
+	}
+	_hx_constructor(body1,body2,type,disableCollisions,breakingThreshold,limits) {
+		this.con = null;
+		this.id = 0;
+		super._hx_constructor();
+		if(armory_trait_physics_bullet_PhysicsConstraint.nullvec) {
+			armory_trait_physics_bullet_PhysicsConstraint.nullvec = false;
+			armory_trait_physics_bullet_PhysicsConstraint.vec1 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_PhysicsConstraint.vec2 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_PhysicsConstraint.vec3 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_PhysicsConstraint.trans1 = new Ammo.btTransform();
+			armory_trait_physics_bullet_PhysicsConstraint.trans2 = new Ammo.btTransform();
+		}
+		this.body1 = body1;
+		this.body2 = body2;
+		this.type = type;
+		this.disableCollisions = disableCollisions;
+		this.breakingThreshold = breakingThreshold;
+		if(limits == null) {
+			let _g = [];
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			_g.push(0);
+			limits = _g;
+		}
+		this.limits = limits;
+		this.notifyOnInit($bind(this,this.init));
+	}
+	init() {
+		this.physics = armory_trait_physics_bullet_PhysicsWorld.active;
+		let target1 = this.body1;
+		let target2 = this.body2;
+		if(target1 == null || target2 == null) {
+			return;
+		}
+		let rb1 = target1.getTrait(armory_trait_physics_bullet_RigidBody);
+		let rb2 = target2.getTrait(armory_trait_physics_bullet_RigidBody);
+		if(rb1 != null && rb1.ready && rb2 != null && rb2.ready) {
+			let t = this.object.transform;
+			let t1 = target1.transform;
+			let t2 = target2.transform;
+			let _this = t.world;
+			let frameT = new iron_math_Mat4(_this.self._00,_this.self._10,_this.self._20,_this.self._30,_this.self._01,_this.self._11,_this.self._21,_this.self._31,_this.self._02,_this.self._12,_this.self._22,_this.self._32,_this.self._03,_this.self._13,_this.self._23,_this.self._33);
+			let _this1 = t1.world;
+			let frameInA = new iron_math_Mat4(_this1.self._00,_this1.self._10,_this1.self._20,_this1.self._30,_this1.self._01,_this1.self._11,_this1.self._21,_this1.self._31,_this1.self._02,_this1.self._12,_this1.self._22,_this1.self._32,_this1.self._03,_this1.self._13,_this1.self._23,_this1.self._33);
+			let a00 = frameInA.self._00;
+			let a01 = frameInA.self._01;
+			let a02 = frameInA.self._02;
+			let a03 = frameInA.self._03;
+			let a10 = frameInA.self._10;
+			let a11 = frameInA.self._11;
+			let a12 = frameInA.self._12;
+			let a13 = frameInA.self._13;
+			let a20 = frameInA.self._20;
+			let a21 = frameInA.self._21;
+			let a22 = frameInA.self._22;
+			let a23 = frameInA.self._23;
+			let a30 = frameInA.self._30;
+			let a31 = frameInA.self._31;
+			let a32 = frameInA.self._32;
+			let a33 = frameInA.self._33;
+			let b00 = a00 * a11 - a01 * a10;
+			let b01 = a00 * a12 - a02 * a10;
+			let b02 = a00 * a13 - a03 * a10;
+			let b03 = a01 * a12 - a02 * a11;
+			let b04 = a01 * a13 - a03 * a11;
+			let b05 = a02 * a13 - a03 * a12;
+			let b06 = a20 * a31 - a21 * a30;
+			let b07 = a20 * a32 - a22 * a30;
+			let b08 = a20 * a33 - a23 * a30;
+			let b09 = a21 * a32 - a22 * a31;
+			let b10 = a21 * a33 - a23 * a31;
+			let b11 = a22 * a33 - a23 * a32;
+			let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+			if(det == 0.0) {
+				frameInA.self._00 = 1.0;
+				frameInA.self._01 = 0.0;
+				frameInA.self._02 = 0.0;
+				frameInA.self._03 = 0.0;
+				frameInA.self._10 = 0.0;
+				frameInA.self._11 = 1.0;
+				frameInA.self._12 = 0.0;
+				frameInA.self._13 = 0.0;
+				frameInA.self._20 = 0.0;
+				frameInA.self._21 = 0.0;
+				frameInA.self._22 = 1.0;
+				frameInA.self._23 = 0.0;
+				frameInA.self._30 = 0.0;
+				frameInA.self._31 = 0.0;
+				frameInA.self._32 = 0.0;
+				frameInA.self._33 = 1.0;
+			} else {
+				det = 1.0 / det;
+				frameInA.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+				frameInA.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+				frameInA.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+				frameInA.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+				frameInA.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+				frameInA.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+				frameInA.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+				frameInA.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+				frameInA.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+				frameInA.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+				frameInA.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+				frameInA.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+				frameInA.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+				frameInA.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+				frameInA.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+				frameInA.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+			}
+			let a001 = frameT.self._00;
+			let a011 = frameT.self._01;
+			let a021 = frameT.self._02;
+			let a031 = frameT.self._03;
+			let a101 = frameT.self._10;
+			let a111 = frameT.self._11;
+			let a121 = frameT.self._12;
+			let a131 = frameT.self._13;
+			let a201 = frameT.self._20;
+			let a211 = frameT.self._21;
+			let a221 = frameT.self._22;
+			let a231 = frameT.self._23;
+			let a301 = frameT.self._30;
+			let a311 = frameT.self._31;
+			let a321 = frameT.self._32;
+			let a331 = frameT.self._33;
+			let b0 = frameInA.self._00;
+			let b1 = frameInA.self._10;
+			let b2 = frameInA.self._20;
+			let b3 = frameInA.self._30;
+			frameT.self._00 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
+			frameT.self._10 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
+			frameT.self._20 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
+			frameT.self._30 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
+			b0 = frameInA.self._01;
+			b1 = frameInA.self._11;
+			b2 = frameInA.self._21;
+			b3 = frameInA.self._31;
+			frameT.self._01 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
+			frameT.self._11 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
+			frameT.self._21 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
+			frameT.self._31 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
+			b0 = frameInA.self._02;
+			b1 = frameInA.self._12;
+			b2 = frameInA.self._22;
+			b3 = frameInA.self._32;
+			frameT.self._02 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
+			frameT.self._12 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
+			frameT.self._22 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
+			frameT.self._32 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
+			b0 = frameInA.self._03;
+			b1 = frameInA.self._13;
+			b2 = frameInA.self._23;
+			b3 = frameInA.self._33;
+			frameT.self._03 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
+			frameT.self._13 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
+			frameT.self._23 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
+			frameT.self._33 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
+			frameInA = new iron_math_Mat4(frameT.self._00,frameT.self._10,frameT.self._20,frameT.self._30,frameT.self._01,frameT.self._11,frameT.self._21,frameT.self._31,frameT.self._02,frameT.self._12,frameT.self._22,frameT.self._32,frameT.self._03,frameT.self._13,frameT.self._23,frameT.self._33);
+			let _this2 = t.world;
+			frameT = new iron_math_Mat4(_this2.self._00,_this2.self._10,_this2.self._20,_this2.self._30,_this2.self._01,_this2.self._11,_this2.self._21,_this2.self._31,_this2.self._02,_this2.self._12,_this2.self._22,_this2.self._32,_this2.self._03,_this2.self._13,_this2.self._23,_this2.self._33);
+			let _this3 = t2.world;
+			let frameInB = new iron_math_Mat4(_this3.self._00,_this3.self._10,_this3.self._20,_this3.self._30,_this3.self._01,_this3.self._11,_this3.self._21,_this3.self._31,_this3.self._02,_this3.self._12,_this3.self._22,_this3.self._32,_this3.self._03,_this3.self._13,_this3.self._23,_this3.self._33);
+			let a002 = frameInB.self._00;
+			let a012 = frameInB.self._01;
+			let a022 = frameInB.self._02;
+			let a032 = frameInB.self._03;
+			let a102 = frameInB.self._10;
+			let a112 = frameInB.self._11;
+			let a122 = frameInB.self._12;
+			let a132 = frameInB.self._13;
+			let a202 = frameInB.self._20;
+			let a212 = frameInB.self._21;
+			let a222 = frameInB.self._22;
+			let a232 = frameInB.self._23;
+			let a302 = frameInB.self._30;
+			let a312 = frameInB.self._31;
+			let a322 = frameInB.self._32;
+			let a332 = frameInB.self._33;
+			let b001 = a002 * a112 - a012 * a102;
+			let b011 = a002 * a122 - a022 * a102;
+			let b021 = a002 * a132 - a032 * a102;
+			let b031 = a012 * a122 - a022 * a112;
+			let b041 = a012 * a132 - a032 * a112;
+			let b051 = a022 * a132 - a032 * a122;
+			let b061 = a202 * a312 - a212 * a302;
+			let b071 = a202 * a322 - a222 * a302;
+			let b081 = a202 * a332 - a232 * a302;
+			let b091 = a212 * a322 - a222 * a312;
+			let b101 = a212 * a332 - a232 * a312;
+			let b111 = a222 * a332 - a232 * a322;
+			let det1 = b001 * b111 - b011 * b101 + b021 * b091 + b031 * b081 - b041 * b071 + b051 * b061;
+			if(det1 == 0.0) {
+				frameInB.self._00 = 1.0;
+				frameInB.self._01 = 0.0;
+				frameInB.self._02 = 0.0;
+				frameInB.self._03 = 0.0;
+				frameInB.self._10 = 0.0;
+				frameInB.self._11 = 1.0;
+				frameInB.self._12 = 0.0;
+				frameInB.self._13 = 0.0;
+				frameInB.self._20 = 0.0;
+				frameInB.self._21 = 0.0;
+				frameInB.self._22 = 1.0;
+				frameInB.self._23 = 0.0;
+				frameInB.self._30 = 0.0;
+				frameInB.self._31 = 0.0;
+				frameInB.self._32 = 0.0;
+				frameInB.self._33 = 1.0;
+			} else {
+				det1 = 1.0 / det1;
+				frameInB.self._00 = (a112 * b111 - a122 * b101 + a132 * b091) * det1;
+				frameInB.self._01 = (a022 * b101 - a012 * b111 - a032 * b091) * det1;
+				frameInB.self._02 = (a312 * b051 - a322 * b041 + a332 * b031) * det1;
+				frameInB.self._03 = (a222 * b041 - a212 * b051 - a232 * b031) * det1;
+				frameInB.self._10 = (a122 * b081 - a102 * b111 - a132 * b071) * det1;
+				frameInB.self._11 = (a002 * b111 - a022 * b081 + a032 * b071) * det1;
+				frameInB.self._12 = (a322 * b021 - a302 * b051 - a332 * b011) * det1;
+				frameInB.self._13 = (a202 * b051 - a222 * b021 + a232 * b011) * det1;
+				frameInB.self._20 = (a102 * b101 - a112 * b081 + a132 * b061) * det1;
+				frameInB.self._21 = (a012 * b081 - a002 * b101 - a032 * b061) * det1;
+				frameInB.self._22 = (a302 * b041 - a312 * b021 + a332 * b001) * det1;
+				frameInB.self._23 = (a212 * b021 - a202 * b041 - a232 * b001) * det1;
+				frameInB.self._30 = (a112 * b071 - a102 * b091 - a122 * b061) * det1;
+				frameInB.self._31 = (a002 * b091 - a012 * b071 + a022 * b061) * det1;
+				frameInB.self._32 = (a312 * b011 - a302 * b031 - a322 * b001) * det1;
+				frameInB.self._33 = (a202 * b031 - a212 * b011 + a222 * b001) * det1;
+			}
+			let a003 = frameT.self._00;
+			let a013 = frameT.self._01;
+			let a023 = frameT.self._02;
+			let a033 = frameT.self._03;
+			let a103 = frameT.self._10;
+			let a113 = frameT.self._11;
+			let a123 = frameT.self._12;
+			let a133 = frameT.self._13;
+			let a203 = frameT.self._20;
+			let a213 = frameT.self._21;
+			let a223 = frameT.self._22;
+			let a233 = frameT.self._23;
+			let a303 = frameT.self._30;
+			let a313 = frameT.self._31;
+			let a323 = frameT.self._32;
+			let a333 = frameT.self._33;
+			let b010 = frameInB.self._00;
+			let b12 = frameInB.self._10;
+			let b21 = frameInB.self._20;
+			let b31 = frameInB.self._30;
+			frameT.self._00 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
+			frameT.self._10 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
+			frameT.self._20 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
+			frameT.self._30 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
+			b010 = frameInB.self._01;
+			b12 = frameInB.self._11;
+			b21 = frameInB.self._21;
+			b31 = frameInB.self._31;
+			frameT.self._01 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
+			frameT.self._11 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
+			frameT.self._21 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
+			frameT.self._31 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
+			b010 = frameInB.self._02;
+			b12 = frameInB.self._12;
+			b21 = frameInB.self._22;
+			b31 = frameInB.self._32;
+			frameT.self._02 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
+			frameT.self._12 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
+			frameT.self._22 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
+			frameT.self._32 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
+			b010 = frameInB.self._03;
+			b12 = frameInB.self._13;
+			b21 = frameInB.self._23;
+			b31 = frameInB.self._33;
+			frameT.self._03 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
+			frameT.self._13 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
+			frameT.self._23 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
+			frameT.self._33 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
+			frameInB = new iron_math_Mat4(frameT.self._00,frameT.self._10,frameT.self._20,frameT.self._30,frameT.self._01,frameT.self._11,frameT.self._21,frameT.self._31,frameT.self._02,frameT.self._12,frameT.self._22,frameT.self._32,frameT.self._03,frameT.self._13,frameT.self._23,frameT.self._33);
+			let loc_x = 0.0;
+			let loc_y = 0.0;
+			let loc_z = 0.0;
+			let loc_w = 1.0;
+			let rot_x = 0.0;
+			let rot_y = 0.0;
+			let rot_z = 0.0;
+			let rot_w = 1.0;
+			let scl_x = 0.0;
+			let scl_y = 0.0;
+			let scl_z = 0.0;
+			let scl_w = 1.0;
+			loc_x = frameInA.self._30;
+			loc_y = frameInA.self._31;
+			loc_z = frameInA.self._32;
+			let _this4 = iron_math_Mat4.helpVec;
+			_this4.x = frameInA.self._00;
+			_this4.y = frameInA.self._01;
+			_this4.z = frameInA.self._02;
+			_this4.w = 1.0;
+			let _this5 = _this4;
+			scl_x = Math.sqrt(_this5.x * _this5.x + _this5.y * _this5.y + _this5.z * _this5.z);
+			let _this6 = iron_math_Mat4.helpVec;
+			_this6.x = frameInA.self._10;
+			_this6.y = frameInA.self._11;
+			_this6.z = frameInA.self._12;
+			_this6.w = 1.0;
+			let _this7 = _this6;
+			scl_y = Math.sqrt(_this7.x * _this7.x + _this7.y * _this7.y + _this7.z * _this7.z);
+			let _this8 = iron_math_Mat4.helpVec;
+			_this8.x = frameInA.self._20;
+			_this8.y = frameInA.self._21;
+			_this8.z = frameInA.self._22;
+			_this8.w = 1.0;
+			let _this9 = _this8;
+			scl_z = Math.sqrt(_this9.x * _this9.x + _this9.y * _this9.y + _this9.z * _this9.z);
+			let _this10 = frameInA.self;
+			let m3 = _this10._12;
+			let m4 = _this10._22;
+			let m5 = _this10._32;
+			let m6 = _this10._13;
+			let m7 = _this10._23;
+			let m8 = _this10._33;
+			let c00 = _this10._11 * (m4 * m8 - m5 * m7) - _this10._21 * (m3 * m8 - m5 * m6) + _this10._31 * (m3 * m7 - m4 * m6);
+			let m31 = _this10._12;
+			let m41 = _this10._22;
+			let m51 = _this10._32;
+			let m61 = _this10._13;
+			let m71 = _this10._23;
+			let m81 = _this10._33;
+			let c01 = _this10._10 * (m41 * m81 - m51 * m71) - _this10._20 * (m31 * m81 - m51 * m61) + _this10._30 * (m31 * m71 - m41 * m61);
+			let m32 = _this10._11;
+			let m42 = _this10._21;
+			let m52 = _this10._31;
+			let m62 = _this10._13;
+			let m72 = _this10._23;
+			let m82 = _this10._33;
+			let c02 = _this10._10 * (m42 * m82 - m52 * m72) - _this10._20 * (m32 * m82 - m52 * m62) + _this10._30 * (m32 * m72 - m42 * m62);
+			let m33 = _this10._11;
+			let m43 = _this10._21;
+			let m53 = _this10._31;
+			let m63 = _this10._12;
+			let m73 = _this10._22;
+			let m83 = _this10._32;
+			let c03 = _this10._10 * (m43 * m83 - m53 * m73) - _this10._20 * (m33 * m83 - m53 * m63) + _this10._30 * (m33 * m73 - m43 * m63);
+			if(_this10._00 * c00 - _this10._01 * c01 + _this10._02 * c02 - _this10._03 * c03 < 0.0) {
+				scl_x = -scl_x;
+			}
+			let invs = 1.0 / scl_x;
+			iron_math_Mat4.helpMat.self._00 = frameInA.self._00 * invs;
+			iron_math_Mat4.helpMat.self._01 = frameInA.self._01 * invs;
+			iron_math_Mat4.helpMat.self._02 = frameInA.self._02 * invs;
+			invs = 1.0 / scl_y;
+			iron_math_Mat4.helpMat.self._10 = frameInA.self._10 * invs;
+			iron_math_Mat4.helpMat.self._11 = frameInA.self._11 * invs;
+			iron_math_Mat4.helpMat.self._12 = frameInA.self._12 * invs;
+			invs = 1.0 / scl_z;
+			iron_math_Mat4.helpMat.self._20 = frameInA.self._20 * invs;
+			iron_math_Mat4.helpMat.self._21 = frameInA.self._21 * invs;
+			iron_math_Mat4.helpMat.self._22 = frameInA.self._22 * invs;
+			let m = iron_math_Mat4.helpMat;
+			let m11 = m.self._00;
+			let m12 = m.self._10;
+			let m13 = m.self._20;
+			let m21 = m.self._01;
+			let m22 = m.self._11;
+			let m23 = m.self._21;
+			let m311 = m.self._02;
+			let m321 = m.self._12;
+			let m331 = m.self._22;
+			let tr = m11 + m22 + m331;
+			let s = 0.0;
+			if(tr > 0) {
+				s = 0.5 / Math.sqrt(tr + 1.0);
+				rot_w = 0.25 / s;
+				rot_x = (m321 - m23) * s;
+				rot_y = (m13 - m311) * s;
+				rot_z = (m21 - m12) * s;
+			} else if(m11 > m22 && m11 > m331) {
+				s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m331);
+				rot_w = (m321 - m23) / s;
+				rot_x = 0.25 * s;
+				rot_y = (m12 + m21) / s;
+				rot_z = (m13 + m311) / s;
+			} else if(m22 > m331) {
+				s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m331);
+				rot_w = (m13 - m311) / s;
+				rot_x = (m12 + m21) / s;
+				rot_y = 0.25 * s;
+				rot_z = (m23 + m321) / s;
+			} else {
+				s = 2.0 * Math.sqrt(1.0 + m331 - m11 - m22);
+				rot_w = (m21 - m12) / s;
+				rot_x = (m13 + m311) / s;
+				rot_y = (m23 + m321) / s;
+				rot_z = 0.25 * s;
+			}
+			armory_trait_physics_bullet_PhysicsConstraint.trans1.setIdentity();
+			armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(loc_x);
+			armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(loc_y);
+			armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(loc_z);
+			armory_trait_physics_bullet_PhysicsConstraint.trans1.setOrigin(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+			armory_trait_physics_bullet_PhysicsConstraint.trans1.setRotation(new Ammo.btQuaternion(rot_x,rot_y,rot_z,rot_w));
+			loc_x = frameInB.self._30;
+			loc_y = frameInB.self._31;
+			loc_z = frameInB.self._32;
+			let _this11 = iron_math_Mat4.helpVec;
+			_this11.x = frameInB.self._00;
+			_this11.y = frameInB.self._01;
+			_this11.z = frameInB.self._02;
+			_this11.w = 1.0;
+			let _this12 = _this11;
+			scl_x = Math.sqrt(_this12.x * _this12.x + _this12.y * _this12.y + _this12.z * _this12.z);
+			let _this13 = iron_math_Mat4.helpVec;
+			_this13.x = frameInB.self._10;
+			_this13.y = frameInB.self._11;
+			_this13.z = frameInB.self._12;
+			_this13.w = 1.0;
+			let _this14 = _this13;
+			scl_y = Math.sqrt(_this14.x * _this14.x + _this14.y * _this14.y + _this14.z * _this14.z);
+			let _this15 = iron_math_Mat4.helpVec;
+			_this15.x = frameInB.self._20;
+			_this15.y = frameInB.self._21;
+			_this15.z = frameInB.self._22;
+			_this15.w = 1.0;
+			let _this16 = _this15;
+			scl_z = Math.sqrt(_this16.x * _this16.x + _this16.y * _this16.y + _this16.z * _this16.z);
+			let _this17 = frameInB.self;
+			let m34 = _this17._12;
+			let m44 = _this17._22;
+			let m54 = _this17._32;
+			let m64 = _this17._13;
+			let m74 = _this17._23;
+			let m84 = _this17._33;
+			let c001 = _this17._11 * (m44 * m84 - m54 * m74) - _this17._21 * (m34 * m84 - m54 * m64) + _this17._31 * (m34 * m74 - m44 * m64);
+			let m35 = _this17._12;
+			let m45 = _this17._22;
+			let m55 = _this17._32;
+			let m65 = _this17._13;
+			let m75 = _this17._23;
+			let m85 = _this17._33;
+			let c011 = _this17._10 * (m45 * m85 - m55 * m75) - _this17._20 * (m35 * m85 - m55 * m65) + _this17._30 * (m35 * m75 - m45 * m65);
+			let m36 = _this17._11;
+			let m46 = _this17._21;
+			let m56 = _this17._31;
+			let m66 = _this17._13;
+			let m76 = _this17._23;
+			let m86 = _this17._33;
+			let c021 = _this17._10 * (m46 * m86 - m56 * m76) - _this17._20 * (m36 * m86 - m56 * m66) + _this17._30 * (m36 * m76 - m46 * m66);
+			let m37 = _this17._11;
+			let m47 = _this17._21;
+			let m57 = _this17._31;
+			let m67 = _this17._12;
+			let m77 = _this17._22;
+			let m87 = _this17._32;
+			let c031 = _this17._10 * (m47 * m87 - m57 * m77) - _this17._20 * (m37 * m87 - m57 * m67) + _this17._30 * (m37 * m77 - m47 * m67);
+			if(_this17._00 * c001 - _this17._01 * c011 + _this17._02 * c021 - _this17._03 * c031 < 0.0) {
+				scl_x = -scl_x;
+			}
+			let invs1 = 1.0 / scl_x;
+			iron_math_Mat4.helpMat.self._00 = frameInB.self._00 * invs1;
+			iron_math_Mat4.helpMat.self._01 = frameInB.self._01 * invs1;
+			iron_math_Mat4.helpMat.self._02 = frameInB.self._02 * invs1;
+			invs1 = 1.0 / scl_y;
+			iron_math_Mat4.helpMat.self._10 = frameInB.self._10 * invs1;
+			iron_math_Mat4.helpMat.self._11 = frameInB.self._11 * invs1;
+			iron_math_Mat4.helpMat.self._12 = frameInB.self._12 * invs1;
+			invs1 = 1.0 / scl_z;
+			iron_math_Mat4.helpMat.self._20 = frameInB.self._20 * invs1;
+			iron_math_Mat4.helpMat.self._21 = frameInB.self._21 * invs1;
+			iron_math_Mat4.helpMat.self._22 = frameInB.self._22 * invs1;
+			let m1 = iron_math_Mat4.helpMat;
+			let m111 = m1.self._00;
+			let m121 = m1.self._10;
+			let m131 = m1.self._20;
+			let m211 = m1.self._01;
+			let m221 = m1.self._11;
+			let m231 = m1.self._21;
+			let m312 = m1.self._02;
+			let m322 = m1.self._12;
+			let m332 = m1.self._22;
+			let tr1 = m111 + m221 + m332;
+			let s1 = 0.0;
+			if(tr1 > 0) {
+				s1 = 0.5 / Math.sqrt(tr1 + 1.0);
+				rot_w = 0.25 / s1;
+				rot_x = (m322 - m231) * s1;
+				rot_y = (m131 - m312) * s1;
+				rot_z = (m211 - m121) * s1;
+			} else if(m111 > m221 && m111 > m332) {
+				s1 = 2.0 * Math.sqrt(1.0 + m111 - m221 - m332);
+				rot_w = (m322 - m231) / s1;
+				rot_x = 0.25 * s1;
+				rot_y = (m121 + m211) / s1;
+				rot_z = (m131 + m312) / s1;
+			} else if(m221 > m332) {
+				s1 = 2.0 * Math.sqrt(1.0 + m221 - m111 - m332);
+				rot_w = (m131 - m312) / s1;
+				rot_x = (m121 + m211) / s1;
+				rot_y = 0.25 * s1;
+				rot_z = (m231 + m322) / s1;
+			} else {
+				s1 = 2.0 * Math.sqrt(1.0 + m332 - m111 - m221);
+				rot_w = (m211 - m121) / s1;
+				rot_x = (m131 + m312) / s1;
+				rot_y = (m231 + m322) / s1;
+				rot_z = 0.25 * s1;
+			}
+			armory_trait_physics_bullet_PhysicsConstraint.trans2.setIdentity();
+			armory_trait_physics_bullet_PhysicsConstraint.vec2.setX(loc_x);
+			armory_trait_physics_bullet_PhysicsConstraint.vec2.setY(loc_y);
+			armory_trait_physics_bullet_PhysicsConstraint.vec2.setZ(loc_z);
+			armory_trait_physics_bullet_PhysicsConstraint.trans2.setOrigin(armory_trait_physics_bullet_PhysicsConstraint.vec2);
+			armory_trait_physics_bullet_PhysicsConstraint.trans2.setRotation(new Ammo.btQuaternion(rot_x,rot_y,rot_z,rot_w));
+			if(this.type == 5 || this.type == 0) {
+				let useLinearReferenceFrameB = false;
+				if(useLinearReferenceFrameB == null) {
+					useLinearReferenceFrameB = false;
+				}
+				let _r1 = rb1.body;
+				let _r2 = rb2.body;
+				let _fa = armory_trait_physics_bullet_PhysicsConstraint.trans1;
+				let _fb = armory_trait_physics_bullet_PhysicsConstraint.trans2;
+				let _b = useLinearReferenceFrameB;
+				let c = new Ammo.btGeneric6DofConstraint(_r1, _r2, _fa, _fb, _b);
+				if(this.type == 0) {
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(0);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(0);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(0);
+					c.setLinearLowerLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+					c.setLinearUpperLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+					c.setAngularLowerLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+					c.setAngularUpperLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+				} else if(this.type == 5) {
+					if(this.limits[0] == 0) {
+						this.limits[1] = 1.0;
+						this.limits[2] = -1.0;
+					}
+					if(this.limits[3] == 0) {
+						this.limits[4] = 1.0;
+						this.limits[5] = -1.0;
+					}
+					if(this.limits[6] == 0) {
+						this.limits[7] = 1.0;
+						this.limits[8] = -1.0;
+					}
+					if(this.limits[9] == 0) {
+						this.limits[10] = 1.0;
+						this.limits[11] = -1.0;
+					}
+					if(this.limits[12] == 0) {
+						this.limits[13] = 1.0;
+						this.limits[14] = -1.0;
+					}
+					if(this.limits[15] == 0) {
+						this.limits[16] = 1.0;
+						this.limits[17] = -1.0;
+					}
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[1]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[4]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[7]);
+					c.setLinearLowerLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[2]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[5]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[8]);
+					c.setLinearUpperLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[10]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[13]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[16]);
+					c.setAngularLowerLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[11]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[14]);
+					armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[17]);
+					c.setAngularUpperLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+				}
+				this.con = c;
+			} else if(this.type == 6) {
+				let c = new Ammo.btGeneric6DofSpringConstraint(rb1.body,rb2.body,armory_trait_physics_bullet_PhysicsConstraint.trans1,armory_trait_physics_bullet_PhysicsConstraint.trans2,false);
+				if(this.limits[0] == 0) {
+					this.limits[1] = 1.0;
+					this.limits[2] = -1.0;
+				}
+				if(this.limits[3] == 0) {
+					this.limits[4] = 1.0;
+					this.limits[5] = -1.0;
+				}
+				if(this.limits[6] == 0) {
+					this.limits[7] = 1.0;
+					this.limits[8] = -1.0;
+				}
+				if(this.limits[9] == 0) {
+					this.limits[10] = 1.0;
+					this.limits[11] = -1.0;
+				}
+				if(this.limits[12] == 0) {
+					this.limits[13] = 1.0;
+					this.limits[14] = -1.0;
+				}
+				if(this.limits[15] == 0) {
+					this.limits[16] = 1.0;
+					this.limits[17] = -1.0;
+				}
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[1]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[4]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[7]);
+				c.setLinearLowerLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[2]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[5]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[8]);
+				c.setLinearUpperLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[10]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[13]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[16]);
+				c.setAngularLowerLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setX(this.limits[11]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setY(this.limits[14]);
+				armory_trait_physics_bullet_PhysicsConstraint.vec1.setZ(this.limits[17]);
+				c.setAngularUpperLimit(armory_trait_physics_bullet_PhysicsConstraint.vec1);
+				if(this.limits[18] != 0) {
+					c.enableSpring(0,true);
+					c.setStiffness(0,this.limits[19]);
+					c.setDamping(0,this.limits[20]);
+				} else {
+					c.enableSpring(0,false);
+				}
+				if(this.limits[21] != 0) {
+					c.enableSpring(1,true);
+					c.setStiffness(1,this.limits[22]);
+					c.setDamping(1,this.limits[23]);
+				} else {
+					c.enableSpring(1,false);
+				}
+				if(this.limits[24] != 0) {
+					c.enableSpring(2,true);
+					c.setStiffness(2,this.limits[25]);
+					c.setDamping(2,this.limits[26]);
+				} else {
+					c.enableSpring(2,false);
+				}
+				if(this.limits[27] != 0) {
+					c.enableSpring(3,true);
+					c.setStiffness(3,this.limits[28]);
+					c.setDamping(3,this.limits[29]);
+				} else {
+					c.enableSpring(3,false);
+				}
+				if(this.limits[30] != 0) {
+					c.enableSpring(4,true);
+					c.setStiffness(4,this.limits[31]);
+					c.setDamping(4,this.limits[32]);
+				} else {
+					c.enableSpring(4,false);
+				}
+				if(this.limits[33] != 0) {
+					c.enableSpring(5,true);
+					c.setStiffness(5,this.limits[34]);
+					c.setDamping(5,this.limits[35]);
+				} else {
+					c.enableSpring(5,false);
+				}
+				this.con = c;
+			} else if(this.type == 1) {
+				let c = new Ammo.btPoint2PointConstraint(rb1.body,rb2.body,armory_trait_physics_bullet_PhysicsConstraint.vec1,armory_trait_physics_bullet_PhysicsConstraint.vec2);
+				this.con = c;
+			} else if(this.type == 2) {
+				let axis = armory_trait_physics_bullet_PhysicsConstraint.vec3;
+				let _softness = 0.9;
+				let _biasFactor = 0.3;
+				let _relaxationFactor = 1.0;
+				let _this = t.world;
+				let x = _this.self._20;
+				let y = _this.self._21;
+				let z = _this.self._22;
+				if(z == null) {
+					z = 0.0;
+				}
+				if(y == null) {
+					y = 0.0;
+				}
+				if(x == null) {
+					x = 0.0;
+				}
+				let inlVec4_x = x;
+				let inlVec4_y = y;
+				let inlVec4_z = z;
+				let inlVec4_w = 1.0;
+				axis.setX(inlVec4_x);
+				let _this1 = t.world;
+				let x1 = _this1.self._20;
+				let y1 = _this1.self._21;
+				let z1 = _this1.self._22;
+				if(z1 == null) {
+					z1 = 0.0;
+				}
+				if(y1 == null) {
+					y1 = 0.0;
+				}
+				if(x1 == null) {
+					x1 = 0.0;
+				}
+				let inlVec4_x1 = x1;
+				let inlVec4_y1 = y1;
+				let inlVec4_z1 = z1;
+				let inlVec4_w1 = 1.0;
+				axis.setY(inlVec4_y1);
+				let _this2 = t.world;
+				let x2 = _this2.self._20;
+				let y2 = _this2.self._21;
+				let z2 = _this2.self._22;
+				if(z2 == null) {
+					z2 = 0.0;
+				}
+				if(y2 == null) {
+					y2 = 0.0;
+				}
+				if(x2 == null) {
+					x2 = 0.0;
+				}
+				let inlVec4_x2 = x2;
+				let inlVec4_y2 = y2;
+				let inlVec4_z2 = z2;
+				let inlVec4_w2 = 1.0;
+				axis.setZ(inlVec4_z2);
+				let c = new Ammo.btHingeConstraint(rb1.body,rb2.body,armory_trait_physics_bullet_PhysicsConstraint.vec1,armory_trait_physics_bullet_PhysicsConstraint.vec2,axis,axis,false);
+				if(this.limits[0] != 0) {
+					c.setLimit(this.limits[1],this.limits[2],_softness,_biasFactor,_relaxationFactor);
+				}
+				this.con = c;
+			} else if(this.type == 3) {
+				let c = new Ammo.btSliderConstraint(rb1.body,rb2.body,armory_trait_physics_bullet_PhysicsConstraint.trans1,armory_trait_physics_bullet_PhysicsConstraint.trans2,true);
+				if(this.limits[0] != 0) {
+					c.setLowerLinLimit(this.limits[1]);
+					c.setUpperLinLimit(this.limits[2]);
+				}
+				this.con = c;
+			} else if(this.type == 4) {
+				let c = new Ammo.btSliderConstraint(rb1.body,rb2.body,armory_trait_physics_bullet_PhysicsConstraint.trans1,armory_trait_physics_bullet_PhysicsConstraint.trans2,true);
+				if(this.limits[0] != 0) {
+					c.setLowerLinLimit(this.limits[1]);
+					c.setUpperLinLimit(this.limits[2]);
+				}
+				if(this.limits[3] != 0) {
+					c.setLowerAngLimit(this.limits[4]);
+					c.setUpperAngLimit(this.limits[5]);
+				} else {
+					c.setLowerAngLimit(1);
+					c.setUpperAngLimit(-1);
+				}
+				this.con = c;
+			}
+			if(this.breakingThreshold > 0) {
+				this.con.setBreakingImpulseThreshold(this.breakingThreshold);
+			}
+			this.physics.addPhysicsConstraint(this);
+			this.id = armory_trait_physics_bullet_PhysicsConstraint.nextId;
+			armory_trait_physics_bullet_PhysicsConstraint.nextId++;
+			this.notifyOnRemove($bind(this,this.removeFromWorld));
+		} else {
+			this.remove();
+		}
+	}
+	removeFromWorld() {
+		this.physics.removePhysicsConstraint(this);
+	}
+	setHingeConstraintLimits(angLimit,lowerAngLimit,upperAngLimit) {
+		if(angLimit) {
+			this.limits[0] = 1;
+		} else {
+			this.limits[0] = 0;
+		}
+		this.limits[1] = lowerAngLimit * (Math.PI / 180);
+		this.limits[2] = upperAngLimit * (Math.PI / 180);
+	}
+	setSliderConstraintLimits(linLimit,lowerLinLimit,upperLinLimit) {
+		if(linLimit) {
+			this.limits[0] = 1;
+		} else {
+			this.limits[0] = 0;
+		}
+		this.limits[1] = lowerLinLimit;
+		this.limits[2] = upperLinLimit;
+	}
+	setPistonConstraintLimits(linLimit,lowerLinLimit,upperLinLimit,angLimit,lowerAngLimit,upperAngLimit) {
+		if(linLimit) {
+			this.limits[0] = 1;
+		} else {
+			this.limits[0] = 0;
+		}
+		this.limits[1] = lowerLinLimit;
+		this.limits[2] = upperLinLimit;
+		if(angLimit) {
+			this.limits[3] = 1;
+		} else {
+			this.limits[3] = 0;
+		}
+		this.limits[4] = lowerAngLimit * (Math.PI / 180);
+		this.limits[5] = upperAngLimit * (Math.PI / 180);
+	}
+	setGenericConstraintLimits(setLimit,lowerLimit,upperLimit,axis,isAngular) {
+		if(isAngular == null) {
+			isAngular = false;
+		}
+		if(axis == null) {
+			axis = 0;
+		}
+		if(upperLimit == null) {
+			upperLimit = -1.0;
+		}
+		if(lowerLimit == null) {
+			lowerLimit = 1.0;
+		}
+		if(setLimit == null) {
+			setLimit = false;
+		}
+		let i = 0;
+		let j = 0;
+		let radian = Math.PI / 180;
+		switch(axis) {
+		case 0:
+			i = 0;
+			break;
+		case 1:
+			i = 3;
+			break;
+		case 2:
+			i = 6;
+			break;
+		}
+		if(isAngular) {
+			j = 9;
+		} else {
+			j = 0;
+		}
+		if(isAngular) {
+			radian = Math.PI / 180;
+		} else {
+			radian = 1;
+		}
+		if(setLimit) {
+			this.limits[i + j] = 1;
+		}
+		this.limits[i + j + 1] = lowerLimit * radian;
+		this.limits[i + j + 2] = upperLimit * radian;
+	}
+	setSpringParams(setSpring,stiffness,damping,axis,isAngular) {
+		if(isAngular == null) {
+			isAngular = false;
+		}
+		if(axis == null) {
+			axis = 0;
+		}
+		if(damping == null) {
+			damping = 0.5;
+		}
+		if(stiffness == null) {
+			stiffness = 10.0;
+		}
+		if(setSpring == null) {
+			setSpring = false;
+		}
+		let i = 0;
+		let j = 0;
+		switch(axis) {
+		case 0:
+			i = 18;
+			break;
+		case 1:
+			i = 21;
+			break;
+		case 2:
+			i = 24;
+			break;
+		}
+		if(isAngular) {
+			j = 9;
+		} else {
+			j = 0;
+		}
+		if(setSpring) {
+			this.limits[i + j] = 1;
+		}
+		this.limits[i + j + 1] = stiffness;
+		this.limits[i + j + 2] = damping;
+	}
+	delete() {
+		Ammo.destroy(this.con);
+	}
+}
+$hxClasses["armory.trait.physics.bullet.PhysicsConstraint"] = armory_trait_physics_bullet_PhysicsConstraint;
+armory_trait_physics_bullet_PhysicsConstraint.__name__ = true;
+armory_trait_physics_bullet_PhysicsConstraint.__super__ = iron_Trait;
+Object.assign(armory_trait_physics_bullet_PhysicsConstraint.prototype, {
+	__class__: armory_trait_physics_bullet_PhysicsConstraint
+	,id: null
+	,physics: null
+	,body1: null
+	,body2: null
+	,type: null
+	,disableCollisions: null
+	,breakingThreshold: null
+	,limits: null
+	,con: null
+});
+class armory_trait_physics_bullet_Hit {
+	constructor(rb,pos,normal) {
+		this.rb = rb;
+		this.pos = pos;
+		this.normal = normal;
+	}
+}
+$hxClasses["armory.trait.physics.bullet.Hit"] = armory_trait_physics_bullet_Hit;
+armory_trait_physics_bullet_Hit.__name__ = true;
+Object.assign(armory_trait_physics_bullet_Hit.prototype, {
+	__class__: armory_trait_physics_bullet_Hit
+	,rb: null
+	,pos: null
+	,normal: null
+});
+class armory_trait_physics_bullet_ConvexHit {
+	constructor(pos,normal,hitFraction) {
+		this.pos = pos;
+		this.normal = normal;
+		this.hitFraction = hitFraction;
+	}
+}
+$hxClasses["armory.trait.physics.bullet.ConvexHit"] = armory_trait_physics_bullet_ConvexHit;
+armory_trait_physics_bullet_ConvexHit.__name__ = true;
+Object.assign(armory_trait_physics_bullet_ConvexHit.prototype, {
+	__class__: armory_trait_physics_bullet_ConvexHit
+	,pos: null
+	,normal: null
+	,hitFraction: null
+});
+class armory_trait_physics_bullet_ContactPair {
+	constructor(a,b) {
+		this.a = a;
+		this.b = b;
+	}
+}
+$hxClasses["armory.trait.physics.bullet.ContactPair"] = armory_trait_physics_bullet_ContactPair;
+armory_trait_physics_bullet_ContactPair.__name__ = true;
+Object.assign(armory_trait_physics_bullet_ContactPair.prototype, {
+	__class__: armory_trait_physics_bullet_ContactPair
+	,a: null
+	,b: null
+	,posA: null
+	,posB: null
+	,normOnB: null
+	,impulse: null
+	,distance: null
+});
+class armory_trait_physics_bullet_PhysicsWorld extends iron_Trait {
+	constructor(timeScale,maxSteps,solverIterations,debugDrawMode) {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor(timeScale,maxSteps,solverIterations,debugDrawMode);
+	}
+	_hx_constructor(timeScale,maxSteps,solverIterations,debugDrawMode) {
+		if(debugDrawMode == null) {
+			debugDrawMode = 0;
+		}
+		if(solverIterations == null) {
+			solverIterations = 10;
+		}
+		if(maxSteps == null) {
+			maxSteps = 10;
+		}
+		if(timeScale == null) {
+			timeScale = 1.0;
+		}
+		this.debugDrawHelper = null;
+		this.pairCache = false;
+		this.convexHitNormalWorld = new iron_math_Vec4();
+		this.convexHitPointWorld = new iron_math_Vec4();
+		this.hitNormalWorld = new iron_math_Vec4();
+		this.hitPointWorld = new iron_math_Vec4();
+		this.solverIterations = 10;
+		this.maxSteps = 1;
+		this.timeScale = 1.0;
+		this.preUpdates = null;
+		this.gimpactRegistered = false;
+		super._hx_constructor();
+		if(armory_trait_physics_bullet_PhysicsWorld.nullvec) {
+			armory_trait_physics_bullet_PhysicsWorld.nullvec = false;
+			armory_trait_physics_bullet_PhysicsWorld.vec1 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_PhysicsWorld.vec2 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_PhysicsWorld.transform1 = new Ammo.btTransform();
+			armory_trait_physics_bullet_PhysicsWorld.transform2 = new Ammo.btTransform();
+			armory_trait_physics_bullet_PhysicsWorld.quat1 = new Ammo.btQuaternion(0,0,0,1.0);
+		}
+		if(armory_trait_physics_bullet_PhysicsWorld.active != null && !armory_trait_physics_bullet_PhysicsWorld.sceneRemoved) {
+			return;
+		}
+		armory_trait_physics_bullet_PhysicsWorld.sceneRemoved = false;
+		this.timeScale = timeScale;
+		this.maxSteps = maxSteps;
+		this.solverIterations = solverIterations;
+		if(armory_trait_physics_bullet_PhysicsWorld.active == null) {
+			this.createPhysics();
+		} else {
+			this.world = armory_trait_physics_bullet_PhysicsWorld.active.world;
+			this.dispatcher = armory_trait_physics_bullet_PhysicsWorld.active.dispatcher;
+			this.gimpactRegistered = armory_trait_physics_bullet_PhysicsWorld.active.gimpactRegistered;
+		}
+		this.contacts = [];
+		this.rbMap = new haxe_ds_IntMap();
+		this.conMap = new haxe_ds_IntMap();
+		armory_trait_physics_bullet_PhysicsWorld.active = this;
+		this._lateUpdate = [$bind(this,this.lateUpdate)];
+		iron_App.traitLateUpdates.splice(0,0,$bind(this,this.lateUpdate));
+		this.setDebugDrawMode(debugDrawMode);
+		iron_Scene.active.notifyOnRemove(function() {
+			armory_trait_physics_bullet_PhysicsWorld.sceneRemoved = true;
+		});
+	}
+	reset() {
+		let rb = armory_trait_physics_bullet_PhysicsWorld.active.rbMap.iterator();
+		while(rb.hasNext()) {
+			let rb1 = rb.next();
+			this.removeRigidBody(rb1);
+		}
+	}
+	createPhysics() {
+		let broadphase = new Ammo.btDbvtBroadphase();
+		let collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+		this.dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+		let solver = new Ammo.btSequentialImpulseConstraintSolver();
+		let g = iron_Scene.active.raw.gravity;
+		let gravity = g == null ? new iron_math_Vec4(0,0,-9.81) : new iron_math_Vec4(g.getFloat32(0,kha_arrays_ByteArray.LITTLE_ENDIAN),g.getFloat32(4,kha_arrays_ByteArray.LITTLE_ENDIAN),g.getFloat32(8,kha_arrays_ByteArray.LITTLE_ENDIAN));
+		this.world = new Ammo.btDiscreteDynamicsWorld(this.dispatcher,broadphase,solver,collisionConfiguration);
+		this.setGravity(gravity);
+	}
+	setGravity(v) {
+		armory_trait_physics_bullet_PhysicsWorld.vec1.setValue(v.x,v.y,v.z);
+		this.world.setGravity(armory_trait_physics_bullet_PhysicsWorld.vec1);
+	}
+	getGravity() {
+		let g = this.world.getGravity();
+		return new iron_math_Vec4(g.x(),g.y(),g.z());
+	}
+	addRigidBody(body) {
+		this.world.addRigidBody(body.body,body.group,body.mask);
+		this.rbMap.h[body.id] = body;
+	}
+	addPhysicsConstraint(constraint) {
+		this.world.addConstraint(constraint.con,constraint.disableCollisions);
+		this.conMap.h[constraint.id] = constraint;
+	}
+	removeRigidBody(body) {
+		if(body.destroyed) {
+			return;
+		}
+		body.destroyed = true;
+		if(this.world != null) {
+			this.world.removeRigidBody(body.body);
+		}
+		this.rbMap.remove(body.id);
+		body.delete();
+	}
+	removePhysicsConstraint(constraint) {
+		if(this.world != null) {
+			this.world.removeConstraint(constraint.con);
+		}
+		this.conMap.remove(constraint.id);
+		constraint.delete();
+	}
+	getContacts(body) {
+		if(this.contacts.length == 0) {
+			return null;
+		}
+		let res = [];
+		let _g = 0;
+		let _g1 = this.contacts.length;
+		while(_g < _g1) {
+			let i = _g++;
+			let c = this.contacts[i];
+			let rb = null;
+			if(c.a == body.body.userIndex) {
+				rb = this.rbMap.h[c.b];
+			} else if(c.b == body.body.userIndex) {
+				rb = this.rbMap.h[c.a];
+			}
+			if(rb != null && res.indexOf(rb) == -1) {
+				res.push(rb);
+			}
+		}
+		return res;
+	}
+	getContactPairs(body) {
+		if(this.contacts.length == 0) {
+			return null;
+		}
+		let res = [];
+		let _g = 0;
+		let _g1 = this.contacts.length;
+		while(_g < _g1) {
+			let i = _g++;
+			let c = this.contacts[i];
+			if(c.a == body.body.userIndex) {
+				res.push(c);
+			} else if(c.b == body.body.userIndex) {
+				res.push(c);
+			}
+		}
+		return res;
+	}
+	findBody(id) {
+		let rb = this.rbMap.h[id];
+		return rb;
+	}
+	lateUpdate() {
+		let t = iron_system_Time.get_delta() * this.timeScale;
+		if(t == 0.0) {
+			return;
+		}
+		if(this.preUpdates != null) {
+			let _g = 0;
+			let _g1 = this.preUpdates;
+			while(_g < _g1.length) {
+				let f = _g1[_g];
+				++_g;
+				f();
+			}
+		}
+		let fixedTime = 0.016666666666666666;
+		let currMaxSteps = t < fixedTime * this.maxSteps ? this.maxSteps : 1;
+		this.world.stepSimulation(t,currMaxSteps,fixedTime);
+		this.updateContacts();
+		let rb = this.rbMap.iterator();
+		while(rb.hasNext()) {
+			let rb1 = rb.next();
+			rb1.physicsUpdate();
+		}
+	}
+	updateContacts() {
+		this.contacts.length = 0;
+		let disp = this.dispatcher;
+		let numManifolds = disp.getNumManifolds();
+		let _g = 0;
+		let _g1 = numManifolds;
+		while(_g < _g1) {
+			let i = _g++;
+			let contactManifold = disp.getManifoldByIndexInternal(i);
+			let body0 = Ammo.btRigidBody.prototype;
+			let body01 = contactManifold.getBody0();
+			let body02 = body0.upcast(body01);
+			let body1 = Ammo.btRigidBody.prototype;
+			let body11 = contactManifold.getBody1();
+			let body12 = body1.upcast(body11);
+			let numContacts = contactManifold.getNumContacts();
+			let _g1 = 0;
+			let _g2 = numContacts;
+			while(_g1 < _g2) {
+				let j = _g1++;
+				let pt = contactManifold.getContactPoint(j);
+				let posA = null;
+				let posB = null;
+				let nor = null;
+				let cp = null;
+				posA = pt.get_m_positionWorldOnA();
+				posB = pt.get_m_positionWorldOnB();
+				nor = pt.get_m_normalWorldOnB();
+				cp = new armory_trait_physics_bullet_ContactPair(body02.userIndex,body12.userIndex);
+				cp.posA = new iron_math_Vec4(posA.x(),posA.y(),posA.z());
+				cp.posB = new iron_math_Vec4(posB.x(),posB.y(),posB.z());
+				cp.normOnB = new iron_math_Vec4(nor.x(),nor.y(),nor.z());
+				cp.impulse = pt.getAppliedImpulse();
+				cp.distance = pt.getDistance();
+				this.contacts.push(cp);
+			}
+		}
+	}
+	pickClosest(inputX,inputY,group,mask) {
+		if(mask == null) {
+			mask = -1;
+		}
+		if(group == null) {
+			group = 1;
+		}
+		let camera = iron_Scene.active.camera;
+		let start = new iron_math_Vec4();
+		let end = new iron_math_Vec4();
+		iron_math_RayCaster.getDirection(start,end,inputX,inputY,camera);
+		let _this = camera.transform.world;
+		let hit = this.rayCast(new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33),end,group,mask);
+		let rb = hit != null ? hit.rb : null;
+		return rb;
+	}
+	rayCast(from,to,group,mask) {
+		if(mask == null) {
+			mask = -1;
+		}
+		if(group == null) {
+			group = 1;
+		}
+		let rayFrom = armory_trait_physics_bullet_PhysicsWorld.vec1;
+		let rayTo = armory_trait_physics_bullet_PhysicsWorld.vec2;
+		rayFrom.setValue(from.x,from.y,from.z);
+		rayTo.setValue(to.x,to.y,to.z);
+		let rayCallback = new Ammo.ClosestRayResultCallback(rayFrom,rayTo);
+		rayCallback.set_m_collisionFilterGroup(group);
+		rayCallback.set_m_collisionFilterMask(mask);
+		let worldDyn = this.world;
+		let worldCol = worldDyn;
+		worldCol.rayTest(rayFrom,rayTo,rayCallback);
+		let rb = null;
+		let hitInfo = null;
+		let rc = rayCallback;
+		if(rc.hasHit()) {
+			let co = rayCallback.get_m_collisionObject();
+			let body = Ammo.btRigidBody.prototype.upcast(co);
+			let hit = rayCallback.get_m_hitPointWorld();
+			let _this = this.hitPointWorld;
+			let x = hit.x();
+			let y = hit.y();
+			let z = hit.z();
+			_this.x = x;
+			_this.y = y;
+			_this.z = z;
+			_this.w = 1.0;
+			let norm = rayCallback.get_m_hitNormalWorld();
+			let _this1 = this.hitNormalWorld;
+			let x1 = norm.x();
+			let y1 = norm.y();
+			let z1 = norm.z();
+			_this1.x = x1;
+			_this1.y = y1;
+			_this1.z = z1;
+			_this1.w = 1.0;
+			rb = this.rbMap.h[body.userIndex];
+			hitInfo = new armory_trait_physics_bullet_Hit(rb,this.hitPointWorld,this.hitNormalWorld);
+		}
+		Ammo.destroy(rayCallback);
+		return hitInfo;
+	}
+	convexSweepTest(rb,from,to,rotation,group,mask) {
+		if(mask == null) {
+			mask = -1;
+		}
+		if(group == null) {
+			group = 1;
+		}
+		let transformFrom = armory_trait_physics_bullet_PhysicsWorld.transform1;
+		let transformTo = armory_trait_physics_bullet_PhysicsWorld.transform2;
+		transformFrom.setIdentity();
+		transformTo.setIdentity();
+		armory_trait_physics_bullet_PhysicsWorld.vec1.setValue(from.x,from.y,from.z);
+		transformFrom.setOrigin(armory_trait_physics_bullet_PhysicsWorld.vec1);
+		armory_trait_physics_bullet_PhysicsWorld.quat1.setValue(rotation.x,rotation.y,rotation.z,rotation.w);
+		transformFrom.setRotation(armory_trait_physics_bullet_PhysicsWorld.quat1);
+		armory_trait_physics_bullet_PhysicsWorld.vec2.setValue(to.x,to.y,to.z);
+		transformTo.setOrigin(armory_trait_physics_bullet_PhysicsWorld.vec2);
+		armory_trait_physics_bullet_PhysicsWorld.quat1.setValue(rotation.x,rotation.y,rotation.z,rotation.w);
+		transformFrom.setRotation(armory_trait_physics_bullet_PhysicsWorld.quat1);
+		let convexCallback = new Ammo.ClosestConvexResultCallback(armory_trait_physics_bullet_PhysicsWorld.vec1,armory_trait_physics_bullet_PhysicsWorld.vec2);
+		convexCallback.set_m_collisionFilterGroup(group);
+		convexCallback.set_m_collisionFilterMask(mask);
+		let worldDyn = this.world;
+		let worldCol = worldDyn;
+		let bodyColl = rb.body.getCollisionShape();
+		worldCol.convexSweepTest(bodyColl,transformFrom,transformTo,convexCallback,0.0);
+		let hitInfo = null;
+		let cc = convexCallback;
+		if(cc.hasHit()) {
+			let hit = convexCallback.get_m_hitPointWorld();
+			let _this = this.convexHitPointWorld;
+			let x = hit.x();
+			let y = hit.y();
+			let z = hit.z();
+			_this.x = x;
+			_this.y = y;
+			_this.z = z;
+			_this.w = 1.0;
+			let norm = convexCallback.get_m_hitNormalWorld();
+			let _this1 = this.convexHitNormalWorld;
+			let x1 = norm.x();
+			let y1 = norm.y();
+			let z1 = norm.z();
+			_this1.x = x1;
+			_this1.y = y1;
+			_this1.z = z1;
+			_this1.w = 1.0;
+			let hitFraction = convexCallback.get_m_closestHitFraction();
+			hitInfo = new armory_trait_physics_bullet_ConvexHit(this.convexHitPointWorld,this.convexHitNormalWorld,hitFraction);
+		}
+		Ammo.destroy(convexCallback);
+		return hitInfo;
+	}
+	notifyOnPreUpdate(f) {
+		if(this.preUpdates == null) {
+			this.preUpdates = [];
+		}
+		this.preUpdates.push(f);
+	}
+	removePreUpdate(f) {
+		HxOverrides.remove(this.preUpdates,f);
+	}
+	setDebugDrawMode(debugDrawMode) {
+		if(this.debugDrawHelper == null) {
+			if(debugDrawMode == 0) {
+				return;
+			}
+			this.initDebugDrawing();
+		}
+		this.world.getDebugDrawer().setDebugMode(debugDrawMode);
+	}
+	getDebugDrawMode() {
+		if(this.debugDrawHelper == null) {
+			return 0;
+		}
+		return this.world.getDebugDrawer().getDebugMode();
+	}
+	initDebugDrawing() {
+		this.debugDrawHelper = new armory_trait_physics_bullet_DebugDrawHelper(this);
+		let drawer = new Ammo.DebugDrawer();
+		drawer.drawLine = ($_=this.debugDrawHelper,$bind($_,$_.drawLine));
+		drawer.drawContactPoint = ($_=this.debugDrawHelper,$bind($_,$_.drawContactPoint));
+		drawer.reportErrorWarning = ($_=this.debugDrawHelper,$bind($_,$_.reportErrorWarning));
+		drawer.draw3dText = ($_=this.debugDrawHelper,$bind($_,$_.draw3dText));
+		drawer.setDebugMode = ($_=this.debugDrawHelper,$bind($_,$_.setDebugMode));
+		drawer.getDebugMode = ($_=this.debugDrawHelper,$bind($_,$_.getDebugMode));
+		this.world.setDebugDrawer(drawer);
+	}
+}
+$hxClasses["armory.trait.physics.bullet.PhysicsWorld"] = armory_trait_physics_bullet_PhysicsWorld;
+armory_trait_physics_bullet_PhysicsWorld.__name__ = true;
+armory_trait_physics_bullet_PhysicsWorld.__super__ = iron_Trait;
+Object.assign(armory_trait_physics_bullet_PhysicsWorld.prototype, {
+	__class__: armory_trait_physics_bullet_PhysicsWorld
+	,world: null
+	,dispatcher: null
+	,gimpactRegistered: null
+	,contacts: null
+	,preUpdates: null
+	,rbMap: null
+	,conMap: null
+	,timeScale: null
+	,maxSteps: null
+	,solverIterations: null
+	,hitPointWorld: null
+	,hitNormalWorld: null
+	,convexHitPointWorld: null
+	,convexHitNormalWorld: null
+	,pairCache: null
+	,debugDrawHelper: null
+});
+class armory_trait_physics_bullet_DebugDrawMode {
+	static bitwiseNegate(this1) {
+		return ~this1;
+	}
+	static bitwiseAND(this1,other) {
+		return this1 & other;
+	}
+	static bitwiseOR(this1,other) {
+		return this1 | other;
+	}
+}
+class kha_math_FastMatrix4 {
+	constructor(_00,_10,_20,_30,_01,_11,_21,_31,_02,_12,_22,_32,_03,_13,_23,_33) {
+		this._00 = _00;
+		this._10 = _10;
+		this._20 = _20;
+		this._30 = _30;
+		this._01 = _01;
+		this._11 = _11;
+		this._21 = _21;
+		this._31 = _31;
+		this._02 = _02;
+		this._12 = _12;
+		this._22 = _22;
+		this._32 = _32;
+		this._03 = _03;
+		this._13 = _13;
+		this._23 = _23;
+		this._33 = _33;
+	}
+	static fromMatrix4(m) {
+		return new kha_math_FastMatrix4(m._00,m._10,m._20,m._30,m._01,m._11,m._21,m._31,m._02,m._12,m._22,m._32,m._03,m._13,m._23,m._33);
+	}
+	static orthogonalProjection(left,right,bottom,top,zn,zf) {
+		let tx = -(right + left) / (right - left);
+		let ty = -(top + bottom) / (top - bottom);
+		let tz = -(zf + zn) / (zf - zn);
+		return new kha_math_FastMatrix4(2 / (right - left),0,0,tx,0,2.0 / (top - bottom),0,ty,0,0,-2 / (zf - zn),tz,0,0,0,1);
+	}
+	static perspectiveProjection(fovY,aspect,zn,zf) {
+		let uh = 1.0 / Math.tan(fovY / 2);
+		let uw = uh / aspect;
+		return new kha_math_FastMatrix4(uw,0,0,0,0,uh,0,0,0,0,(zf + zn) / (zn - zf),2 * zf * zn / (zn - zf),0,0,-1,0);
+	}
+	static lookAt(eye,at,up) {
+		let x = at.x - eye.x;
+		let y = at.y - eye.y;
+		let z = at.z - eye.z;
+		if(z == null) {
+			z = 0;
+		}
+		if(y == null) {
+			y = 0;
+		}
+		if(x == null) {
+			x = 0;
+		}
+		let _this_x = x;
+		let _this_y = y;
+		let _this_z = z;
+		let x1 = _this_x;
+		let y1 = _this_y;
+		let z1 = _this_z;
+		if(z1 == null) {
+			z1 = 0;
+		}
+		if(y1 == null) {
+			y1 = 0;
+		}
+		if(x1 == null) {
+			x1 = 0;
+		}
+		let zaxis_x = x1;
+		let zaxis_y = y1;
+		let zaxis_z = z1;
+		let currentLength = Math.sqrt(zaxis_x * zaxis_x + zaxis_y * zaxis_y + zaxis_z * zaxis_z);
+		if(currentLength != 0) {
+			let mul = 1 / currentLength;
+			zaxis_x *= mul;
+			zaxis_y *= mul;
+			zaxis_z *= mul;
+		}
+		let _x = zaxis_y * up.z - zaxis_z * up.y;
+		let _y = zaxis_z * up.x - zaxis_x * up.z;
+		let _z = zaxis_x * up.y - zaxis_y * up.x;
+		let x2 = _x;
+		let y2 = _y;
+		let z2 = _z;
+		if(z2 == null) {
+			z2 = 0;
+		}
+		if(y2 == null) {
+			y2 = 0;
+		}
+		if(x2 == null) {
+			x2 = 0;
+		}
+		let _this_x1 = x2;
+		let _this_y1 = y2;
+		let _this_z1 = z2;
+		let x3 = _this_x1;
+		let y3 = _this_y1;
+		let z3 = _this_z1;
+		if(z3 == null) {
+			z3 = 0;
+		}
+		if(y3 == null) {
+			y3 = 0;
+		}
+		if(x3 == null) {
+			x3 = 0;
+		}
+		let xaxis_x = x3;
+		let xaxis_y = y3;
+		let xaxis_z = z3;
+		let currentLength1 = Math.sqrt(xaxis_x * xaxis_x + xaxis_y * xaxis_y + xaxis_z * xaxis_z);
+		if(currentLength1 != 0) {
+			let mul = 1 / currentLength1;
+			xaxis_x *= mul;
+			xaxis_y *= mul;
+			xaxis_z *= mul;
+		}
+		let _x1 = xaxis_y * zaxis_z - xaxis_z * zaxis_y;
+		let _y1 = xaxis_z * zaxis_x - xaxis_x * zaxis_z;
+		let _z1 = xaxis_x * zaxis_y - xaxis_y * zaxis_x;
+		let x4 = _x1;
+		let y4 = _y1;
+		let z4 = _z1;
+		if(z4 == null) {
+			z4 = 0;
+		}
+		if(y4 == null) {
+			y4 = 0;
+		}
+		if(x4 == null) {
+			x4 = 0;
+		}
+		let yaxis_x = x4;
+		let yaxis_y = y4;
+		let yaxis_z = z4;
+		return new kha_math_FastMatrix4(xaxis_x,xaxis_y,xaxis_z,-(xaxis_x * eye.x + xaxis_y * eye.y + xaxis_z * eye.z),yaxis_x,yaxis_y,yaxis_z,-(yaxis_x * eye.x + yaxis_y * eye.y + yaxis_z * eye.z),-zaxis_x,-zaxis_y,-zaxis_z,zaxis_x * eye.x + zaxis_y * eye.y + zaxis_z * eye.z,0,0,0,1);
+	}
+}
+$hxClasses["kha.math.FastMatrix4"] = kha_math_FastMatrix4;
+kha_math_FastMatrix4.__name__ = true;
+Object.assign(kha_math_FastMatrix4.prototype, {
+	__class__: kha_math_FastMatrix4
+	,_00: null
+	,_10: null
+	,_20: null
+	,_30: null
+	,_01: null
+	,_11: null
+	,_21: null
+	,_31: null
+	,_02: null
+	,_12: null
+	,_22: null
+	,_32: null
+	,_03: null
+	,_13: null
+	,_23: null
+	,_33: null
+});
+class iron_math_Vec4 {
+	constructor(x,y,z,w) {
+		if(w == null) {
+			w = 1.0;
+		}
+		if(z == null) {
+			z = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+	}
+	cross(v) {
+		let ax = this.x;
+		let ay = this.y;
+		let az = this.z;
+		let vx = v.x;
+		let vy = v.y;
+		let vz = v.z;
+		this.x = ay * vz - az * vy;
+		this.y = az * vx - ax * vz;
+		this.z = ax * vy - ay * vx;
+		return this;
+	}
+	crossvecs(a,b) {
+		let ax = a.x;
+		let ay = a.y;
+		let az = a.z;
+		let bx = b.x;
+		let by = b.y;
+		let bz = b.z;
+		this.x = ay * bz - az * by;
+		this.y = az * bx - ax * bz;
+		this.z = ax * by - ay * bx;
+		return this;
+	}
+	set(x,y,z,w) {
+		if(w == null) {
+			w = 1.0;
+		}
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+		return this;
+	}
+	add(v) {
+		this.x += v.x;
+		this.y += v.y;
+		this.z += v.z;
+		return this;
+	}
+	addf(x,y,z) {
+		this.x += x;
+		this.y += y;
+		this.z += z;
+		return this;
+	}
+	addvecs(a,b) {
+		this.x = a.x + b.x;
+		this.y = a.y + b.y;
+		this.z = a.z + b.z;
+		return this;
+	}
+	subvecs(a,b) {
+		this.x = a.x - b.x;
+		this.y = a.y - b.y;
+		this.z = a.z - b.z;
+		return this;
+	}
+	normalize() {
+		let n = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+		if(n > 0.0) {
+			let invN = 1.0 / n;
+			this.x *= invN;
+			this.y *= invN;
+			this.z *= invN;
+		}
+		return this;
+	}
+	mult(f) {
+		this.x *= f;
+		this.y *= f;
+		this.z *= f;
+		return this;
+	}
+	dot(v) {
+		return this.x * v.x + this.y * v.y + this.z * v.z;
+	}
+	setFrom(v) {
+		this.x = v.x;
+		this.y = v.y;
+		this.z = v.z;
+		this.w = v.w;
+		return this;
+	}
+	clone() {
+		return new iron_math_Vec4(this.x,this.y,this.z,this.w);
+	}
+	lerp(from,to,s) {
+		this.x = from.x + (to.x - from.x) * s;
+		this.y = from.y + (to.y - from.y) * s;
+		this.z = from.z + (to.z - from.z) * s;
+		return this;
+	}
+	applyproj(m) {
+		let x = this.x;
+		let y = this.y;
+		let z = this.z;
+		let d = 1.0 / (m.self._03 * x + m.self._13 * y + m.self._23 * z + m.self._33);
+		this.x = (m.self._00 * x + m.self._10 * y + m.self._20 * z + m.self._30) * d;
+		this.y = (m.self._01 * x + m.self._11 * y + m.self._21 * z + m.self._31) * d;
+		this.z = (m.self._02 * x + m.self._12 * y + m.self._22 * z + m.self._32) * d;
+		return this;
+	}
+	applymat(m) {
+		let x = this.x;
+		let y = this.y;
+		let z = this.z;
+		this.x = m.self._00 * x + m.self._10 * y + m.self._20 * z + m.self._30;
+		this.y = m.self._01 * x + m.self._11 * y + m.self._21 * z + m.self._31;
+		this.z = m.self._02 * x + m.self._12 * y + m.self._22 * z + m.self._32;
+		return this;
+	}
+	applymat4(m) {
+		let x = this.x;
+		let y = this.y;
+		let z = this.z;
+		let w = this.w;
+		this.x = m.self._00 * x + m.self._10 * y + m.self._20 * z + m.self._30 * w;
+		this.y = m.self._01 * x + m.self._11 * y + m.self._21 * z + m.self._31 * w;
+		this.z = m.self._02 * x + m.self._12 * y + m.self._22 * z + m.self._32 * w;
+		this.w = m.self._03 * x + m.self._13 * y + m.self._23 * z + m.self._33 * w;
+		return this;
+	}
+	applyAxisAngle(axis,angle) {
+		let quat_x = 0.0;
+		let quat_y = 0.0;
+		let quat_z = 0.0;
+		let quat_w = 1.0;
+		let s = Math.sin(angle * 0.5);
+		quat_x = axis.x * s;
+		quat_y = axis.y * s;
+		quat_z = axis.z * s;
+		quat_w = Math.cos(angle * 0.5);
+		let l = Math.sqrt(quat_x * quat_x + quat_y * quat_y + quat_z * quat_z + quat_w * quat_w);
+		if(l == 0.0) {
+			quat_x = 0;
+			quat_y = 0;
+			quat_z = 0;
+			quat_w = 0;
+		} else {
+			l = 1.0 / l;
+			quat_x *= l;
+			quat_y *= l;
+			quat_z *= l;
+			quat_w *= l;
+		}
+		let ix = quat_w * this.x + quat_y * this.z - quat_z * this.y;
+		let iy = quat_w * this.y + quat_z * this.x - quat_x * this.z;
+		let iz = quat_w * this.z + quat_x * this.y - quat_y * this.x;
+		let iw = -quat_x * this.x - quat_y * this.y - quat_z * this.z;
+		this.x = ix * quat_w + iw * -quat_x + iy * -quat_z - iz * -quat_y;
+		this.y = iy * quat_w + iw * -quat_y + iz * -quat_x - ix * -quat_z;
+		this.z = iz * quat_w + iw * -quat_z + ix * -quat_y - iy * -quat_x;
+		return this;
+	}
+	applyQuat(q) {
+		let ix = q.w * this.x + q.y * this.z - q.z * this.y;
+		let iy = q.w * this.y + q.z * this.x - q.x * this.z;
+		let iz = q.w * this.z + q.x * this.y - q.y * this.x;
+		let iw = -q.x * this.x - q.y * this.y - q.z * this.z;
+		this.x = ix * q.w + iw * -q.x + iy * -q.z - iz * -q.y;
+		this.y = iy * q.w + iw * -q.y + iz * -q.x - ix * -q.z;
+		this.z = iz * q.w + iw * -q.z + ix * -q.y - iy * -q.x;
+		return this;
+	}
+	equals(v) {
+		if(this.x == v.x && this.y == v.y) {
+			return this.z == v.z;
+		} else {
+			return false;
+		}
+	}
+	almostEquals(v,prec) {
+		if(Math.abs(this.x - v.x) < prec && Math.abs(this.y - v.y) < prec) {
+			return Math.abs(this.z - v.z) < prec;
+		} else {
+			return false;
+		}
+	}
+	length() {
+		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+	}
+	sub(v) {
+		this.x -= v.x;
+		this.y -= v.y;
+		this.z -= v.z;
+		return this;
+	}
+	exp(v) {
+		this.x = Math.exp(v.x);
+		this.y = Math.exp(v.y);
+		this.z = Math.exp(v.z);
+		return this;
+	}
+	distanceTo(p) {
+		return Math.sqrt((p.x - this.x) * (p.x - this.x) + (p.y - this.y) * (p.y - this.y) + (p.z - this.z) * (p.z - this.z));
+	}
+	reflect(n) {
+		let d = 2 * (this.x * n.x + this.y * n.y + this.z * n.z);
+		this.x -= d * n.x;
+		this.y -= d * n.y;
+		this.z -= d * n.z;
+		return this;
+	}
+	clamp(min,max) {
+		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+		if(l < min) {
+			let n = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+			if(n > 0.0) {
+				let invN = 1.0 / n;
+				this.x *= invN;
+				this.y *= invN;
+				this.z *= invN;
+			}
+			let _this = this;
+			_this.x *= min;
+			_this.y *= min;
+			_this.z *= min;
+		} else if(l > max) {
+			let n = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+			if(n > 0.0) {
+				let invN = 1.0 / n;
+				this.x *= invN;
+				this.y *= invN;
+				this.z *= invN;
+			}
+			let _this = this;
+			_this.x *= max;
+			_this.y *= max;
+			_this.z *= max;
+		}
+		return this;
+	}
+	toString() {
+		return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+	}
+	static distance(v1,v2) {
+		let vx = v1.x - v2.x;
+		let vy = v1.y - v2.y;
+		let vz = v1.z - v2.z;
+		return Math.sqrt(vx * vx + vy * vy + vz * vz);
+	}
+	static distancef(v1x,v1y,v1z,v2x,v2y,v2z) {
+		let vx = v1x - v2x;
+		let vy = v1y - v2y;
+		let vz = v1z - v2z;
+		return Math.sqrt(vx * vx + vy * vy + vz * vz);
+	}
+	static xAxis() {
+		return new iron_math_Vec4(1.0,0.0,0.0);
+	}
+	static yAxis() {
+		return new iron_math_Vec4(0.0,1.0,0.0);
+	}
+	static zAxis() {
+		return new iron_math_Vec4(0.0,0.0,1.0);
+	}
+}
+$hxClasses["iron.math.Vec4"] = iron_math_Vec4;
+iron_math_Vec4.__name__ = true;
+Object.assign(iron_math_Vec4.prototype, {
+	__class__: iron_math_Vec4
+	,x: null
+	,y: null
+	,z: null
+	,w: null
+});
+class iron_math_Mat4 {
+	constructor(_00,_10,_20,_30,_01,_11,_21,_31,_02,_12,_22,_32,_03,_13,_23,_33) {
+		this.self = new kha_math_FastMatrix4(_00,_10,_20,_30,_01,_11,_21,_31,_02,_12,_22,_32,_03,_13,_23,_33);
+	}
+	compose(loc,quat,sc) {
+		let x = quat.x;
+		let y = quat.y;
+		let z = quat.z;
+		let w = quat.w;
+		let x2 = x + x;
+		let y2 = y + y;
+		let z2 = z + z;
+		let xx = x * x2;
+		let xy = x * y2;
+		let xz = x * z2;
+		let yy = y * y2;
+		let yz = y * z2;
+		let zz = z * z2;
+		let wx = w * x2;
+		let wy = w * y2;
+		let wz = w * z2;
+		this.self._00 = 1.0 - (yy + zz);
+		this.self._10 = xy - wz;
+		this.self._20 = xz + wy;
+		this.self._01 = xy + wz;
+		this.self._11 = 1.0 - (xx + zz);
+		this.self._21 = yz - wx;
+		this.self._02 = xz - wy;
+		this.self._12 = yz + wx;
+		this.self._22 = 1.0 - (xx + yy);
+		this.self._03 = 0.0;
+		this.self._13 = 0.0;
+		this.self._23 = 0.0;
+		this.self._30 = 0.0;
+		this.self._31 = 0.0;
+		this.self._32 = 0.0;
+		this.self._33 = 1.0;
+		let x1 = sc.x;
+		let y1 = sc.y;
+		let z1 = sc.z;
+		this.self._00 *= x1;
+		this.self._01 *= x1;
+		this.self._02 *= x1;
+		this.self._03 *= x1;
+		this.self._10 *= y1;
+		this.self._11 *= y1;
+		this.self._12 *= y1;
+		this.self._13 *= y1;
+		this.self._20 *= z1;
+		this.self._21 *= z1;
+		this.self._22 *= z1;
+		this.self._23 *= z1;
+		this.self._30 = loc.x;
+		this.self._31 = loc.y;
+		this.self._32 = loc.z;
+		return this;
+	}
+	decompose(loc,quat,scale) {
+		loc.x = this.self._30;
+		loc.y = this.self._31;
+		loc.z = this.self._32;
+		let _this = iron_math_Mat4.helpVec;
+		_this.x = this.self._00;
+		_this.y = this.self._01;
+		_this.z = this.self._02;
+		_this.w = 1.0;
+		let _this1 = _this;
+		scale.x = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z);
+		let _this2 = iron_math_Mat4.helpVec;
+		_this2.x = this.self._10;
+		_this2.y = this.self._11;
+		_this2.z = this.self._12;
+		_this2.w = 1.0;
+		let _this3 = _this2;
+		scale.y = Math.sqrt(_this3.x * _this3.x + _this3.y * _this3.y + _this3.z * _this3.z);
+		let _this4 = iron_math_Mat4.helpVec;
+		_this4.x = this.self._20;
+		_this4.y = this.self._21;
+		_this4.z = this.self._22;
+		_this4.w = 1.0;
+		let _this5 = _this4;
+		scale.z = Math.sqrt(_this5.x * _this5.x + _this5.y * _this5.y + _this5.z * _this5.z);
+		let _this6 = this.self;
+		let m3 = _this6._12;
+		let m4 = _this6._22;
+		let m5 = _this6._32;
+		let m6 = _this6._13;
+		let m7 = _this6._23;
+		let m8 = _this6._33;
+		let c00 = _this6._11 * (m4 * m8 - m5 * m7) - _this6._21 * (m3 * m8 - m5 * m6) + _this6._31 * (m3 * m7 - m4 * m6);
+		let m31 = _this6._12;
+		let m41 = _this6._22;
+		let m51 = _this6._32;
+		let m61 = _this6._13;
+		let m71 = _this6._23;
+		let m81 = _this6._33;
+		let c01 = _this6._10 * (m41 * m81 - m51 * m71) - _this6._20 * (m31 * m81 - m51 * m61) + _this6._30 * (m31 * m71 - m41 * m61);
+		let m32 = _this6._11;
+		let m42 = _this6._21;
+		let m52 = _this6._31;
+		let m62 = _this6._13;
+		let m72 = _this6._23;
+		let m82 = _this6._33;
+		let c02 = _this6._10 * (m42 * m82 - m52 * m72) - _this6._20 * (m32 * m82 - m52 * m62) + _this6._30 * (m32 * m72 - m42 * m62);
+		let m33 = _this6._11;
+		let m43 = _this6._21;
+		let m53 = _this6._31;
+		let m63 = _this6._12;
+		let m73 = _this6._22;
+		let m83 = _this6._32;
+		let c03 = _this6._10 * (m43 * m83 - m53 * m73) - _this6._20 * (m33 * m83 - m53 * m63) + _this6._30 * (m33 * m73 - m43 * m63);
+		if(_this6._00 * c00 - _this6._01 * c01 + _this6._02 * c02 - _this6._03 * c03 < 0.0) {
+			scale.x = -scale.x;
+		}
+		let invs = 1.0 / scale.x;
+		iron_math_Mat4.helpMat.self._00 = this.self._00 * invs;
+		iron_math_Mat4.helpMat.self._01 = this.self._01 * invs;
+		iron_math_Mat4.helpMat.self._02 = this.self._02 * invs;
+		invs = 1.0 / scale.y;
+		iron_math_Mat4.helpMat.self._10 = this.self._10 * invs;
+		iron_math_Mat4.helpMat.self._11 = this.self._11 * invs;
+		iron_math_Mat4.helpMat.self._12 = this.self._12 * invs;
+		invs = 1.0 / scale.z;
+		iron_math_Mat4.helpMat.self._20 = this.self._20 * invs;
+		iron_math_Mat4.helpMat.self._21 = this.self._21 * invs;
+		iron_math_Mat4.helpMat.self._22 = this.self._22 * invs;
+		let m = iron_math_Mat4.helpMat;
+		let m11 = m.self._00;
+		let m12 = m.self._10;
+		let m13 = m.self._20;
+		let m21 = m.self._01;
+		let m22 = m.self._11;
+		let m23 = m.self._21;
+		let m311 = m.self._02;
+		let m321 = m.self._12;
+		let m331 = m.self._22;
+		let tr = m11 + m22 + m331;
+		let s = 0.0;
+		if(tr > 0) {
+			s = 0.5 / Math.sqrt(tr + 1.0);
+			quat.w = 0.25 / s;
+			quat.x = (m321 - m23) * s;
+			quat.y = (m13 - m311) * s;
+			quat.z = (m21 - m12) * s;
+		} else if(m11 > m22 && m11 > m331) {
+			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m331);
+			quat.w = (m321 - m23) / s;
+			quat.x = 0.25 * s;
+			quat.y = (m12 + m21) / s;
+			quat.z = (m13 + m311) / s;
+		} else if(m22 > m331) {
+			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m331);
+			quat.w = (m13 - m311) / s;
+			quat.x = (m12 + m21) / s;
+			quat.y = 0.25 * s;
+			quat.z = (m23 + m321) / s;
+		} else {
+			s = 2.0 * Math.sqrt(1.0 + m331 - m11 - m22);
+			quat.w = (m21 - m12) / s;
+			quat.x = (m13 + m311) / s;
+			quat.y = (m23 + m321) / s;
+			quat.z = 0.25 * s;
+		}
+		return this;
+	}
+	setLoc(v) {
+		this.self._30 = v.x;
+		this.self._31 = v.y;
+		this.self._32 = v.z;
+		return this;
+	}
+	fromQuat(q) {
+		let x = q.x;
+		let y = q.y;
+		let z = q.z;
+		let w = q.w;
+		let x2 = x + x;
+		let y2 = y + y;
+		let z2 = z + z;
+		let xx = x * x2;
+		let xy = x * y2;
+		let xz = x * z2;
+		let yy = y * y2;
+		let yz = y * z2;
+		let zz = z * z2;
+		let wx = w * x2;
+		let wy = w * y2;
+		let wz = w * z2;
+		this.self._00 = 1.0 - (yy + zz);
+		this.self._10 = xy - wz;
+		this.self._20 = xz + wy;
+		this.self._01 = xy + wz;
+		this.self._11 = 1.0 - (xx + zz);
+		this.self._21 = yz - wx;
+		this.self._02 = xz - wy;
+		this.self._12 = yz + wx;
+		this.self._22 = 1.0 - (xx + yy);
+		this.self._03 = 0.0;
+		this.self._13 = 0.0;
+		this.self._23 = 0.0;
+		this.self._30 = 0.0;
+		this.self._31 = 0.0;
+		this.self._32 = 0.0;
+		this.self._33 = 1.0;
+		return this;
+	}
+	setIdentity() {
+		this.self._00 = 1.0;
+		this.self._01 = 0.0;
+		this.self._02 = 0.0;
+		this.self._03 = 0.0;
+		this.self._10 = 0.0;
+		this.self._11 = 1.0;
+		this.self._12 = 0.0;
+		this.self._13 = 0.0;
+		this.self._20 = 0.0;
+		this.self._21 = 0.0;
+		this.self._22 = 1.0;
+		this.self._23 = 0.0;
+		this.self._30 = 0.0;
+		this.self._31 = 0.0;
+		this.self._32 = 0.0;
+		this.self._33 = 1.0;
+		return this;
+	}
+	initTranslate(x,y,z) {
+		if(z == null) {
+			z = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		this.self._00 = 1.0;
+		this.self._01 = 0.0;
+		this.self._02 = 0.0;
+		this.self._03 = 0.0;
+		this.self._10 = 0.0;
+		this.self._11 = 1.0;
+		this.self._12 = 0.0;
+		this.self._13 = 0.0;
+		this.self._20 = 0.0;
+		this.self._21 = 0.0;
+		this.self._22 = 1.0;
+		this.self._23 = 0.0;
+		this.self._30 = x;
+		this.self._31 = y;
+		this.self._32 = z;
+		this.self._33 = 1.0;
+		return this;
+	}
+	translate(x,y,z) {
+		this.self._00 += x * this.self._03;
+		this.self._01 += y * this.self._03;
+		this.self._02 += z * this.self._03;
+		this.self._10 += x * this.self._13;
+		this.self._11 += y * this.self._13;
+		this.self._12 += z * this.self._13;
+		this.self._20 += x * this.self._23;
+		this.self._21 += y * this.self._23;
+		this.self._22 += z * this.self._23;
+		this.self._30 += x * this.self._33;
+		this.self._31 += y * this.self._33;
+		this.self._32 += z * this.self._33;
+		return this;
+	}
+	scale(v) {
+		let x = v.x;
+		let y = v.y;
+		let z = v.z;
+		this.self._00 *= x;
+		this.self._01 *= x;
+		this.self._02 *= x;
+		this.self._03 *= x;
+		this.self._10 *= y;
+		this.self._11 *= y;
+		this.self._12 *= y;
+		this.self._13 *= y;
+		this.self._20 *= z;
+		this.self._21 *= z;
+		this.self._22 *= z;
+		this.self._23 *= z;
+		return this;
+	}
+	multmats3x4(a,b) {
+		let a00 = a.self._00;
+		let a01 = a.self._01;
+		let a02 = a.self._02;
+		let a03 = a.self._03;
+		let a10 = a.self._10;
+		let a11 = a.self._11;
+		let a12 = a.self._12;
+		let a13 = a.self._13;
+		let a20 = a.self._20;
+		let a21 = a.self._21;
+		let a22 = a.self._22;
+		let a23 = a.self._23;
+		let a30 = a.self._30;
+		let a31 = a.self._31;
+		let a32 = a.self._32;
+		let a33 = a.self._33;
+		let b0 = b.self._00;
+		let b1 = b.self._10;
+		let b2 = b.self._20;
+		let b3 = b.self._30;
+		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = b.self._01;
+		b1 = b.self._11;
+		b2 = b.self._21;
+		b3 = b.self._31;
+		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = b.self._02;
+		b1 = b.self._12;
+		b2 = b.self._22;
+		b3 = b.self._32;
+		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		this.self._03 = 0;
+		this.self._13 = 0;
+		this.self._23 = 0;
+		this.self._33 = 1;
+		return this;
+	}
+	multmats(b,a) {
+		let a00 = a.self._00;
+		let a01 = a.self._01;
+		let a02 = a.self._02;
+		let a03 = a.self._03;
+		let a10 = a.self._10;
+		let a11 = a.self._11;
+		let a12 = a.self._12;
+		let a13 = a.self._13;
+		let a20 = a.self._20;
+		let a21 = a.self._21;
+		let a22 = a.self._22;
+		let a23 = a.self._23;
+		let a30 = a.self._30;
+		let a31 = a.self._31;
+		let a32 = a.self._32;
+		let a33 = a.self._33;
+		let b0 = b.self._00;
+		let b1 = b.self._10;
+		let b2 = b.self._20;
+		let b3 = b.self._30;
+		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = b.self._01;
+		b1 = b.self._11;
+		b2 = b.self._21;
+		b3 = b.self._31;
+		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = b.self._02;
+		b1 = b.self._12;
+		b2 = b.self._22;
+		b3 = b.self._32;
+		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = b.self._03;
+		b1 = b.self._13;
+		b2 = b.self._23;
+		b3 = b.self._33;
+		this.self._03 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._13 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._23 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._33 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		return this;
+	}
+	multmat(m) {
+		let a00 = this.self._00;
+		let a01 = this.self._01;
+		let a02 = this.self._02;
+		let a03 = this.self._03;
+		let a10 = this.self._10;
+		let a11 = this.self._11;
+		let a12 = this.self._12;
+		let a13 = this.self._13;
+		let a20 = this.self._20;
+		let a21 = this.self._21;
+		let a22 = this.self._22;
+		let a23 = this.self._23;
+		let a30 = this.self._30;
+		let a31 = this.self._31;
+		let a32 = this.self._32;
+		let a33 = this.self._33;
+		let b0 = m.self._00;
+		let b1 = m.self._10;
+		let b2 = m.self._20;
+		let b3 = m.self._30;
+		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = m.self._01;
+		b1 = m.self._11;
+		b2 = m.self._21;
+		b3 = m.self._31;
+		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = m.self._02;
+		b1 = m.self._12;
+		b2 = m.self._22;
+		b3 = m.self._32;
+		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = m.self._03;
+		b1 = m.self._13;
+		b2 = m.self._23;
+		b3 = m.self._33;
+		this.self._03 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._13 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._23 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._33 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		return this;
+	}
+	getInverse(m) {
+		let a00 = m.self._00;
+		let a01 = m.self._01;
+		let a02 = m.self._02;
+		let a03 = m.self._03;
+		let a10 = m.self._10;
+		let a11 = m.self._11;
+		let a12 = m.self._12;
+		let a13 = m.self._13;
+		let a20 = m.self._20;
+		let a21 = m.self._21;
+		let a22 = m.self._22;
+		let a23 = m.self._23;
+		let a30 = m.self._30;
+		let a31 = m.self._31;
+		let a32 = m.self._32;
+		let a33 = m.self._33;
+		let b00 = a00 * a11 - a01 * a10;
+		let b01 = a00 * a12 - a02 * a10;
+		let b02 = a00 * a13 - a03 * a10;
+		let b03 = a01 * a12 - a02 * a11;
+		let b04 = a01 * a13 - a03 * a11;
+		let b05 = a02 * a13 - a03 * a12;
+		let b06 = a20 * a31 - a21 * a30;
+		let b07 = a20 * a32 - a22 * a30;
+		let b08 = a20 * a33 - a23 * a30;
+		let b09 = a21 * a32 - a22 * a31;
+		let b10 = a21 * a33 - a23 * a31;
+		let b11 = a22 * a33 - a23 * a32;
+		let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+		if(det == 0.0) {
+			this.self._00 = 1.0;
+			this.self._01 = 0.0;
+			this.self._02 = 0.0;
+			this.self._03 = 0.0;
+			this.self._10 = 0.0;
+			this.self._11 = 1.0;
+			this.self._12 = 0.0;
+			this.self._13 = 0.0;
+			this.self._20 = 0.0;
+			this.self._21 = 0.0;
+			this.self._22 = 1.0;
+			this.self._23 = 0.0;
+			this.self._30 = 0.0;
+			this.self._31 = 0.0;
+			this.self._32 = 0.0;
+			this.self._33 = 1.0;
+			return this;
+		}
+		det = 1.0 / det;
+		this.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+		this.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+		this.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+		this.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+		this.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+		this.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+		this.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+		this.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+		this.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+		this.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+		this.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+		this.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+		this.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+		this.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+		this.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+		this.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+		return this;
+	}
+	transpose() {
+		let f = this.self._01;
+		this.self._01 = this.self._10;
+		this.self._10 = f;
+		f = this.self._02;
+		this.self._02 = this.self._20;
+		this.self._20 = f;
+		f = this.self._03;
+		this.self._03 = this.self._30;
+		this.self._30 = f;
+		f = this.self._12;
+		this.self._12 = this.self._21;
+		this.self._21 = f;
+		f = this.self._13;
+		this.self._13 = this.self._31;
+		this.self._31 = f;
+		f = this.self._23;
+		this.self._23 = this.self._32;
+		this.self._32 = f;
+		return this;
+	}
+	transpose3x3() {
+		let f = this.self._01;
+		this.self._01 = this.self._10;
+		this.self._10 = f;
+		f = this.self._02;
+		this.self._02 = this.self._20;
+		this.self._20 = f;
+		f = this.self._12;
+		this.self._12 = this.self._21;
+		this.self._21 = f;
+		return this;
+	}
+	clone() {
+		return new iron_math_Mat4(this.self._00,this.self._10,this.self._20,this.self._30,this.self._01,this.self._11,this.self._21,this.self._31,this.self._02,this.self._12,this.self._22,this.self._32,this.self._03,this.self._13,this.self._23,this.self._33);
+	}
+	setF32(a,offset) {
+		if(offset == null) {
+			offset = 0;
+		}
+		this.self._00 = a.getFloat32(offset * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._10 = a.getFloat32((1 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._20 = a.getFloat32((2 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._30 = a.getFloat32((3 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._01 = a.getFloat32((4 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._11 = a.getFloat32((5 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._21 = a.getFloat32((6 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._31 = a.getFloat32((7 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._02 = a.getFloat32((8 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._12 = a.getFloat32((9 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._22 = a.getFloat32((10 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._32 = a.getFloat32((11 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._03 = a.getFloat32((12 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._13 = a.getFloat32((13 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._23 = a.getFloat32((14 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		this.self._33 = a.getFloat32((15 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+		return this;
+	}
+	setFrom(m) {
+		this.self._00 = m.self._00;
+		this.self._01 = m.self._01;
+		this.self._02 = m.self._02;
+		this.self._03 = m.self._03;
+		this.self._10 = m.self._10;
+		this.self._11 = m.self._11;
+		this.self._12 = m.self._12;
+		this.self._13 = m.self._13;
+		this.self._20 = m.self._20;
+		this.self._21 = m.self._21;
+		this.self._22 = m.self._22;
+		this.self._23 = m.self._23;
+		this.self._30 = m.self._30;
+		this.self._31 = m.self._31;
+		this.self._32 = m.self._32;
+		this.self._33 = m.self._33;
+		return this;
+	}
+	getLoc() {
+		return new iron_math_Vec4(this.self._30,this.self._31,this.self._32,this.self._33);
+	}
+	getScale() {
+		return new iron_math_Vec4(Math.sqrt(this.self._00 * this.self._00 + this.self._10 * this.self._10 + this.self._20 * this.self._20),Math.sqrt(this.self._01 * this.self._01 + this.self._11 * this.self._11 + this.self._21 * this.self._21),Math.sqrt(this.self._02 * this.self._02 + this.self._12 * this.self._12 + this.self._22 * this.self._22));
+	}
+	mult(s) {
+		this.self._00 *= s;
+		this.self._10 *= s;
+		this.self._20 *= s;
+		this.self._30 *= s;
+		this.self._01 *= s;
+		this.self._11 *= s;
+		this.self._21 *= s;
+		this.self._31 *= s;
+		this.self._02 *= s;
+		this.self._12 *= s;
+		this.self._22 *= s;
+		this.self._32 *= s;
+		this.self._03 *= s;
+		this.self._13 *= s;
+		this.self._23 *= s;
+		this.self._33 *= s;
+		return this;
+	}
+	toRotation() {
+		let _this = iron_math_Mat4.helpVec;
+		_this.x = this.self._00;
+		_this.y = this.self._01;
+		_this.z = this.self._02;
+		_this.w = 1.0;
+		let _this1 = _this;
+		let scale = 1.0 / Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z);
+		this.self._00 *= scale;
+		this.self._01 *= scale;
+		this.self._02 *= scale;
+		let _this2 = iron_math_Mat4.helpVec;
+		_this2.x = this.self._10;
+		_this2.y = this.self._11;
+		_this2.z = this.self._12;
+		_this2.w = 1.0;
+		let _this3 = _this2;
+		scale = 1.0 / Math.sqrt(_this3.x * _this3.x + _this3.y * _this3.y + _this3.z * _this3.z);
+		this.self._10 *= scale;
+		this.self._11 *= scale;
+		this.self._12 *= scale;
+		let _this4 = iron_math_Mat4.helpVec;
+		_this4.x = this.self._20;
+		_this4.y = this.self._21;
+		_this4.z = this.self._22;
+		_this4.w = 1.0;
+		let _this5 = _this4;
+		scale = 1.0 / Math.sqrt(_this5.x * _this5.x + _this5.y * _this5.y + _this5.z * _this5.z);
+		this.self._20 *= scale;
+		this.self._21 *= scale;
+		this.self._22 *= scale;
+		this.self._03 = 0.0;
+		this.self._13 = 0.0;
+		this.self._23 = 0.0;
+		this.self._30 = 0.0;
+		this.self._31 = 0.0;
+		this.self._32 = 0.0;
+		this.self._33 = 1.0;
+		return this;
+	}
+	setLookAt(eye,center,up) {
+		let f0 = center.x - eye.x;
+		let f1 = center.y - eye.y;
+		let f2 = center.z - eye.z;
+		let n = 1.0 / Math.sqrt(f0 * f0 + f1 * f1 + f2 * f2);
+		f0 *= n;
+		f1 *= n;
+		f2 *= n;
+		let s0 = f1 * up.z - f2 * up.y;
+		let s1 = f2 * up.x - f0 * up.z;
+		let s2 = f0 * up.y - f1 * up.x;
+		n = 1.0 / Math.sqrt(s0 * s0 + s1 * s1 + s2 * s2);
+		s0 *= n;
+		s1 *= n;
+		s2 *= n;
+		let u0 = s1 * f2 - s2 * f1;
+		let u1 = s2 * f0 - s0 * f2;
+		let u2 = s0 * f1 - s1 * f0;
+		let d0 = -eye.x * s0 - eye.y * s1 - eye.z * s2;
+		let d1 = -eye.x * u0 - eye.y * u1 - eye.z * u2;
+		let d2 = eye.x * f0 + eye.y * f1 + eye.z * f2;
+		this.self._00 = s0;
+		this.self._10 = s1;
+		this.self._20 = s2;
+		this.self._30 = d0;
+		this.self._01 = u0;
+		this.self._11 = u1;
+		this.self._21 = u2;
+		this.self._31 = d1;
+		this.self._02 = -f0;
+		this.self._12 = -f1;
+		this.self._22 = -f2;
+		this.self._32 = d2;
+		this.self._03 = 0.0;
+		this.self._13 = 0.0;
+		this.self._23 = 0.0;
+		this.self._33 = 1.0;
+		return this;
+	}
+	applyQuat(q) {
+		let _this = iron_math_Mat4.helpMat;
+		let x = q.x;
+		let y = q.y;
+		let z = q.z;
+		let w = q.w;
+		let x2 = x + x;
+		let y2 = y + y;
+		let z2 = z + z;
+		let xx = x * x2;
+		let xy = x * y2;
+		let xz = x * z2;
+		let yy = y * y2;
+		let yz = y * z2;
+		let zz = z * z2;
+		let wx = w * x2;
+		let wy = w * y2;
+		let wz = w * z2;
+		_this.self._00 = 1.0 - (yy + zz);
+		_this.self._10 = xy - wz;
+		_this.self._20 = xz + wy;
+		_this.self._01 = xy + wz;
+		_this.self._11 = 1.0 - (xx + zz);
+		_this.self._21 = yz - wx;
+		_this.self._02 = xz - wy;
+		_this.self._12 = yz + wx;
+		_this.self._22 = 1.0 - (xx + yy);
+		_this.self._03 = 0.0;
+		_this.self._13 = 0.0;
+		_this.self._23 = 0.0;
+		_this.self._30 = 0.0;
+		_this.self._31 = 0.0;
+		_this.self._32 = 0.0;
+		_this.self._33 = 1.0;
+		let m = iron_math_Mat4.helpMat;
+		let a00 = this.self._00;
+		let a01 = this.self._01;
+		let a02 = this.self._02;
+		let a03 = this.self._03;
+		let a10 = this.self._10;
+		let a11 = this.self._11;
+		let a12 = this.self._12;
+		let a13 = this.self._13;
+		let a20 = this.self._20;
+		let a21 = this.self._21;
+		let a22 = this.self._22;
+		let a23 = this.self._23;
+		let a30 = this.self._30;
+		let a31 = this.self._31;
+		let a32 = this.self._32;
+		let a33 = this.self._33;
+		let b0 = m.self._00;
+		let b1 = m.self._10;
+		let b2 = m.self._20;
+		let b3 = m.self._30;
+		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = m.self._01;
+		b1 = m.self._11;
+		b2 = m.self._21;
+		b3 = m.self._31;
+		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = m.self._02;
+		b1 = m.self._12;
+		b2 = m.self._22;
+		b3 = m.self._32;
+		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+		b0 = m.self._03;
+		b1 = m.self._13;
+		b2 = m.self._23;
+		b3 = m.self._33;
+		this.self._03 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
+		this.self._13 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
+		this.self._23 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
+		this.self._33 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
+	}
+	right() {
+		return new iron_math_Vec4(this.self._00,this.self._01,this.self._02);
+	}
+	look() {
+		return new iron_math_Vec4(this.self._10,this.self._11,this.self._12);
+	}
+	up() {
+		return new iron_math_Vec4(this.self._20,this.self._21,this.self._22);
+	}
+	get__00() {
+		return this.self._00;
+	}
+	set__00(f) {
+		return this.self._00 = f;
+	}
+	get__01() {
+		return this.self._01;
+	}
+	set__01(f) {
+		return this.self._01 = f;
+	}
+	get__02() {
+		return this.self._02;
+	}
+	set__02(f) {
+		return this.self._02 = f;
+	}
+	get__03() {
+		return this.self._03;
+	}
+	set__03(f) {
+		return this.self._03 = f;
+	}
+	get__10() {
+		return this.self._10;
+	}
+	set__10(f) {
+		return this.self._10 = f;
+	}
+	get__11() {
+		return this.self._11;
+	}
+	set__11(f) {
+		return this.self._11 = f;
+	}
+	get__12() {
+		return this.self._12;
+	}
+	set__12(f) {
+		return this.self._12 = f;
+	}
+	get__13() {
+		return this.self._13;
+	}
+	set__13(f) {
+		return this.self._13 = f;
+	}
+	get__20() {
+		return this.self._20;
+	}
+	set__20(f) {
+		return this.self._20 = f;
+	}
+	get__21() {
+		return this.self._21;
+	}
+	set__21(f) {
+		return this.self._21 = f;
+	}
+	get__22() {
+		return this.self._22;
+	}
+	set__22(f) {
+		return this.self._22 = f;
+	}
+	get__23() {
+		return this.self._23;
+	}
+	set__23(f) {
+		return this.self._23 = f;
+	}
+	get__30() {
+		return this.self._30;
+	}
+	set__30(f) {
+		return this.self._30 = f;
+	}
+	get__31() {
+		return this.self._31;
+	}
+	set__31(f) {
+		return this.self._31 = f;
+	}
+	get__32() {
+		return this.self._32;
+	}
+	set__32(f) {
+		return this.self._32 = f;
+	}
+	get__33() {
+		return this.self._33;
+	}
+	set__33(f) {
+		return this.self._33 = f;
+	}
+	toString() {
+		return "[[" + this.self._00 + ", " + this.self._10 + ", " + this.self._20 + ", " + this.self._30 + "], [" + this.self._01 + ", " + this.self._11 + ", " + this.self._21 + ", " + this.self._31 + "], [" + this.self._02 + ", " + this.self._12 + ", " + this.self._22 + ", " + this.self._32 + "], [" + this.self._03 + ", " + this.self._13 + ", " + this.self._23 + ", " + this.self._33 + "]]";
+	}
+	toFloat32Array() {
+		let array = kha_arrays_Float32Array._new(16);
+		let v = this.self._00;
+		array.setFloat32(0,v,true);
+		let v1 = this.self._10;
+		array.setFloat32(4,v1,true);
+		let v2 = this.self._20;
+		array.setFloat32(8,v2,true);
+		let v3 = this.self._30;
+		array.setFloat32(12,v3,true);
+		let v4 = this.self._01;
+		array.setFloat32(16,v4,true);
+		let v5 = this.self._11;
+		array.setFloat32(20,v5,true);
+		let v6 = this.self._21;
+		array.setFloat32(24,v6,true);
+		let v7 = this.self._31;
+		array.setFloat32(28,v7,true);
+		let v8 = this.self._02;
+		array.setFloat32(32,v8,true);
+		let v9 = this.self._12;
+		array.setFloat32(36,v9,true);
+		let v10 = this.self._22;
+		array.setFloat32(40,v10,true);
+		let v11 = this.self._32;
+		array.setFloat32(44,v11,true);
+		let v12 = this.self._03;
+		array.setFloat32(48,v12,true);
+		let v13 = this.self._13;
+		array.setFloat32(52,v13,true);
+		let v14 = this.self._23;
+		array.setFloat32(56,v14,true);
+		let v15 = this.self._33;
+		array.setFloat32(60,v15,true);
+		return array;
+	}
+	static fromFloat32Array(a,offset) {
+		if(offset == null) {
+			offset = 0;
+		}
+		return new iron_math_Mat4(a.getFloat32(offset * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((1 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((2 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((3 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((4 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((5 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((6 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((7 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((8 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((9 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((10 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((11 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((12 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((13 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((14 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((15 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN));
+	}
+	static identity() {
+		return new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
+	}
+	static persp(fovY,aspect,zn,zf) {
+		let uh = 1.0 / Math.tan(fovY / 2);
+		let uw = uh / aspect;
+		return new iron_math_Mat4(uw,0,0,0,0,uh,0,0,0,0,(zf + zn) / (zn - zf),2 * zf * zn / (zn - zf),0,0,-1,0);
+	}
+	static ortho(left,right,bottom,top,near,far) {
+		let rl = right - left;
+		let tb = top - bottom;
+		let fn = far - near;
+		let tx = -(right + left) / rl;
+		let ty = -(top + bottom) / tb;
+		let tz = -(far + near) / fn;
+		return new iron_math_Mat4(2 / rl,0,0,tx,0,2 / tb,0,ty,0,0,-2 / fn,tz,0,0,0,1);
+	}
+}
+$hxClasses["iron.math.Mat4"] = iron_math_Mat4;
+iron_math_Mat4.__name__ = true;
+Object.assign(iron_math_Mat4.prototype, {
+	__class__: iron_math_Mat4
+	,self: null
+	,__properties__: {set__33: "set__33",get__33: "get__33",set__32: "set__32",get__32: "get__32",set__31: "set__31",get__31: "get__31",set__30: "set__30",get__30: "get__30",set__23: "set__23",get__23: "get__23",set__22: "set__22",get__22: "get__22",set__21: "set__21",get__21: "get__21",set__20: "set__20",get__20: "get__20",set__13: "set__13",get__13: "get__13",set__12: "set__12",get__12: "get__12",set__11: "set__11",get__11: "get__11",set__10: "set__10",get__10: "get__10",set__03: "set__03",get__03: "get__03",set__02: "set__02",get__02: "get__02",set__01: "set__01",get__01: "get__01",set__00: "set__00",get__00: "get__00"}
+});
+class iron_math_Quat {
+	constructor(x,y,z,w) {
+		if(w == null) {
+			w = 1.0;
+		}
+		if(z == null) {
+			z = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+	}
+	set(x,y,z,w) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+		return this;
+	}
+	add(q) {
+		this.x += q.x;
+		this.y += q.y;
+		this.z += q.z;
+		this.w += q.w;
+		return this;
+	}
+	addquat(a,b) {
+		this.x = a.x + b.x;
+		this.y = a.y + b.y;
+		this.z = a.z + b.z;
+		this.w = a.w + b.w;
+		return this;
+	}
+	sub(q) {
+		this.x -= q.x;
+		this.y -= q.y;
+		this.z -= q.z;
+		this.w -= q.w;
+		return this;
+	}
+	subquat(a,b) {
+		this.x = a.x - b.x;
+		this.y = a.y - b.y;
+		this.z = a.z - b.z;
+		this.w = a.w - b.w;
+		return this;
+	}
+	fromAxisAngle(axis,angle) {
+		let s = Math.sin(angle * 0.5);
+		this.x = axis.x * s;
+		this.y = axis.y * s;
+		this.z = axis.z * s;
+		this.w = Math.cos(angle * 0.5);
+		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+		if(l == 0.0) {
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+			this.w = 0;
+		} else {
+			l = 1.0 / l;
+			this.x *= l;
+			this.y *= l;
+			this.z *= l;
+			this.w *= l;
+		}
+		return this;
+	}
+	toAxisAngle(axis) {
+		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+		if(l == 0.0) {
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+			this.w = 0;
+		} else {
+			l = 1.0 / l;
+			this.x *= l;
+			this.y *= l;
+			this.z *= l;
+			this.w *= l;
+		}
+		let angle = 2 * Math.acos(this.w);
+		let s = Math.sqrt(1 - this.w * this.w);
+		if(s < 0.001) {
+			axis.x = this.x;
+			axis.y = this.y;
+			axis.z = this.z;
+		} else {
+			axis.x = this.x / s;
+			axis.y = this.y / s;
+			axis.z = this.z / s;
+		}
+		return angle;
+	}
+	fromMat(m) {
+		let _this = iron_math_Quat.helpMat;
+		_this.self._00 = m.self._00;
+		_this.self._01 = m.self._01;
+		_this.self._02 = m.self._02;
+		_this.self._03 = m.self._03;
+		_this.self._10 = m.self._10;
+		_this.self._11 = m.self._11;
+		_this.self._12 = m.self._12;
+		_this.self._13 = m.self._13;
+		_this.self._20 = m.self._20;
+		_this.self._21 = m.self._21;
+		_this.self._22 = m.self._22;
+		_this.self._23 = m.self._23;
+		_this.self._30 = m.self._30;
+		_this.self._31 = m.self._31;
+		_this.self._32 = m.self._32;
+		_this.self._33 = m.self._33;
+		let _this1 = iron_math_Quat.helpMat;
+		let _this2 = iron_math_Mat4.helpVec;
+		_this2.x = _this1.self._00;
+		_this2.y = _this1.self._01;
+		_this2.z = _this1.self._02;
+		_this2.w = 1.0;
+		let _this3 = _this2;
+		let scale = 1.0 / Math.sqrt(_this3.x * _this3.x + _this3.y * _this3.y + _this3.z * _this3.z);
+		_this1.self._00 *= scale;
+		_this1.self._01 *= scale;
+		_this1.self._02 *= scale;
+		let _this4 = iron_math_Mat4.helpVec;
+		_this4.x = _this1.self._10;
+		_this4.y = _this1.self._11;
+		_this4.z = _this1.self._12;
+		_this4.w = 1.0;
+		let _this5 = _this4;
+		scale = 1.0 / Math.sqrt(_this5.x * _this5.x + _this5.y * _this5.y + _this5.z * _this5.z);
+		_this1.self._10 *= scale;
+		_this1.self._11 *= scale;
+		_this1.self._12 *= scale;
+		let _this6 = iron_math_Mat4.helpVec;
+		_this6.x = _this1.self._20;
+		_this6.y = _this1.self._21;
+		_this6.z = _this1.self._22;
+		_this6.w = 1.0;
+		let _this7 = _this6;
+		scale = 1.0 / Math.sqrt(_this7.x * _this7.x + _this7.y * _this7.y + _this7.z * _this7.z);
+		_this1.self._20 *= scale;
+		_this1.self._21 *= scale;
+		_this1.self._22 *= scale;
+		_this1.self._03 = 0.0;
+		_this1.self._13 = 0.0;
+		_this1.self._23 = 0.0;
+		_this1.self._30 = 0.0;
+		_this1.self._31 = 0.0;
+		_this1.self._32 = 0.0;
+		_this1.self._33 = 1.0;
+		let m1 = iron_math_Quat.helpMat;
+		let m11 = m1.self._00;
+		let m12 = m1.self._10;
+		let m13 = m1.self._20;
+		let m21 = m1.self._01;
+		let m22 = m1.self._11;
+		let m23 = m1.self._21;
+		let m31 = m1.self._02;
+		let m32 = m1.self._12;
+		let m33 = m1.self._22;
+		let tr = m11 + m22 + m33;
+		let s = 0.0;
+		if(tr > 0) {
+			s = 0.5 / Math.sqrt(tr + 1.0);
+			this.w = 0.25 / s;
+			this.x = (m32 - m23) * s;
+			this.y = (m13 - m31) * s;
+			this.z = (m21 - m12) * s;
+		} else if(m11 > m22 && m11 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+			this.w = (m32 - m23) / s;
+			this.x = 0.25 * s;
+			this.y = (m12 + m21) / s;
+			this.z = (m13 + m31) / s;
+		} else if(m22 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+			this.w = (m13 - m31) / s;
+			this.x = (m12 + m21) / s;
+			this.y = 0.25 * s;
+			this.z = (m23 + m32) / s;
+		} else {
+			s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+			this.w = (m21 - m12) / s;
+			this.x = (m13 + m31) / s;
+			this.y = (m23 + m32) / s;
+			this.z = 0.25 * s;
+		}
+		return this;
+	}
+	fromRotationMat(m) {
+		let m11 = m.self._00;
+		let m12 = m.self._10;
+		let m13 = m.self._20;
+		let m21 = m.self._01;
+		let m22 = m.self._11;
+		let m23 = m.self._21;
+		let m31 = m.self._02;
+		let m32 = m.self._12;
+		let m33 = m.self._22;
+		let tr = m11 + m22 + m33;
+		let s = 0.0;
+		if(tr > 0) {
+			s = 0.5 / Math.sqrt(tr + 1.0);
+			this.w = 0.25 / s;
+			this.x = (m32 - m23) * s;
+			this.y = (m13 - m31) * s;
+			this.z = (m21 - m12) * s;
+		} else if(m11 > m22 && m11 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+			this.w = (m32 - m23) / s;
+			this.x = 0.25 * s;
+			this.y = (m12 + m21) / s;
+			this.z = (m13 + m31) / s;
+		} else if(m22 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+			this.w = (m13 - m31) / s;
+			this.x = (m12 + m21) / s;
+			this.y = 0.25 * s;
+			this.z = (m23 + m32) / s;
+		} else {
+			s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+			this.w = (m21 - m12) / s;
+			this.x = (m13 + m31) / s;
+			this.y = (m23 + m32) / s;
+			this.z = 0.25 * s;
+		}
+		return this;
+	}
+	scale(scale) {
+		this.x *= scale;
+		this.y *= scale;
+		this.z *= scale;
+		this.w *= scale;
+		return this;
+	}
+	scalequat(q,scale) {
+		q.x *= scale;
+		q.y *= scale;
+		q.z *= scale;
+		q.w *= scale;
+		return q;
+	}
+	mult(q) {
+		let q1x = this.x;
+		let q1y = this.y;
+		let q1z = this.z;
+		let q1w = this.w;
+		let q2x = q.x;
+		let q2y = q.y;
+		let q2z = q.z;
+		let q2w = q.w;
+		this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+		this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+		this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+		this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		return this;
+	}
+	multquats(q1,q2) {
+		let q1x = q1.x;
+		let q1y = q1.y;
+		let q1z = q1.z;
+		let q1w = q1.w;
+		let q2x = q2.x;
+		let q2y = q2.y;
+		let q2z = q2.z;
+		let q2w = q2.w;
+		this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+		this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+		this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+		this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		return this;
+	}
+	module() {
+		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+	}
+	normalize() {
+		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+		if(l == 0.0) {
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+			this.w = 0;
+		} else {
+			l = 1.0 / l;
+			this.x *= l;
+			this.y *= l;
+			this.z *= l;
+			this.w *= l;
+		}
+		return this;
+	}
+	inverse(q) {
+		let sqsum = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+		sqsum = -1 / sqsum;
+		this.x = q.x * sqsum;
+		this.y = q.y * sqsum;
+		this.z = q.z * sqsum;
+		this.w = -q.w * sqsum;
+		return this;
+	}
+	setFrom(q) {
+		this.x = q.x;
+		this.y = q.y;
+		this.z = q.z;
+		this.w = q.w;
+		return this;
+	}
+	getEuler() {
+		let a = -2 * (this.x * this.z - this.w * this.y);
+		let b = this.w * this.w + this.x * this.x - this.y * this.y - this.z * this.z;
+		let c = 2 * (this.x * this.y + this.w * this.z);
+		let d = -2 * (this.y * this.z - this.w * this.x);
+		let e = this.w * this.w - this.x * this.x + this.y * this.y - this.z * this.z;
+		return new iron_math_Vec4(Math.atan2(d,e),Math.atan2(a,b),Math.asin(c));
+	}
+	fromEuler(x,y,z) {
+		let f = x / 2;
+		let c1 = Math.cos(f);
+		let s1 = Math.sin(f);
+		f = y / 2;
+		let c2 = Math.cos(f);
+		let s2 = Math.sin(f);
+		f = z / 2;
+		let c3 = Math.cos(f);
+		let s3 = Math.sin(f);
+		this.x = s1 * c2 * c3 + c1 * s2 * s3;
+		this.y = c1 * s2 * c3 + s1 * c2 * s3;
+		this.z = c1 * c2 * s3 - s1 * s2 * c3;
+		this.w = c1 * c2 * c3 - s1 * s2 * s3;
+		return this;
+	}
+	toEulerOrdered(p) {
+		let q0 = 1.4142135623730951 * this.w;
+		let q1 = 1.4142135623730951 * this.x;
+		let q2 = 1.4142135623730951 * this.y;
+		let q3 = 1.4142135623730951 * this.z;
+		let qda = q0 * q1;
+		let qdb = q0 * q2;
+		let qdc = q0 * q3;
+		let qaa = q1 * q1;
+		let qab = q1 * q2;
+		let qac = q1 * q3;
+		let qbb = q2 * q2;
+		let qbc = q2 * q3;
+		let qcc = q3 * q3;
+		let m_self__00 = 1.0 - qbb - qcc;
+		let m_self__10 = qdc + qab;
+		let m_self__20 = -qdb + qac;
+		let m_self__01 = -qdc + qab;
+		let m_self__11 = 1.0 - qaa - qcc;
+		let m_self__21 = qda + qbc;
+		let m_self__02 = qdb + qac;
+		let m_self__12 = -qda + qbc;
+		let m_self__22 = 1.0 - qaa - qbb;
+		let ml = [[m_self__00,m_self__10,m_self__20],[m_self__01,m_self__11,m_self__21],[m_self__02,m_self__12,m_self__22]];
+		let eull = [0,0,0];
+		let i = HxOverrides.cca(p,0) - HxOverrides.cca("X",0);
+		let j = HxOverrides.cca(p,1) - HxOverrides.cca("X",0);
+		let k = HxOverrides.cca(p,2) - HxOverrides.cca("X",0);
+		if(p.charAt(0) == "X") {
+			i = 0;
+		} else if(p.charAt(0) == "Y") {
+			i = 1;
+		} else {
+			i = 2;
+		}
+		if(p.charAt(1) == "X") {
+			j = 0;
+		} else if(p.charAt(1) == "Y") {
+			j = 1;
+		} else {
+			j = 2;
+		}
+		if(p.charAt(2) == "X") {
+			k = 0;
+		} else if(p.charAt(2) == "Y") {
+			k = 1;
+		} else {
+			k = 2;
+		}
+		let cy = Math.sqrt(ml[i][i] * ml[i][i] + ml[i][j] * ml[i][j]);
+		let eul1 = new iron_math_Vec4();
+		if(cy > 0.016) {
+			eull[i] = Math.atan2(ml[j][k],ml[k][k]);
+			eull[j] = Math.atan2(-ml[i][k],cy);
+			eull[k] = Math.atan2(ml[i][j],ml[i][i]);
+		} else {
+			eull[i] = Math.atan2(-ml[k][j],ml[j][j]);
+			eull[j] = Math.atan2(-ml[i][k],cy);
+			eull[k] = 0;
+		}
+		eul1.x = eull[0];
+		eul1.y = eull[1];
+		eul1.z = eull[2];
+		if(p == "XZY" || p == "YXZ" || p == "ZYX") {
+			eul1.x *= -1;
+			eul1.y *= -1;
+			eul1.z *= -1;
+		}
+		return eul1;
+	}
+	fromEulerOrdered(e,order) {
+		let c1 = Math.cos(e.x / 2);
+		let c2 = Math.cos(e.y / 2);
+		let c3 = Math.cos(e.z / 2);
+		let s1 = Math.sin(e.x / 2);
+		let s2 = Math.sin(e.y / 2);
+		let s3 = Math.sin(e.z / 2);
+		let x = s1;
+		let y = 0;
+		let z = 0;
+		let w = c1;
+		if(w == null) {
+			w = 1.0;
+		}
+		if(z == null) {
+			z = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		let qx_x = x;
+		let qx_y = y;
+		let qx_z = z;
+		let qx_w = w;
+		let x1 = 0;
+		let y1 = s2;
+		let z1 = 0;
+		let w1 = c2;
+		if(w1 == null) {
+			w1 = 1.0;
+		}
+		if(z1 == null) {
+			z1 = 0.0;
+		}
+		if(y1 == null) {
+			y1 = 0.0;
+		}
+		if(x1 == null) {
+			x1 = 0.0;
+		}
+		let qy_x = x1;
+		let qy_y = y1;
+		let qy_z = z1;
+		let qy_w = w1;
+		let x2 = 0;
+		let y2 = 0;
+		let z2 = s3;
+		let w2 = c3;
+		if(w2 == null) {
+			w2 = 1.0;
+		}
+		if(z2 == null) {
+			z2 = 0.0;
+		}
+		if(y2 == null) {
+			y2 = 0.0;
+		}
+		if(x2 == null) {
+			x2 = 0.0;
+		}
+		let qz_x = x2;
+		let qz_y = y2;
+		let qz_z = z2;
+		let qz_w = w2;
+		if(order.charAt(2) == "X") {
+			this.x = qx_x;
+			this.y = qx_y;
+			this.z = qx_z;
+			this.w = qx_w;
+		} else if(order.charAt(2) == "Y") {
+			this.x = qy_x;
+			this.y = qy_y;
+			this.z = qy_z;
+			this.w = qy_w;
+		} else {
+			this.x = qz_x;
+			this.y = qz_y;
+			this.z = qz_z;
+			this.w = qz_w;
+		}
+		if(order.charAt(1) == "X") {
+			let q1x = this.x;
+			let q1y = this.y;
+			let q1z = this.z;
+			let q1w = this.w;
+			let q2x = qx_x;
+			let q2y = qx_y;
+			let q2z = qx_z;
+			let q2w = qx_w;
+			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		} else if(order.charAt(1) == "Y") {
+			let q1x = this.x;
+			let q1y = this.y;
+			let q1z = this.z;
+			let q1w = this.w;
+			let q2x = qy_x;
+			let q2y = qy_y;
+			let q2z = qy_z;
+			let q2w = qy_w;
+			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		} else {
+			let q1x = this.x;
+			let q1y = this.y;
+			let q1z = this.z;
+			let q1w = this.w;
+			let q2x = qz_x;
+			let q2y = qz_y;
+			let q2z = qz_z;
+			let q2w = qz_w;
+			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		}
+		if(order.charAt(0) == "X") {
+			let q1x = this.x;
+			let q1y = this.y;
+			let q1z = this.z;
+			let q1w = this.w;
+			let q2x = qx_x;
+			let q2y = qx_y;
+			let q2z = qx_z;
+			let q2w = qx_w;
+			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		} else if(order.charAt(0) == "Y") {
+			let q1x = this.x;
+			let q1y = this.y;
+			let q1z = this.z;
+			let q1w = this.w;
+			let q2x = qy_x;
+			let q2y = qy_y;
+			let q2z = qy_z;
+			let q2w = qy_w;
+			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		} else {
+			let q1x = this.x;
+			let q1y = this.y;
+			let q1z = this.z;
+			let q1w = this.w;
+			let q2x = qz_x;
+			let q2y = qz_y;
+			let q2z = qz_z;
+			let q2w = qz_w;
+			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
+			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
+			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
+			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+		}
+		return this;
+	}
+	lerp(from,to,s) {
+		let fromx = from.x;
+		let fromy = from.y;
+		let fromz = from.z;
+		let fromw = from.w;
+		let dot = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w;
+		if(dot < 0.0) {
+			fromx = -fromx;
+			fromy = -fromy;
+			fromz = -fromz;
+			fromw = -fromw;
+		}
+		this.x = fromx + (to.x - fromx) * s;
+		this.y = fromy + (to.y - fromy) * s;
+		this.z = fromz + (to.z - fromz) * s;
+		this.w = fromw + (to.w - fromw) * s;
+		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+		if(l == 0.0) {
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+			this.w = 0;
+		} else {
+			l = 1.0 / l;
+			this.x *= l;
+			this.y *= l;
+			this.z *= l;
+			this.w *= l;
+		}
+		return this;
+	}
+	slerp(from,to,t) {
+		let epsilon = 0.0005;
+		let dot = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w;
+		if(dot > 1 - epsilon) {
+			from.x -= to.x;
+			from.y -= to.y;
+			from.z -= to.z;
+			from.w -= to.w;
+			let _this = from;
+			_this.x *= t;
+			_this.y *= t;
+			_this.z *= t;
+			_this.w *= t;
+			let q = _this;
+			to.x += q.x;
+			to.y += q.y;
+			to.z += q.z;
+			to.w += q.w;
+			let result = to;
+			let l = Math.sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+			if(l == 0.0) {
+				result.x = 0;
+				result.y = 0;
+				result.z = 0;
+				result.w = 0;
+			} else {
+				l = 1.0 / l;
+				result.x *= l;
+				result.y *= l;
+				result.z *= l;
+				result.w *= l;
+			}
+			return result;
+		}
+		if(dot < 0) {
+			dot = 0;
+		}
+		if(dot > 1) {
+			dot = 1;
+		}
+		let theta0 = Math.acos(dot);
+		let theta = theta0 * t;
+		this.x *= dot;
+		this.y *= dot;
+		this.z *= dot;
+		this.w *= dot;
+		let q = this;
+		to.x -= q.x;
+		to.y -= q.y;
+		to.z -= q.z;
+		to.w -= q.w;
+		let q2 = to;
+		let l = Math.sqrt(q2.x * q2.x + q2.y * q2.y + q2.z * q2.z + q2.w * q2.w);
+		if(l == 0.0) {
+			q2.x = 0;
+			q2.y = 0;
+			q2.z = 0;
+			q2.w = 0;
+		} else {
+			l = 1.0 / l;
+			q2.x *= l;
+			q2.y *= l;
+			q2.z *= l;
+			q2.w *= l;
+		}
+		let scale = Math.cos(theta);
+		this.x *= scale;
+		this.y *= scale;
+		this.z *= scale;
+		this.w *= scale;
+		let _this = this;
+		let scale1 = Math.sin(theta);
+		q2.x *= scale1;
+		q2.y *= scale1;
+		q2.z *= scale1;
+		q2.w *= scale1;
+		let q1 = q2;
+		_this.x += q1.x;
+		_this.y += q1.y;
+		_this.z += q1.z;
+		_this.w += q1.w;
+		let result = _this;
+		let l1 = Math.sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+		if(l1 == 0.0) {
+			result.x = 0;
+			result.y = 0;
+			result.z = 0;
+			result.w = 0;
+		} else {
+			l1 = 1.0 / l1;
+			result.x *= l1;
+			result.y *= l1;
+			result.z *= l1;
+			result.w *= l1;
+		}
+		return result;
+	}
+	dot(q) {
+		return this.x * q.x + this.y * q.y + this.z * q.z + this.w * q.w;
+	}
+	fromTo(v1,v2) {
+		let a = iron_math_Quat.helpVec0;
+		let dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+		if(dot < -0.999999) {
+			let a1 = iron_math_Quat.xAxis;
+			let ax = a1.x;
+			let ay = a1.y;
+			let az = a1.z;
+			let bx = v1.x;
+			let by = v1.y;
+			let bz = v1.z;
+			a.x = ay * bz - az * by;
+			a.y = az * bx - ax * bz;
+			a.z = ax * by - ay * bx;
+			if(Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z) < 0.000001) {
+				let a1 = iron_math_Quat.yAxis;
+				let ax = a1.x;
+				let ay = a1.y;
+				let az = a1.z;
+				let bx = v1.x;
+				let by = v1.y;
+				let bz = v1.z;
+				a.x = ay * bz - az * by;
+				a.y = az * bx - ax * bz;
+				a.z = ax * by - ay * bx;
+			}
+			let n = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+			if(n > 0.0) {
+				let invN = 1.0 / n;
+				a.x *= invN;
+				a.y *= invN;
+				a.z *= invN;
+			}
+			let angle = Math.PI;
+			let s = Math.sin(angle * 0.5);
+			this.x = a.x * s;
+			this.y = a.y * s;
+			this.z = a.z * s;
+			this.w = Math.cos(angle * 0.5);
+			let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+			if(l == 0.0) {
+				this.x = 0;
+				this.y = 0;
+				this.z = 0;
+				this.w = 0;
+			} else {
+				l = 1.0 / l;
+				this.x *= l;
+				this.y *= l;
+				this.z *= l;
+				this.w *= l;
+			}
+		} else if(dot > 0.999999) {
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+			this.w = 1;
+		} else {
+			let ax = v1.x;
+			let ay = v1.y;
+			let az = v1.z;
+			let bx = v2.x;
+			let by = v2.y;
+			let bz = v2.z;
+			a.x = ay * bz - az * by;
+			a.y = az * bx - ax * bz;
+			a.z = ax * by - ay * bx;
+			this.x = a.x;
+			this.y = a.y;
+			this.z = a.z;
+			this.w = 1 + dot;
+			let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+			if(l == 0.0) {
+				this.x = 0;
+				this.y = 0;
+				this.z = 0;
+				this.w = 0;
+			} else {
+				l = 1.0 / l;
+				this.x *= l;
+				this.y *= l;
+				this.z *= l;
+				this.w *= l;
+			}
+		}
+		return this;
+	}
+	toString() {
+		return this.x + ", " + this.y + ", " + this.z + ", " + this.w;
+	}
+}
+$hxClasses["iron.math.Quat"] = iron_math_Quat;
+iron_math_Quat.__name__ = true;
+Object.assign(iron_math_Quat.prototype, {
+	__class__: iron_math_Quat
+	,x: null
+	,y: null
+	,z: null
+	,w: null
+});
+class armory_trait_physics_bullet_RigidBody extends iron_Trait {
+	constructor(shape,mass,friction,restitution,group,mask,params,flags) {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor(shape,mass,friction,restitution,group,mask,params,flags);
+	}
+	_hx_constructor(shape,mass,friction,restitution,group,mask,params,flags) {
+		if(mask == null) {
+			mask = 1;
+		}
+		if(group == null) {
+			group = 1;
+		}
+		if(restitution == null) {
+			restitution = 0.0;
+		}
+		if(friction == null) {
+			friction = 0.5;
+		}
+		if(mass == null) {
+			mass = 1.0;
+		}
+		if(shape == null) {
+			shape = 0;
+		}
+		this.heightData = null;
+		this.onContact = null;
+		this.onReady = null;
+		this.id = 0;
+		this.ready = false;
+		this.body = null;
+		this.trigger = false;
+		this.mask = 1;
+		this.group = 1;
+		this.ccd = false;
+		this.destroyed = false;
+		this.transform = null;
+		super._hx_constructor();
+		if(armory_trait_physics_bullet_RigidBody.nullvec) {
+			armory_trait_physics_bullet_RigidBody.nullvec = false;
+			armory_trait_physics_bullet_RigidBody.vec1 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_RigidBody.vec2 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_RigidBody.vec3 = new Ammo.btVector3(0,0,0);
+			armory_trait_physics_bullet_RigidBody.quat1 = new Ammo.btQuaternion(0,0,0,0);
+			armory_trait_physics_bullet_RigidBody.trans1 = new Ammo.btTransform();
+			armory_trait_physics_bullet_RigidBody.trans2 = new Ammo.btTransform();
+		}
+		this.shape = shape;
+		this.mass = mass;
+		this.friction = friction;
+		this.restitution = restitution;
+		this.group = group;
+		this.mask = mask;
+		if(params == null) {
+			params = { linearDamping : 0.04, angularDamping : 0.1, angularFriction : 0.1, linearFactorsX : 1.0, linearFactorsY : 1.0, linearFactorsZ : 1.0, angularFactorsX : 1.0, angularFactorsY : 1.0, angularFactorsZ : 1.0, collisionMargin : 0.0, linearDeactivationThreshold : 0.0, angularDeactivationThrshold : 0.0, deactivationTime : 0.0};
+		}
+		if(flags == null) {
+			flags = { animated : false, trigger : false, ccd : false, staticObj : false, useDeactivation : true};
+		}
+		this.linearDamping = params.linearDamping;
+		this.angularDamping = params.angularDamping;
+		this.angularFriction = params.angularFriction;
+		this.linearFactors = [params.linearFactorsX,params.linearFactorsY,params.linearFactorsZ];
+		this.angularFactors = [params.angularFactorsX,params.angularFactorsY,params.angularFactorsZ];
+		this.collisionMargin = params.collisionMargin;
+		this.deactivationParams = [params.linearDeactivationThreshold,params.angularDeactivationThrshold,params.deactivationTime];
+		this.animated = flags.animated;
+		this.trigger = flags.trigger;
+		this.ccd = flags.ccd;
+		this.staticObj = flags.staticObj;
+		this.useDeactivation = flags.useDeactivation;
+		this.notifyOnAdd($bind(this,this.init));
+	}
+	withMargin(f) {
+		return f + f * this.collisionMargin;
+	}
+	notifyOnReady(f) {
+		this.onReady = f;
+		if(this.ready) {
+			this.onReady();
+		}
+	}
+	init() {
+		if(this.ready) {
+			return;
+		}
+		this.ready = true;
+		if(!((this.object) instanceof iron_object_MeshObject)) {
+			return;
+		}
+		this.transform = this.object.transform;
+		this.physics = armory_trait_physics_bullet_PhysicsWorld.active;
+		if(this.shape == 0) {
+			let f = this.transform.dim.x / 2;
+			armory_trait_physics_bullet_RigidBody.vec1.setX(f + f * this.collisionMargin);
+			let f1 = this.transform.dim.y / 2;
+			armory_trait_physics_bullet_RigidBody.vec1.setY(f1 + f1 * this.collisionMargin);
+			let f2 = this.transform.dim.z / 2;
+			armory_trait_physics_bullet_RigidBody.vec1.setZ(f2 + f2 * this.collisionMargin);
+			this.btshape = new Ammo.btBoxShape(armory_trait_physics_bullet_RigidBody.vec1);
+		} else if(this.shape == 1) {
+			let f = this.transform.dim.x / 2;
+			this.btshape = new Ammo.btSphereShape(f + f * this.collisionMargin);
+		} else if(this.shape == 2) {
+			let shapeConvex = this.fillConvexHull(this.transform.scale,this.collisionMargin);
+			this.btshape = shapeConvex;
+		} else if(this.shape == 4) {
+			let f = this.transform.dim.x / 2;
+			let f1 = this.transform.dim.z;
+			let coneZ = new Ammo.btConeShapeZ(f + f * this.collisionMargin,f1 + f1 * this.collisionMargin);
+			let cone = coneZ;
+			this.btshape = cone;
+		} else if(this.shape == 5) {
+			let f = this.transform.dim.x / 2;
+			armory_trait_physics_bullet_RigidBody.vec1.setX(f + f * this.collisionMargin);
+			let f1 = this.transform.dim.y / 2;
+			armory_trait_physics_bullet_RigidBody.vec1.setY(f1 + f1 * this.collisionMargin);
+			let f2 = this.transform.dim.z / 2;
+			armory_trait_physics_bullet_RigidBody.vec1.setZ(f2 + f2 * this.collisionMargin);
+			let cylZ = new Ammo.btCylinderShapeZ(armory_trait_physics_bullet_RigidBody.vec1);
+			let cyl = cylZ;
+			this.btshape = cyl;
+		} else if(this.shape == 6) {
+			let r = this.transform.dim.x / 2;
+			let f = this.transform.dim.z - r * 2;
+			let capsZ = new Ammo.btCapsuleShapeZ(r + r * this.collisionMargin,f + f * this.collisionMargin);
+			let caps = capsZ;
+			this.btshape = caps;
+		} else if(this.shape == 3) {
+			this.meshInterface = this.fillTriangleMesh(this.transform.scale);
+			if(this.mass > 0) {
+				let shapeGImpact = new Ammo.btGImpactMeshShape(this.meshInterface);
+				shapeGImpact.updateBound();
+				let shapeConcave = shapeGImpact;
+				this.btshape = shapeConcave;
+				if(!this.physics.gimpactRegistered) {
+					new Ammo.GImpactCollisionAlgorithm().registerAlgorithm(this.physics.dispatcher);
+					this.physics.gimpactRegistered = true;
+				}
+			} else {
+				let shapeBvh = new Ammo.btBvhTriangleMeshShape(this.meshInterface,true,true);
+				let shapeTri = shapeBvh;
+				let shapeConcave = shapeTri;
+				this.btshape = shapeConcave;
+			}
+		} else if(this.shape == 7) {
+			let length = this.heightData.length;
+			if(armory_trait_physics_bullet_RigidBody.ammoArray == -1) {
+				armory_trait_physics_bullet_RigidBody.ammoArray = Ammo._malloc(length);
+			}
+			let _g = 0;
+			let _g1 = length;
+			while(_g < _g1) {
+				let i = _g++;
+				Ammo.HEAPU8[armory_trait_physics_bullet_RigidBody.ammoArray + i] = this.heightData.b[i];
+			}
+			let slice = Math.sqrt(length) | 0;
+			let axis = 2;
+			let dataType = 5;
+			this.btshape = new Ammo.btHeightfieldTerrainShape(slice,slice,armory_trait_physics_bullet_RigidBody.ammoArray,0.00392156862745098,0,1,axis,dataType,false);
+			armory_trait_physics_bullet_RigidBody.vec1.setX(this.transform.dim.x / slice);
+			armory_trait_physics_bullet_RigidBody.vec1.setY(this.transform.dim.y / slice);
+			armory_trait_physics_bullet_RigidBody.vec1.setZ(this.transform.dim.z);
+			this.btshape.setLocalScaling(armory_trait_physics_bullet_RigidBody.vec1);
+		}
+		armory_trait_physics_bullet_RigidBody.trans1.setIdentity();
+		armory_trait_physics_bullet_RigidBody.vec1.setX(this.transform.world.self._30);
+		armory_trait_physics_bullet_RigidBody.vec1.setY(this.transform.world.self._31);
+		armory_trait_physics_bullet_RigidBody.vec1.setZ(this.transform.world.self._32);
+		armory_trait_physics_bullet_RigidBody.trans1.setOrigin(armory_trait_physics_bullet_RigidBody.vec1);
+		let _this = armory_trait_physics_bullet_RigidBody.quat;
+		let m = this.transform.world;
+		let _this1 = iron_math_Quat.helpMat;
+		_this1.self._00 = m.self._00;
+		_this1.self._01 = m.self._01;
+		_this1.self._02 = m.self._02;
+		_this1.self._03 = m.self._03;
+		_this1.self._10 = m.self._10;
+		_this1.self._11 = m.self._11;
+		_this1.self._12 = m.self._12;
+		_this1.self._13 = m.self._13;
+		_this1.self._20 = m.self._20;
+		_this1.self._21 = m.self._21;
+		_this1.self._22 = m.self._22;
+		_this1.self._23 = m.self._23;
+		_this1.self._30 = m.self._30;
+		_this1.self._31 = m.self._31;
+		_this1.self._32 = m.self._32;
+		_this1.self._33 = m.self._33;
+		let _this2 = iron_math_Quat.helpMat;
+		let _this3 = iron_math_Mat4.helpVec;
+		_this3.x = _this2.self._00;
+		_this3.y = _this2.self._01;
+		_this3.z = _this2.self._02;
+		_this3.w = 1.0;
+		let _this4 = _this3;
+		let scale = 1.0 / Math.sqrt(_this4.x * _this4.x + _this4.y * _this4.y + _this4.z * _this4.z);
+		_this2.self._00 *= scale;
+		_this2.self._01 *= scale;
+		_this2.self._02 *= scale;
+		let _this5 = iron_math_Mat4.helpVec;
+		_this5.x = _this2.self._10;
+		_this5.y = _this2.self._11;
+		_this5.z = _this2.self._12;
+		_this5.w = 1.0;
+		let _this6 = _this5;
+		scale = 1.0 / Math.sqrt(_this6.x * _this6.x + _this6.y * _this6.y + _this6.z * _this6.z);
+		_this2.self._10 *= scale;
+		_this2.self._11 *= scale;
+		_this2.self._12 *= scale;
+		let _this7 = iron_math_Mat4.helpVec;
+		_this7.x = _this2.self._20;
+		_this7.y = _this2.self._21;
+		_this7.z = _this2.self._22;
+		_this7.w = 1.0;
+		let _this8 = _this7;
+		scale = 1.0 / Math.sqrt(_this8.x * _this8.x + _this8.y * _this8.y + _this8.z * _this8.z);
+		_this2.self._20 *= scale;
+		_this2.self._21 *= scale;
+		_this2.self._22 *= scale;
+		_this2.self._03 = 0.0;
+		_this2.self._13 = 0.0;
+		_this2.self._23 = 0.0;
+		_this2.self._30 = 0.0;
+		_this2.self._31 = 0.0;
+		_this2.self._32 = 0.0;
+		_this2.self._33 = 1.0;
+		let m1 = iron_math_Quat.helpMat;
+		let m11 = m1.self._00;
+		let m12 = m1.self._10;
+		let m13 = m1.self._20;
+		let m21 = m1.self._01;
+		let m22 = m1.self._11;
+		let m23 = m1.self._21;
+		let m31 = m1.self._02;
+		let m32 = m1.self._12;
+		let m33 = m1.self._22;
+		let tr = m11 + m22 + m33;
+		let s = 0.0;
+		if(tr > 0) {
+			s = 0.5 / Math.sqrt(tr + 1.0);
+			_this.w = 0.25 / s;
+			_this.x = (m32 - m23) * s;
+			_this.y = (m13 - m31) * s;
+			_this.z = (m21 - m12) * s;
+		} else if(m11 > m22 && m11 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+			_this.w = (m32 - m23) / s;
+			_this.x = 0.25 * s;
+			_this.y = (m12 + m21) / s;
+			_this.z = (m13 + m31) / s;
+		} else if(m22 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+			_this.w = (m13 - m31) / s;
+			_this.x = (m12 + m21) / s;
+			_this.y = 0.25 * s;
+			_this.z = (m23 + m32) / s;
+		} else {
+			s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+			_this.w = (m21 - m12) / s;
+			_this.x = (m13 + m31) / s;
+			_this.y = (m23 + m32) / s;
+			_this.z = 0.25 * s;
+		}
+		armory_trait_physics_bullet_RigidBody.quat1.setValue(armory_trait_physics_bullet_RigidBody.quat.x,armory_trait_physics_bullet_RigidBody.quat.y,armory_trait_physics_bullet_RigidBody.quat.z,armory_trait_physics_bullet_RigidBody.quat.w);
+		armory_trait_physics_bullet_RigidBody.trans1.setRotation(armory_trait_physics_bullet_RigidBody.quat1);
+		let centerOfMassOffset = armory_trait_physics_bullet_RigidBody.trans2;
+		centerOfMassOffset.setIdentity();
+		this.motionState = new Ammo.btDefaultMotionState(armory_trait_physics_bullet_RigidBody.trans1,centerOfMassOffset);
+		armory_trait_physics_bullet_RigidBody.vec1.setX(0);
+		armory_trait_physics_bullet_RigidBody.vec1.setY(0);
+		armory_trait_physics_bullet_RigidBody.vec1.setZ(0);
+		let inertia = armory_trait_physics_bullet_RigidBody.vec1;
+		if(this.staticObj || this.animated) {
+			this.mass = 0;
+		}
+		if(this.mass > 0) {
+			this.btshape.calculateLocalInertia(this.mass,inertia);
+		}
+		let bodyCI = new Ammo.btRigidBodyConstructionInfo(this.mass,this.motionState,this.btshape,inertia);
+		this.body = new Ammo.btRigidBody(bodyCI);
+		let bodyColl = this.body;
+		bodyColl.setFriction(this.friction);
+		bodyColl.setRollingFriction(this.angularFriction);
+		bodyColl.setRestitution(this.restitution);
+		if(this.useDeactivation) {
+			this.setDeactivationParams(this.deactivationParams[0],this.deactivationParams[1],this.deactivationParams[2]);
+		} else {
+			this.setActivationState(4);
+		}
+		if(this.linearDamping != 0.04 || this.angularDamping != 0.1) {
+			this.body.setDamping(this.linearDamping,this.angularDamping);
+		}
+		if(this.linearFactors != null) {
+			this.setLinearFactor(this.linearFactors[0],this.linearFactors[1],this.linearFactors[2]);
+		}
+		if(this.angularFactors != null) {
+			this.setAngularFactor(this.angularFactors[0],this.angularFactors[1],this.angularFactors[2]);
+		}
+		if(this.trigger) {
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | armory_trait_physics_bullet_RigidBody.CF_NO_CONTACT_RESPONSE);
+		}
+		if(this.animated) {
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | armory_trait_physics_bullet_RigidBody.CF_KINEMATIC_OBJECT);
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() & ~armory_trait_physics_bullet_RigidBody.CF_STATIC_OBJECT);
+		}
+		if(this.staticObj && !this.animated) {
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | armory_trait_physics_bullet_RigidBody.CF_STATIC_OBJECT);
+		}
+		if(this.ccd) {
+			this.setCcd(this.transform.radius);
+		}
+		this.bodyScaleX = this.currentScaleX = this.transform.scale.x;
+		this.bodyScaleY = this.currentScaleY = this.transform.scale.y;
+		this.bodyScaleZ = this.currentScaleZ = this.transform.scale.z;
+		this.id = armory_trait_physics_bullet_RigidBody.nextId;
+		armory_trait_physics_bullet_RigidBody.nextId++;
+		this.body.userIndex = this.id;
+		this.physics.addRigidBody(this);
+		this.notifyOnRemove($bind(this,this.removeFromWorld));
+		if(this.onReady != null) {
+			this.onReady();
+		}
+		Ammo.destroy(bodyCI);
+	}
+	physicsUpdate() {
+		if(!this.ready) {
+			return;
+		}
+		if(this.animated) {
+			this.syncTransform();
+		} else {
+			let trans = this.body.getWorldTransform();
+			let p = trans.getOrigin();
+			let q = trans.getRotation();
+			let _this = this.transform.loc;
+			let x = p.x();
+			let y = p.y();
+			let z = p.z();
+			_this.x = x;
+			_this.y = y;
+			_this.z = z;
+			_this.w = 1.0;
+			let _this1 = this.transform.rot;
+			let x1 = q.x();
+			let y1 = q.y();
+			let z1 = q.z();
+			let w = q.w();
+			_this1.x = x1;
+			_this1.y = y1;
+			_this1.z = z1;
+			_this1.w = w;
+			if(this.object.parent != null) {
+				let ptransform = this.object.parent.transform;
+				this.transform.loc.x -= ptransform.world.self._30;
+				this.transform.loc.y -= ptransform.world.self._31;
+				this.transform.loc.z -= ptransform.world.self._32;
+			}
+			this.transform.buildMatrix();
+		}
+		if(this.onContact != null) {
+			let rbs = this.physics.getContacts(this);
+			if(rbs != null) {
+				let _g = 0;
+				while(_g < rbs.length) {
+					let rb = rbs[_g];
+					++_g;
+					let _g1 = 0;
+					let _g2 = this.onContact;
+					while(_g1 < _g2.length) {
+						let f = _g2[_g1];
+						++_g1;
+						f(rb);
+					}
+				}
+			}
+		}
+	}
+	disableCollision() {
+		let bodyColl = this.body;
+		bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | armory_trait_physics_bullet_RigidBody.CF_NO_CONTACT_RESPONSE);
+	}
+	enableCollision() {
+		let bodyColl = this.body;
+		bodyColl.setCollisionFlags(~bodyColl.getCollisionFlags() & armory_trait_physics_bullet_RigidBody.CF_NO_CONTACT_RESPONSE);
+	}
+	removeFromWorld() {
+		if(this.physics != null) {
+			this.physics.removeRigidBody(this);
+		}
+	}
+	isActive() {
+		return this.body.isActive();
+	}
+	activate() {
+		let bodyColl = this.body;
+		bodyColl.activate(false);
+	}
+	disableGravity() {
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(0,0,0);
+		this.body.setGravity(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	enableGravity() {
+		this.body.setGravity(this.physics.world.getGravity());
+	}
+	setGravity(v) {
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(v.x,v.y,v.z);
+		this.body.setGravity(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	setActivationState(newState) {
+		let bodyColl = this.body;
+		bodyColl.setActivationState(newState);
+	}
+	setDeactivationParams(linearThreshold,angularThreshold,time) {
+		this.body.setSleepingThresholds(linearThreshold,angularThreshold);
+	}
+	setUpDeactivation(useDeactivation,linearThreshold,angularThreshold,time) {
+		this.useDeactivation = useDeactivation;
+		this.deactivationParams[0] = linearThreshold;
+		this.deactivationParams[1] = angularThreshold;
+		this.deactivationParams[2] = time;
+	}
+	isTriggerObject(isTrigger) {
+		this.trigger = isTrigger;
+	}
+	applyForce(force,loc) {
+		this.activate();
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(force.x,force.y,force.z);
+		if(loc == null) {
+			this.body.applyCentralForce(armory_trait_physics_bullet_RigidBody.vec1);
+		} else {
+			armory_trait_physics_bullet_RigidBody.vec2.setValue(loc.x,loc.y,loc.z);
+			this.body.applyForce(armory_trait_physics_bullet_RigidBody.vec1,armory_trait_physics_bullet_RigidBody.vec2);
+		}
+	}
+	applyImpulse(impulse,loc) {
+		this.activate();
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(impulse.x,impulse.y,impulse.z);
+		if(loc == null) {
+			this.body.applyCentralImpulse(armory_trait_physics_bullet_RigidBody.vec1);
+		} else {
+			armory_trait_physics_bullet_RigidBody.vec2.setValue(loc.x,loc.y,loc.z);
+			this.body.applyImpulse(armory_trait_physics_bullet_RigidBody.vec1,armory_trait_physics_bullet_RigidBody.vec2);
+		}
+	}
+	applyTorque(torque) {
+		this.activate();
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(torque.x,torque.y,torque.z);
+		this.body.applyTorque(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	applyTorqueImpulse(torque) {
+		this.activate();
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(torque.x,torque.y,torque.z);
+		this.body.applyTorqueImpulse(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	setLinearFactor(x,y,z) {
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(x,y,z);
+		this.body.setLinearFactor(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	setAngularFactor(x,y,z) {
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(x,y,z);
+		this.body.setAngularFactor(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	getLinearVelocity() {
+		let v = this.body.getLinearVelocity();
+		return new iron_math_Vec4(v.x(),v.y(),v.z());
+	}
+	setLinearVelocity(x,y,z) {
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(x,y,z);
+		this.body.setLinearVelocity(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	getAngularVelocity() {
+		let v = this.body.getAngularVelocity();
+		return new iron_math_Vec4(v.x(),v.y(),v.z());
+	}
+	setAngularVelocity(x,y,z) {
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(x,y,z);
+		this.body.setAngularVelocity(armory_trait_physics_bullet_RigidBody.vec1);
+	}
+	getPointVelocity(x,y,z) {
+		let linear = this.getLinearVelocity();
+		let x1 = x;
+		let y1 = y;
+		let z1 = z;
+		if(z1 == null) {
+			z1 = 0.0;
+		}
+		if(y1 == null) {
+			y1 = 0.0;
+		}
+		if(x1 == null) {
+			x1 = 0.0;
+		}
+		let relativePoint_x = x1;
+		let relativePoint_y = y1;
+		let relativePoint_z = z1;
+		let relativePoint_w = 1.0;
+		let _this = this.transform.world;
+		let x2 = _this.self._30;
+		let y2 = _this.self._31;
+		let z2 = _this.self._32;
+		let w = _this.self._33;
+		if(w == null) {
+			w = 1.0;
+		}
+		if(z2 == null) {
+			z2 = 0.0;
+		}
+		if(y2 == null) {
+			y2 = 0.0;
+		}
+		if(x2 == null) {
+			x2 = 0.0;
+		}
+		let v_x = x2;
+		let v_y = y2;
+		let v_z = z2;
+		let v_w = w;
+		relativePoint_x -= v_x;
+		relativePoint_y -= v_y;
+		relativePoint_z -= v_z;
+		let _this1 = this.getAngularVelocity();
+		let ax = _this1.x;
+		let ay = _this1.y;
+		let az = _this1.z;
+		let vx = relativePoint_x;
+		let vy = relativePoint_y;
+		let vz = relativePoint_z;
+		_this1.x = ay * vz - az * vy;
+		_this1.y = az * vx - ax * vz;
+		_this1.z = ax * vy - ay * vx;
+		let angular = _this1;
+		linear.x += angular.x;
+		linear.y += angular.y;
+		linear.z += angular.z;
+		return linear;
+	}
+	setFriction(f) {
+		let bodyColl = this.body;
+		bodyColl.setFriction(f);
+		this.friction = f;
+	}
+	notifyOnContact(f) {
+		if(this.onContact == null) {
+			this.onContact = [];
+		}
+		this.onContact.push(f);
+	}
+	removeContact(f) {
+		HxOverrides.remove(this.onContact,f);
+	}
+	setScale(v) {
+		this.currentScaleX = v.x;
+		this.currentScaleY = v.y;
+		this.currentScaleZ = v.z;
+		armory_trait_physics_bullet_RigidBody.vec1.setX(v.x / this.bodyScaleX);
+		armory_trait_physics_bullet_RigidBody.vec1.setY(v.y / this.bodyScaleY);
+		armory_trait_physics_bullet_RigidBody.vec1.setZ(v.z / this.bodyScaleZ);
+		this.btshape.setLocalScaling(armory_trait_physics_bullet_RigidBody.vec1);
+		let worldDyn = this.physics.world;
+		let worldCol = worldDyn;
+		worldCol.updateSingleAabb(this.body);
+	}
+	syncTransform() {
+		let t = this.transform;
+		t.buildMatrix();
+		armory_trait_physics_bullet_RigidBody.vec1.setValue(t.world.self._30,t.world.self._31,t.world.self._32);
+		armory_trait_physics_bullet_RigidBody.trans1.setOrigin(armory_trait_physics_bullet_RigidBody.vec1);
+		let _this = armory_trait_physics_bullet_RigidBody.quat;
+		let m = t.world;
+		let _this1 = iron_math_Quat.helpMat;
+		_this1.self._00 = m.self._00;
+		_this1.self._01 = m.self._01;
+		_this1.self._02 = m.self._02;
+		_this1.self._03 = m.self._03;
+		_this1.self._10 = m.self._10;
+		_this1.self._11 = m.self._11;
+		_this1.self._12 = m.self._12;
+		_this1.self._13 = m.self._13;
+		_this1.self._20 = m.self._20;
+		_this1.self._21 = m.self._21;
+		_this1.self._22 = m.self._22;
+		_this1.self._23 = m.self._23;
+		_this1.self._30 = m.self._30;
+		_this1.self._31 = m.self._31;
+		_this1.self._32 = m.self._32;
+		_this1.self._33 = m.self._33;
+		let _this2 = iron_math_Quat.helpMat;
+		let _this3 = iron_math_Mat4.helpVec;
+		_this3.x = _this2.self._00;
+		_this3.y = _this2.self._01;
+		_this3.z = _this2.self._02;
+		_this3.w = 1.0;
+		let _this4 = _this3;
+		let scale = 1.0 / Math.sqrt(_this4.x * _this4.x + _this4.y * _this4.y + _this4.z * _this4.z);
+		_this2.self._00 *= scale;
+		_this2.self._01 *= scale;
+		_this2.self._02 *= scale;
+		let _this5 = iron_math_Mat4.helpVec;
+		_this5.x = _this2.self._10;
+		_this5.y = _this2.self._11;
+		_this5.z = _this2.self._12;
+		_this5.w = 1.0;
+		let _this6 = _this5;
+		scale = 1.0 / Math.sqrt(_this6.x * _this6.x + _this6.y * _this6.y + _this6.z * _this6.z);
+		_this2.self._10 *= scale;
+		_this2.self._11 *= scale;
+		_this2.self._12 *= scale;
+		let _this7 = iron_math_Mat4.helpVec;
+		_this7.x = _this2.self._20;
+		_this7.y = _this2.self._21;
+		_this7.z = _this2.self._22;
+		_this7.w = 1.0;
+		let _this8 = _this7;
+		scale = 1.0 / Math.sqrt(_this8.x * _this8.x + _this8.y * _this8.y + _this8.z * _this8.z);
+		_this2.self._20 *= scale;
+		_this2.self._21 *= scale;
+		_this2.self._22 *= scale;
+		_this2.self._03 = 0.0;
+		_this2.self._13 = 0.0;
+		_this2.self._23 = 0.0;
+		_this2.self._30 = 0.0;
+		_this2.self._31 = 0.0;
+		_this2.self._32 = 0.0;
+		_this2.self._33 = 1.0;
+		let m1 = iron_math_Quat.helpMat;
+		let m11 = m1.self._00;
+		let m12 = m1.self._10;
+		let m13 = m1.self._20;
+		let m21 = m1.self._01;
+		let m22 = m1.self._11;
+		let m23 = m1.self._21;
+		let m31 = m1.self._02;
+		let m32 = m1.self._12;
+		let m33 = m1.self._22;
+		let tr = m11 + m22 + m33;
+		let s = 0.0;
+		if(tr > 0) {
+			s = 0.5 / Math.sqrt(tr + 1.0);
+			_this.w = 0.25 / s;
+			_this.x = (m32 - m23) * s;
+			_this.y = (m13 - m31) * s;
+			_this.z = (m21 - m12) * s;
+		} else if(m11 > m22 && m11 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+			_this.w = (m32 - m23) / s;
+			_this.x = 0.25 * s;
+			_this.y = (m12 + m21) / s;
+			_this.z = (m13 + m31) / s;
+		} else if(m22 > m33) {
+			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+			_this.w = (m13 - m31) / s;
+			_this.x = (m12 + m21) / s;
+			_this.y = 0.25 * s;
+			_this.z = (m23 + m32) / s;
+		} else {
+			s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+			_this.w = (m21 - m12) / s;
+			_this.x = (m13 + m31) / s;
+			_this.y = (m23 + m32) / s;
+			_this.z = 0.25 * s;
+		}
+		armory_trait_physics_bullet_RigidBody.quat1.setValue(armory_trait_physics_bullet_RigidBody.quat.x,armory_trait_physics_bullet_RigidBody.quat.y,armory_trait_physics_bullet_RigidBody.quat.z,armory_trait_physics_bullet_RigidBody.quat.w);
+		armory_trait_physics_bullet_RigidBody.trans1.setRotation(armory_trait_physics_bullet_RigidBody.quat1);
+		if(this.animated) {
+			this.body.getMotionState().setWorldTransform(armory_trait_physics_bullet_RigidBody.trans1);
+		} else {
+			this.body.setCenterOfMassTransform(armory_trait_physics_bullet_RigidBody.trans1);
+		}
+		if(this.currentScaleX != t.scale.x || this.currentScaleY != t.scale.y || this.currentScaleZ != t.scale.z) {
+			this.setScale(t.scale);
+		}
+		this.activate();
+	}
+	setCcd(sphereRadius,motionThreshold) {
+		if(motionThreshold == null) {
+			motionThreshold = 1e-7;
+		}
+		let bodyColl = this.body;
+		bodyColl.setCcdSweptSphereRadius(sphereRadius);
+		bodyColl.setCcdMotionThreshold(motionThreshold);
+	}
+	fillConvexHull(scale,margin) {
+		let data = (js_Boot.__cast(this.object , iron_object_MeshObject)).data;
+		let shape = armory_trait_physics_bullet_RigidBody.convexHullCache.h[data.__id__];
+		if(shape != null) {
+			armory_trait_physics_bullet_RigidBody.usersCache.set(data,armory_trait_physics_bullet_RigidBody.usersCache.h[data.__id__] + 1);
+			return shape;
+		}
+		shape = new Ammo.btConvexHullShape();
+		armory_trait_physics_bullet_RigidBody.convexHullCache.set(data,shape);
+		armory_trait_physics_bullet_RigidBody.usersCache.set(data,1);
+		let positions = data.geom.positions.values;
+		let sx = scale.x * (1.0 - margin) * 3.0518509475997192e-005;
+		let sy = scale.y * (1.0 - margin) * 3.0518509475997192e-005;
+		let sz = scale.z * (1.0 - margin) * 3.0518509475997192e-005;
+		if(data.raw.scale_pos != null) {
+			sx *= data.raw.scale_pos;
+			sy *= data.raw.scale_pos;
+			sz *= data.raw.scale_pos;
+		}
+		let _g = 0;
+		let _g1 = (positions.byteLength >> 1) / 4 | 0;
+		while(_g < _g1) {
+			let i = _g++;
+			armory_trait_physics_bullet_RigidBody.vec1.setX(positions.getInt16(i * 4 * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sx);
+			armory_trait_physics_bullet_RigidBody.vec1.setY(positions.getInt16((i * 4 + 1) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sy);
+			armory_trait_physics_bullet_RigidBody.vec1.setZ(positions.getInt16((i * 4 + 2) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sz);
+			shape.addPoint(armory_trait_physics_bullet_RigidBody.vec1,true);
+		}
+		return shape;
+	}
+	fillTriangleMesh(scale) {
+		let data = (js_Boot.__cast(this.object , iron_object_MeshObject)).data;
+		let triangleMesh = armory_trait_physics_bullet_RigidBody.triangleMeshCache.h[data.__id__];
+		if(triangleMesh != null) {
+			armory_trait_physics_bullet_RigidBody.usersCache.set(data,armory_trait_physics_bullet_RigidBody.usersCache.h[data.__id__] + 1);
+			return triangleMesh;
+		}
+		triangleMesh = new Ammo.btTriangleMesh(true,true);
+		armory_trait_physics_bullet_RigidBody.triangleMeshCache.set(data,triangleMesh);
+		armory_trait_physics_bullet_RigidBody.usersCache.set(data,1);
+		let positions = data.geom.positions.values;
+		let indices = data.geom.indices;
+		let sx = scale.x * 3.0518509475997192e-005;
+		let sy = scale.y * 3.0518509475997192e-005;
+		let sz = scale.z * 3.0518509475997192e-005;
+		if(data.raw.scale_pos != null) {
+			sx *= data.raw.scale_pos;
+			sy *= data.raw.scale_pos;
+			sz *= data.raw.scale_pos;
+		}
+		let _g = 0;
+		while(_g < indices.length) {
+			let ar = indices[_g];
+			++_g;
+			let _g1 = 0;
+			let _g2 = (ar.byteLength >> 2) / 3 | 0;
+			while(_g1 < _g2) {
+				let i = _g1++;
+				armory_trait_physics_bullet_RigidBody.vec1.setX(positions.getInt16(ar.getUint32(i * 3 * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sx);
+				armory_trait_physics_bullet_RigidBody.vec1.setY(positions.getInt16((ar.getUint32(i * 3 * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 + 1) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sy);
+				armory_trait_physics_bullet_RigidBody.vec1.setZ(positions.getInt16((ar.getUint32(i * 3 * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 + 2) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sz);
+				armory_trait_physics_bullet_RigidBody.vec2.setX(positions.getInt16(ar.getUint32((i * 3 + 1) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sx);
+				armory_trait_physics_bullet_RigidBody.vec2.setY(positions.getInt16((ar.getUint32((i * 3 + 1) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 + 1) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sy);
+				armory_trait_physics_bullet_RigidBody.vec2.setZ(positions.getInt16((ar.getUint32((i * 3 + 1) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 + 2) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sz);
+				armory_trait_physics_bullet_RigidBody.vec3.setX(positions.getInt16(ar.getUint32((i * 3 + 2) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sx);
+				armory_trait_physics_bullet_RigidBody.vec3.setY(positions.getInt16((ar.getUint32((i * 3 + 2) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 + 1) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sy);
+				armory_trait_physics_bullet_RigidBody.vec3.setZ(positions.getInt16((ar.getUint32((i * 3 + 2) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN) * 4 + 2) * 2,kha_arrays_ByteArray.LITTLE_ENDIAN) * sz);
+				triangleMesh.addTriangle(armory_trait_physics_bullet_RigidBody.vec1,armory_trait_physics_bullet_RigidBody.vec2,armory_trait_physics_bullet_RigidBody.vec3);
+			}
+		}
+		return triangleMesh;
+	}
+	delete() {
+		Ammo.destroy(this.motionState);
+		Ammo.destroy(this.body);
+		if(this.shape == 2 || this.shape == 3) {
+			let data = (js_Boot.__cast(this.object , iron_object_MeshObject)).data;
+			let i = armory_trait_physics_bullet_RigidBody.usersCache.h[data.__id__] - 1;
+			armory_trait_physics_bullet_RigidBody.usersCache.set(data,i);
+			if(this.shape == 3) {
+				Ammo.destroy(this.btshape);
+			}
+			if(i <= 0) {
+				if(this.shape == 2) {
+					Ammo.destroy(this.btshape);
+					armory_trait_physics_bullet_RigidBody.convexHullCache.remove(data);
+				} else {
+					armory_trait_physics_bullet_RigidBody.triangleMeshCache.remove(data);
+					if(this.meshInterface != null) {
+						Ammo.destroy(this.meshInterface);
+					}
+				}
+			}
+		} else {
+			Ammo.destroy(this.btshape);
+		}
+	}
+	deleteShape() {
+		Ammo.destroy(this.btshape);
+	}
+}
+$hxClasses["armory.trait.physics.bullet.RigidBody"] = armory_trait_physics_bullet_RigidBody;
+armory_trait_physics_bullet_RigidBody.__name__ = true;
+armory_trait_physics_bullet_RigidBody.__super__ = iron_Trait;
+Object.assign(armory_trait_physics_bullet_RigidBody.prototype, {
+	__class__: armory_trait_physics_bullet_RigidBody
+	,shape: null
+	,physics: null
+	,transform: null
+	,mass: null
+	,friction: null
+	,angularFriction: null
+	,restitution: null
+	,collisionMargin: null
+	,linearDamping: null
+	,angularDamping: null
+	,animated: null
+	,staticObj: null
+	,destroyed: null
+	,linearFactors: null
+	,angularFactors: null
+	,useDeactivation: null
+	,deactivationParams: null
+	,ccd: null
+	,group: null
+	,mask: null
+	,trigger: null
+	,bodyScaleX: null
+	,bodyScaleY: null
+	,bodyScaleZ: null
+	,currentScaleX: null
+	,currentScaleY: null
+	,currentScaleZ: null
+	,meshInterface: null
+	,body: null
+	,motionState: null
+	,btshape: null
+	,ready: null
+	,id: null
+	,onReady: null
+	,onContact: null
+	,heightData: null
 });
 class zui_Handle {
 	constructor(ops) {
@@ -3584,6 +8525,17 @@ class armory_ui_Popup {
 }
 $hxClasses["armory.ui.Popup"] = armory_ui_Popup;
 armory_ui_Popup.__name__ = true;
+class bullet_BulletString {
+	static toHaxeString(this1) {
+		return bullet_BulletString.js_UTF8ToString(this1,this1);
+	}
+	static js_UTF8ToString(this1,heapOffset) {
+		let heap = Ammo.HEAPU8;
+		let end = heapOffset;
+		while(heap[end] != 0) ++end;
+		return haxe_io_Bytes.ofData(heap.buffer).getString(heapOffset,end - heapOffset,haxe_io_Encoding.UTF8);
+	}
+}
 var haxe_StackItem = $hxEnums["haxe.StackItem"] = { __ename__:true,__constructs__:null
 	,CFunction: {_hx_name:"CFunction",_hx_index:0,__enum__:"haxe.StackItem",toString:$estr}
 	,Module: ($_=function(m) { return {_hx_index:1,m:m,__enum__:"haxe.StackItem",toString:$estr}; },$_._hx_name="Module",$_.__params__ = ["m"],$_)
@@ -9547,2193 +14499,6 @@ Object.assign(iron_math_Mat3.prototype, {
 	,self: null
 	,__properties__: {set__22: "set__22",get__22: "get__22",set__21: "set__21",get__21: "get__21",set__20: "set__20",get__20: "get__20",set__12: "set__12",get__12: "get__12",set__11: "set__11",get__11: "get__11",set__10: "set__10",get__10: "get__10",set__02: "set__02",get__02: "get__02",set__01: "set__01",get__01: "get__01",set__00: "set__00",get__00: "get__00"}
 });
-class kha_math_FastMatrix4 {
-	constructor(_00,_10,_20,_30,_01,_11,_21,_31,_02,_12,_22,_32,_03,_13,_23,_33) {
-		this._00 = _00;
-		this._10 = _10;
-		this._20 = _20;
-		this._30 = _30;
-		this._01 = _01;
-		this._11 = _11;
-		this._21 = _21;
-		this._31 = _31;
-		this._02 = _02;
-		this._12 = _12;
-		this._22 = _22;
-		this._32 = _32;
-		this._03 = _03;
-		this._13 = _13;
-		this._23 = _23;
-		this._33 = _33;
-	}
-	static fromMatrix4(m) {
-		return new kha_math_FastMatrix4(m._00,m._10,m._20,m._30,m._01,m._11,m._21,m._31,m._02,m._12,m._22,m._32,m._03,m._13,m._23,m._33);
-	}
-	static orthogonalProjection(left,right,bottom,top,zn,zf) {
-		let tx = -(right + left) / (right - left);
-		let ty = -(top + bottom) / (top - bottom);
-		let tz = -(zf + zn) / (zf - zn);
-		return new kha_math_FastMatrix4(2 / (right - left),0,0,tx,0,2.0 / (top - bottom),0,ty,0,0,-2 / (zf - zn),tz,0,0,0,1);
-	}
-	static perspectiveProjection(fovY,aspect,zn,zf) {
-		let uh = 1.0 / Math.tan(fovY / 2);
-		let uw = uh / aspect;
-		return new kha_math_FastMatrix4(uw,0,0,0,0,uh,0,0,0,0,(zf + zn) / (zn - zf),2 * zf * zn / (zn - zf),0,0,-1,0);
-	}
-	static lookAt(eye,at,up) {
-		let x = at.x - eye.x;
-		let y = at.y - eye.y;
-		let z = at.z - eye.z;
-		if(z == null) {
-			z = 0;
-		}
-		if(y == null) {
-			y = 0;
-		}
-		if(x == null) {
-			x = 0;
-		}
-		let _this_x = x;
-		let _this_y = y;
-		let _this_z = z;
-		let x1 = _this_x;
-		let y1 = _this_y;
-		let z1 = _this_z;
-		if(z1 == null) {
-			z1 = 0;
-		}
-		if(y1 == null) {
-			y1 = 0;
-		}
-		if(x1 == null) {
-			x1 = 0;
-		}
-		let zaxis_x = x1;
-		let zaxis_y = y1;
-		let zaxis_z = z1;
-		let currentLength = Math.sqrt(zaxis_x * zaxis_x + zaxis_y * zaxis_y + zaxis_z * zaxis_z);
-		if(currentLength != 0) {
-			let mul = 1 / currentLength;
-			zaxis_x *= mul;
-			zaxis_y *= mul;
-			zaxis_z *= mul;
-		}
-		let _x = zaxis_y * up.z - zaxis_z * up.y;
-		let _y = zaxis_z * up.x - zaxis_x * up.z;
-		let _z = zaxis_x * up.y - zaxis_y * up.x;
-		let x2 = _x;
-		let y2 = _y;
-		let z2 = _z;
-		if(z2 == null) {
-			z2 = 0;
-		}
-		if(y2 == null) {
-			y2 = 0;
-		}
-		if(x2 == null) {
-			x2 = 0;
-		}
-		let _this_x1 = x2;
-		let _this_y1 = y2;
-		let _this_z1 = z2;
-		let x3 = _this_x1;
-		let y3 = _this_y1;
-		let z3 = _this_z1;
-		if(z3 == null) {
-			z3 = 0;
-		}
-		if(y3 == null) {
-			y3 = 0;
-		}
-		if(x3 == null) {
-			x3 = 0;
-		}
-		let xaxis_x = x3;
-		let xaxis_y = y3;
-		let xaxis_z = z3;
-		let currentLength1 = Math.sqrt(xaxis_x * xaxis_x + xaxis_y * xaxis_y + xaxis_z * xaxis_z);
-		if(currentLength1 != 0) {
-			let mul = 1 / currentLength1;
-			xaxis_x *= mul;
-			xaxis_y *= mul;
-			xaxis_z *= mul;
-		}
-		let _x1 = xaxis_y * zaxis_z - xaxis_z * zaxis_y;
-		let _y1 = xaxis_z * zaxis_x - xaxis_x * zaxis_z;
-		let _z1 = xaxis_x * zaxis_y - xaxis_y * zaxis_x;
-		let x4 = _x1;
-		let y4 = _y1;
-		let z4 = _z1;
-		if(z4 == null) {
-			z4 = 0;
-		}
-		if(y4 == null) {
-			y4 = 0;
-		}
-		if(x4 == null) {
-			x4 = 0;
-		}
-		let yaxis_x = x4;
-		let yaxis_y = y4;
-		let yaxis_z = z4;
-		return new kha_math_FastMatrix4(xaxis_x,xaxis_y,xaxis_z,-(xaxis_x * eye.x + xaxis_y * eye.y + xaxis_z * eye.z),yaxis_x,yaxis_y,yaxis_z,-(yaxis_x * eye.x + yaxis_y * eye.y + yaxis_z * eye.z),-zaxis_x,-zaxis_y,-zaxis_z,zaxis_x * eye.x + zaxis_y * eye.y + zaxis_z * eye.z,0,0,0,1);
-	}
-}
-$hxClasses["kha.math.FastMatrix4"] = kha_math_FastMatrix4;
-kha_math_FastMatrix4.__name__ = true;
-Object.assign(kha_math_FastMatrix4.prototype, {
-	__class__: kha_math_FastMatrix4
-	,_00: null
-	,_10: null
-	,_20: null
-	,_30: null
-	,_01: null
-	,_11: null
-	,_21: null
-	,_31: null
-	,_02: null
-	,_12: null
-	,_22: null
-	,_32: null
-	,_03: null
-	,_13: null
-	,_23: null
-	,_33: null
-});
-class iron_math_Vec4 {
-	constructor(x,y,z,w) {
-		if(w == null) {
-			w = 1.0;
-		}
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.w = w;
-	}
-	cross(v) {
-		let ax = this.x;
-		let ay = this.y;
-		let az = this.z;
-		let vx = v.x;
-		let vy = v.y;
-		let vz = v.z;
-		this.x = ay * vz - az * vy;
-		this.y = az * vx - ax * vz;
-		this.z = ax * vy - ay * vx;
-		return this;
-	}
-	crossvecs(a,b) {
-		let ax = a.x;
-		let ay = a.y;
-		let az = a.z;
-		let bx = b.x;
-		let by = b.y;
-		let bz = b.z;
-		this.x = ay * bz - az * by;
-		this.y = az * bx - ax * bz;
-		this.z = ax * by - ay * bx;
-		return this;
-	}
-	set(x,y,z,w) {
-		if(w == null) {
-			w = 1.0;
-		}
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.w = w;
-		return this;
-	}
-	add(v) {
-		this.x += v.x;
-		this.y += v.y;
-		this.z += v.z;
-		return this;
-	}
-	addf(x,y,z) {
-		this.x += x;
-		this.y += y;
-		this.z += z;
-		return this;
-	}
-	addvecs(a,b) {
-		this.x = a.x + b.x;
-		this.y = a.y + b.y;
-		this.z = a.z + b.z;
-		return this;
-	}
-	subvecs(a,b) {
-		this.x = a.x - b.x;
-		this.y = a.y - b.y;
-		this.z = a.z - b.z;
-		return this;
-	}
-	normalize() {
-		let n = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-		if(n > 0.0) {
-			let invN = 1.0 / n;
-			this.x *= invN;
-			this.y *= invN;
-			this.z *= invN;
-		}
-		return this;
-	}
-	mult(f) {
-		this.x *= f;
-		this.y *= f;
-		this.z *= f;
-		return this;
-	}
-	dot(v) {
-		return this.x * v.x + this.y * v.y + this.z * v.z;
-	}
-	setFrom(v) {
-		this.x = v.x;
-		this.y = v.y;
-		this.z = v.z;
-		this.w = v.w;
-		return this;
-	}
-	clone() {
-		return new iron_math_Vec4(this.x,this.y,this.z,this.w);
-	}
-	lerp(from,to,s) {
-		this.x = from.x + (to.x - from.x) * s;
-		this.y = from.y + (to.y - from.y) * s;
-		this.z = from.z + (to.z - from.z) * s;
-		return this;
-	}
-	applyproj(m) {
-		let x = this.x;
-		let y = this.y;
-		let z = this.z;
-		let d = 1.0 / (m.self._03 * x + m.self._13 * y + m.self._23 * z + m.self._33);
-		this.x = (m.self._00 * x + m.self._10 * y + m.self._20 * z + m.self._30) * d;
-		this.y = (m.self._01 * x + m.self._11 * y + m.self._21 * z + m.self._31) * d;
-		this.z = (m.self._02 * x + m.self._12 * y + m.self._22 * z + m.self._32) * d;
-		return this;
-	}
-	applymat(m) {
-		let x = this.x;
-		let y = this.y;
-		let z = this.z;
-		this.x = m.self._00 * x + m.self._10 * y + m.self._20 * z + m.self._30;
-		this.y = m.self._01 * x + m.self._11 * y + m.self._21 * z + m.self._31;
-		this.z = m.self._02 * x + m.self._12 * y + m.self._22 * z + m.self._32;
-		return this;
-	}
-	applymat4(m) {
-		let x = this.x;
-		let y = this.y;
-		let z = this.z;
-		let w = this.w;
-		this.x = m.self._00 * x + m.self._10 * y + m.self._20 * z + m.self._30 * w;
-		this.y = m.self._01 * x + m.self._11 * y + m.self._21 * z + m.self._31 * w;
-		this.z = m.self._02 * x + m.self._12 * y + m.self._22 * z + m.self._32 * w;
-		this.w = m.self._03 * x + m.self._13 * y + m.self._23 * z + m.self._33 * w;
-		return this;
-	}
-	applyAxisAngle(axis,angle) {
-		let quat_x = 0.0;
-		let quat_y = 0.0;
-		let quat_z = 0.0;
-		let quat_w = 1.0;
-		let s = Math.sin(angle * 0.5);
-		quat_x = axis.x * s;
-		quat_y = axis.y * s;
-		quat_z = axis.z * s;
-		quat_w = Math.cos(angle * 0.5);
-		let l = Math.sqrt(quat_x * quat_x + quat_y * quat_y + quat_z * quat_z + quat_w * quat_w);
-		if(l == 0.0) {
-			quat_x = 0;
-			quat_y = 0;
-			quat_z = 0;
-			quat_w = 0;
-		} else {
-			l = 1.0 / l;
-			quat_x *= l;
-			quat_y *= l;
-			quat_z *= l;
-			quat_w *= l;
-		}
-		let ix = quat_w * this.x + quat_y * this.z - quat_z * this.y;
-		let iy = quat_w * this.y + quat_z * this.x - quat_x * this.z;
-		let iz = quat_w * this.z + quat_x * this.y - quat_y * this.x;
-		let iw = -quat_x * this.x - quat_y * this.y - quat_z * this.z;
-		this.x = ix * quat_w + iw * -quat_x + iy * -quat_z - iz * -quat_y;
-		this.y = iy * quat_w + iw * -quat_y + iz * -quat_x - ix * -quat_z;
-		this.z = iz * quat_w + iw * -quat_z + ix * -quat_y - iy * -quat_x;
-		return this;
-	}
-	applyQuat(q) {
-		let ix = q.w * this.x + q.y * this.z - q.z * this.y;
-		let iy = q.w * this.y + q.z * this.x - q.x * this.z;
-		let iz = q.w * this.z + q.x * this.y - q.y * this.x;
-		let iw = -q.x * this.x - q.y * this.y - q.z * this.z;
-		this.x = ix * q.w + iw * -q.x + iy * -q.z - iz * -q.y;
-		this.y = iy * q.w + iw * -q.y + iz * -q.x - ix * -q.z;
-		this.z = iz * q.w + iw * -q.z + ix * -q.y - iy * -q.x;
-		return this;
-	}
-	equals(v) {
-		if(this.x == v.x && this.y == v.y) {
-			return this.z == v.z;
-		} else {
-			return false;
-		}
-	}
-	almostEquals(v,prec) {
-		if(Math.abs(this.x - v.x) < prec && Math.abs(this.y - v.y) < prec) {
-			return Math.abs(this.z - v.z) < prec;
-		} else {
-			return false;
-		}
-	}
-	length() {
-		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-	}
-	sub(v) {
-		this.x -= v.x;
-		this.y -= v.y;
-		this.z -= v.z;
-		return this;
-	}
-	exp(v) {
-		this.x = Math.exp(v.x);
-		this.y = Math.exp(v.y);
-		this.z = Math.exp(v.z);
-		return this;
-	}
-	distanceTo(p) {
-		return Math.sqrt((p.x - this.x) * (p.x - this.x) + (p.y - this.y) * (p.y - this.y) + (p.z - this.z) * (p.z - this.z));
-	}
-	reflect(n) {
-		let d = 2 * (this.x * n.x + this.y * n.y + this.z * n.z);
-		this.x -= d * n.x;
-		this.y -= d * n.y;
-		this.z -= d * n.z;
-		return this;
-	}
-	clamp(min,max) {
-		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-		if(l < min) {
-			let n = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-			if(n > 0.0) {
-				let invN = 1.0 / n;
-				this.x *= invN;
-				this.y *= invN;
-				this.z *= invN;
-			}
-			let _this = this;
-			_this.x *= min;
-			_this.y *= min;
-			_this.z *= min;
-		} else if(l > max) {
-			let n = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-			if(n > 0.0) {
-				let invN = 1.0 / n;
-				this.x *= invN;
-				this.y *= invN;
-				this.z *= invN;
-			}
-			let _this = this;
-			_this.x *= max;
-			_this.y *= max;
-			_this.z *= max;
-		}
-		return this;
-	}
-	toString() {
-		return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
-	}
-	static distance(v1,v2) {
-		let vx = v1.x - v2.x;
-		let vy = v1.y - v2.y;
-		let vz = v1.z - v2.z;
-		return Math.sqrt(vx * vx + vy * vy + vz * vz);
-	}
-	static distancef(v1x,v1y,v1z,v2x,v2y,v2z) {
-		let vx = v1x - v2x;
-		let vy = v1y - v2y;
-		let vz = v1z - v2z;
-		return Math.sqrt(vx * vx + vy * vy + vz * vz);
-	}
-	static xAxis() {
-		return new iron_math_Vec4(1.0,0.0,0.0);
-	}
-	static yAxis() {
-		return new iron_math_Vec4(0.0,1.0,0.0);
-	}
-	static zAxis() {
-		return new iron_math_Vec4(0.0,0.0,1.0);
-	}
-}
-$hxClasses["iron.math.Vec4"] = iron_math_Vec4;
-iron_math_Vec4.__name__ = true;
-Object.assign(iron_math_Vec4.prototype, {
-	__class__: iron_math_Vec4
-	,x: null
-	,y: null
-	,z: null
-	,w: null
-});
-class iron_math_Mat4 {
-	constructor(_00,_10,_20,_30,_01,_11,_21,_31,_02,_12,_22,_32,_03,_13,_23,_33) {
-		this.self = new kha_math_FastMatrix4(_00,_10,_20,_30,_01,_11,_21,_31,_02,_12,_22,_32,_03,_13,_23,_33);
-	}
-	compose(loc,quat,sc) {
-		let x = quat.x;
-		let y = quat.y;
-		let z = quat.z;
-		let w = quat.w;
-		let x2 = x + x;
-		let y2 = y + y;
-		let z2 = z + z;
-		let xx = x * x2;
-		let xy = x * y2;
-		let xz = x * z2;
-		let yy = y * y2;
-		let yz = y * z2;
-		let zz = z * z2;
-		let wx = w * x2;
-		let wy = w * y2;
-		let wz = w * z2;
-		this.self._00 = 1.0 - (yy + zz);
-		this.self._10 = xy - wz;
-		this.self._20 = xz + wy;
-		this.self._01 = xy + wz;
-		this.self._11 = 1.0 - (xx + zz);
-		this.self._21 = yz - wx;
-		this.self._02 = xz - wy;
-		this.self._12 = yz + wx;
-		this.self._22 = 1.0 - (xx + yy);
-		this.self._03 = 0.0;
-		this.self._13 = 0.0;
-		this.self._23 = 0.0;
-		this.self._30 = 0.0;
-		this.self._31 = 0.0;
-		this.self._32 = 0.0;
-		this.self._33 = 1.0;
-		let x1 = sc.x;
-		let y1 = sc.y;
-		let z1 = sc.z;
-		this.self._00 *= x1;
-		this.self._01 *= x1;
-		this.self._02 *= x1;
-		this.self._03 *= x1;
-		this.self._10 *= y1;
-		this.self._11 *= y1;
-		this.self._12 *= y1;
-		this.self._13 *= y1;
-		this.self._20 *= z1;
-		this.self._21 *= z1;
-		this.self._22 *= z1;
-		this.self._23 *= z1;
-		this.self._30 = loc.x;
-		this.self._31 = loc.y;
-		this.self._32 = loc.z;
-		return this;
-	}
-	decompose(loc,quat,scale) {
-		loc.x = this.self._30;
-		loc.y = this.self._31;
-		loc.z = this.self._32;
-		let _this = iron_math_Mat4.helpVec;
-		_this.x = this.self._00;
-		_this.y = this.self._01;
-		_this.z = this.self._02;
-		_this.w = 1.0;
-		let _this1 = _this;
-		scale.x = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z);
-		let _this2 = iron_math_Mat4.helpVec;
-		_this2.x = this.self._10;
-		_this2.y = this.self._11;
-		_this2.z = this.self._12;
-		_this2.w = 1.0;
-		let _this3 = _this2;
-		scale.y = Math.sqrt(_this3.x * _this3.x + _this3.y * _this3.y + _this3.z * _this3.z);
-		let _this4 = iron_math_Mat4.helpVec;
-		_this4.x = this.self._20;
-		_this4.y = this.self._21;
-		_this4.z = this.self._22;
-		_this4.w = 1.0;
-		let _this5 = _this4;
-		scale.z = Math.sqrt(_this5.x * _this5.x + _this5.y * _this5.y + _this5.z * _this5.z);
-		let _this6 = this.self;
-		let m3 = _this6._12;
-		let m4 = _this6._22;
-		let m5 = _this6._32;
-		let m6 = _this6._13;
-		let m7 = _this6._23;
-		let m8 = _this6._33;
-		let c00 = _this6._11 * (m4 * m8 - m5 * m7) - _this6._21 * (m3 * m8 - m5 * m6) + _this6._31 * (m3 * m7 - m4 * m6);
-		let m31 = _this6._12;
-		let m41 = _this6._22;
-		let m51 = _this6._32;
-		let m61 = _this6._13;
-		let m71 = _this6._23;
-		let m81 = _this6._33;
-		let c01 = _this6._10 * (m41 * m81 - m51 * m71) - _this6._20 * (m31 * m81 - m51 * m61) + _this6._30 * (m31 * m71 - m41 * m61);
-		let m32 = _this6._11;
-		let m42 = _this6._21;
-		let m52 = _this6._31;
-		let m62 = _this6._13;
-		let m72 = _this6._23;
-		let m82 = _this6._33;
-		let c02 = _this6._10 * (m42 * m82 - m52 * m72) - _this6._20 * (m32 * m82 - m52 * m62) + _this6._30 * (m32 * m72 - m42 * m62);
-		let m33 = _this6._11;
-		let m43 = _this6._21;
-		let m53 = _this6._31;
-		let m63 = _this6._12;
-		let m73 = _this6._22;
-		let m83 = _this6._32;
-		let c03 = _this6._10 * (m43 * m83 - m53 * m73) - _this6._20 * (m33 * m83 - m53 * m63) + _this6._30 * (m33 * m73 - m43 * m63);
-		if(_this6._00 * c00 - _this6._01 * c01 + _this6._02 * c02 - _this6._03 * c03 < 0.0) {
-			scale.x = -scale.x;
-		}
-		let invs = 1.0 / scale.x;
-		iron_math_Mat4.helpMat.self._00 = this.self._00 * invs;
-		iron_math_Mat4.helpMat.self._01 = this.self._01 * invs;
-		iron_math_Mat4.helpMat.self._02 = this.self._02 * invs;
-		invs = 1.0 / scale.y;
-		iron_math_Mat4.helpMat.self._10 = this.self._10 * invs;
-		iron_math_Mat4.helpMat.self._11 = this.self._11 * invs;
-		iron_math_Mat4.helpMat.self._12 = this.self._12 * invs;
-		invs = 1.0 / scale.z;
-		iron_math_Mat4.helpMat.self._20 = this.self._20 * invs;
-		iron_math_Mat4.helpMat.self._21 = this.self._21 * invs;
-		iron_math_Mat4.helpMat.self._22 = this.self._22 * invs;
-		let m = iron_math_Mat4.helpMat;
-		let m11 = m.self._00;
-		let m12 = m.self._10;
-		let m13 = m.self._20;
-		let m21 = m.self._01;
-		let m22 = m.self._11;
-		let m23 = m.self._21;
-		let m311 = m.self._02;
-		let m321 = m.self._12;
-		let m331 = m.self._22;
-		let tr = m11 + m22 + m331;
-		let s = 0.0;
-		if(tr > 0) {
-			s = 0.5 / Math.sqrt(tr + 1.0);
-			quat.w = 0.25 / s;
-			quat.x = (m321 - m23) * s;
-			quat.y = (m13 - m311) * s;
-			quat.z = (m21 - m12) * s;
-		} else if(m11 > m22 && m11 > m331) {
-			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m331);
-			quat.w = (m321 - m23) / s;
-			quat.x = 0.25 * s;
-			quat.y = (m12 + m21) / s;
-			quat.z = (m13 + m311) / s;
-		} else if(m22 > m331) {
-			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m331);
-			quat.w = (m13 - m311) / s;
-			quat.x = (m12 + m21) / s;
-			quat.y = 0.25 * s;
-			quat.z = (m23 + m321) / s;
-		} else {
-			s = 2.0 * Math.sqrt(1.0 + m331 - m11 - m22);
-			quat.w = (m21 - m12) / s;
-			quat.x = (m13 + m311) / s;
-			quat.y = (m23 + m321) / s;
-			quat.z = 0.25 * s;
-		}
-		return this;
-	}
-	setLoc(v) {
-		this.self._30 = v.x;
-		this.self._31 = v.y;
-		this.self._32 = v.z;
-		return this;
-	}
-	fromQuat(q) {
-		let x = q.x;
-		let y = q.y;
-		let z = q.z;
-		let w = q.w;
-		let x2 = x + x;
-		let y2 = y + y;
-		let z2 = z + z;
-		let xx = x * x2;
-		let xy = x * y2;
-		let xz = x * z2;
-		let yy = y * y2;
-		let yz = y * z2;
-		let zz = z * z2;
-		let wx = w * x2;
-		let wy = w * y2;
-		let wz = w * z2;
-		this.self._00 = 1.0 - (yy + zz);
-		this.self._10 = xy - wz;
-		this.self._20 = xz + wy;
-		this.self._01 = xy + wz;
-		this.self._11 = 1.0 - (xx + zz);
-		this.self._21 = yz - wx;
-		this.self._02 = xz - wy;
-		this.self._12 = yz + wx;
-		this.self._22 = 1.0 - (xx + yy);
-		this.self._03 = 0.0;
-		this.self._13 = 0.0;
-		this.self._23 = 0.0;
-		this.self._30 = 0.0;
-		this.self._31 = 0.0;
-		this.self._32 = 0.0;
-		this.self._33 = 1.0;
-		return this;
-	}
-	setIdentity() {
-		this.self._00 = 1.0;
-		this.self._01 = 0.0;
-		this.self._02 = 0.0;
-		this.self._03 = 0.0;
-		this.self._10 = 0.0;
-		this.self._11 = 1.0;
-		this.self._12 = 0.0;
-		this.self._13 = 0.0;
-		this.self._20 = 0.0;
-		this.self._21 = 0.0;
-		this.self._22 = 1.0;
-		this.self._23 = 0.0;
-		this.self._30 = 0.0;
-		this.self._31 = 0.0;
-		this.self._32 = 0.0;
-		this.self._33 = 1.0;
-		return this;
-	}
-	initTranslate(x,y,z) {
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		this.self._00 = 1.0;
-		this.self._01 = 0.0;
-		this.self._02 = 0.0;
-		this.self._03 = 0.0;
-		this.self._10 = 0.0;
-		this.self._11 = 1.0;
-		this.self._12 = 0.0;
-		this.self._13 = 0.0;
-		this.self._20 = 0.0;
-		this.self._21 = 0.0;
-		this.self._22 = 1.0;
-		this.self._23 = 0.0;
-		this.self._30 = x;
-		this.self._31 = y;
-		this.self._32 = z;
-		this.self._33 = 1.0;
-		return this;
-	}
-	translate(x,y,z) {
-		this.self._00 += x * this.self._03;
-		this.self._01 += y * this.self._03;
-		this.self._02 += z * this.self._03;
-		this.self._10 += x * this.self._13;
-		this.self._11 += y * this.self._13;
-		this.self._12 += z * this.self._13;
-		this.self._20 += x * this.self._23;
-		this.self._21 += y * this.self._23;
-		this.self._22 += z * this.self._23;
-		this.self._30 += x * this.self._33;
-		this.self._31 += y * this.self._33;
-		this.self._32 += z * this.self._33;
-		return this;
-	}
-	scale(v) {
-		let x = v.x;
-		let y = v.y;
-		let z = v.z;
-		this.self._00 *= x;
-		this.self._01 *= x;
-		this.self._02 *= x;
-		this.self._03 *= x;
-		this.self._10 *= y;
-		this.self._11 *= y;
-		this.self._12 *= y;
-		this.self._13 *= y;
-		this.self._20 *= z;
-		this.self._21 *= z;
-		this.self._22 *= z;
-		this.self._23 *= z;
-		return this;
-	}
-	multmats3x4(a,b) {
-		let a00 = a.self._00;
-		let a01 = a.self._01;
-		let a02 = a.self._02;
-		let a03 = a.self._03;
-		let a10 = a.self._10;
-		let a11 = a.self._11;
-		let a12 = a.self._12;
-		let a13 = a.self._13;
-		let a20 = a.self._20;
-		let a21 = a.self._21;
-		let a22 = a.self._22;
-		let a23 = a.self._23;
-		let a30 = a.self._30;
-		let a31 = a.self._31;
-		let a32 = a.self._32;
-		let a33 = a.self._33;
-		let b0 = b.self._00;
-		let b1 = b.self._10;
-		let b2 = b.self._20;
-		let b3 = b.self._30;
-		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = b.self._01;
-		b1 = b.self._11;
-		b2 = b.self._21;
-		b3 = b.self._31;
-		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = b.self._02;
-		b1 = b.self._12;
-		b2 = b.self._22;
-		b3 = b.self._32;
-		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		this.self._03 = 0;
-		this.self._13 = 0;
-		this.self._23 = 0;
-		this.self._33 = 1;
-		return this;
-	}
-	multmats(b,a) {
-		let a00 = a.self._00;
-		let a01 = a.self._01;
-		let a02 = a.self._02;
-		let a03 = a.self._03;
-		let a10 = a.self._10;
-		let a11 = a.self._11;
-		let a12 = a.self._12;
-		let a13 = a.self._13;
-		let a20 = a.self._20;
-		let a21 = a.self._21;
-		let a22 = a.self._22;
-		let a23 = a.self._23;
-		let a30 = a.self._30;
-		let a31 = a.self._31;
-		let a32 = a.self._32;
-		let a33 = a.self._33;
-		let b0 = b.self._00;
-		let b1 = b.self._10;
-		let b2 = b.self._20;
-		let b3 = b.self._30;
-		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = b.self._01;
-		b1 = b.self._11;
-		b2 = b.self._21;
-		b3 = b.self._31;
-		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = b.self._02;
-		b1 = b.self._12;
-		b2 = b.self._22;
-		b3 = b.self._32;
-		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = b.self._03;
-		b1 = b.self._13;
-		b2 = b.self._23;
-		b3 = b.self._33;
-		this.self._03 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._13 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._23 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._33 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		return this;
-	}
-	multmat(m) {
-		let a00 = this.self._00;
-		let a01 = this.self._01;
-		let a02 = this.self._02;
-		let a03 = this.self._03;
-		let a10 = this.self._10;
-		let a11 = this.self._11;
-		let a12 = this.self._12;
-		let a13 = this.self._13;
-		let a20 = this.self._20;
-		let a21 = this.self._21;
-		let a22 = this.self._22;
-		let a23 = this.self._23;
-		let a30 = this.self._30;
-		let a31 = this.self._31;
-		let a32 = this.self._32;
-		let a33 = this.self._33;
-		let b0 = m.self._00;
-		let b1 = m.self._10;
-		let b2 = m.self._20;
-		let b3 = m.self._30;
-		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = m.self._01;
-		b1 = m.self._11;
-		b2 = m.self._21;
-		b3 = m.self._31;
-		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = m.self._02;
-		b1 = m.self._12;
-		b2 = m.self._22;
-		b3 = m.self._32;
-		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = m.self._03;
-		b1 = m.self._13;
-		b2 = m.self._23;
-		b3 = m.self._33;
-		this.self._03 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._13 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._23 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._33 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		return this;
-	}
-	getInverse(m) {
-		let a00 = m.self._00;
-		let a01 = m.self._01;
-		let a02 = m.self._02;
-		let a03 = m.self._03;
-		let a10 = m.self._10;
-		let a11 = m.self._11;
-		let a12 = m.self._12;
-		let a13 = m.self._13;
-		let a20 = m.self._20;
-		let a21 = m.self._21;
-		let a22 = m.self._22;
-		let a23 = m.self._23;
-		let a30 = m.self._30;
-		let a31 = m.self._31;
-		let a32 = m.self._32;
-		let a33 = m.self._33;
-		let b00 = a00 * a11 - a01 * a10;
-		let b01 = a00 * a12 - a02 * a10;
-		let b02 = a00 * a13 - a03 * a10;
-		let b03 = a01 * a12 - a02 * a11;
-		let b04 = a01 * a13 - a03 * a11;
-		let b05 = a02 * a13 - a03 * a12;
-		let b06 = a20 * a31 - a21 * a30;
-		let b07 = a20 * a32 - a22 * a30;
-		let b08 = a20 * a33 - a23 * a30;
-		let b09 = a21 * a32 - a22 * a31;
-		let b10 = a21 * a33 - a23 * a31;
-		let b11 = a22 * a33 - a23 * a32;
-		let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-		if(det == 0.0) {
-			this.self._00 = 1.0;
-			this.self._01 = 0.0;
-			this.self._02 = 0.0;
-			this.self._03 = 0.0;
-			this.self._10 = 0.0;
-			this.self._11 = 1.0;
-			this.self._12 = 0.0;
-			this.self._13 = 0.0;
-			this.self._20 = 0.0;
-			this.self._21 = 0.0;
-			this.self._22 = 1.0;
-			this.self._23 = 0.0;
-			this.self._30 = 0.0;
-			this.self._31 = 0.0;
-			this.self._32 = 0.0;
-			this.self._33 = 1.0;
-			return this;
-		}
-		det = 1.0 / det;
-		this.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-		this.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-		this.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-		this.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-		this.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-		this.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-		this.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-		this.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-		this.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-		this.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-		this.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-		this.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-		this.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-		this.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-		this.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-		this.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-		return this;
-	}
-	transpose() {
-		let f = this.self._01;
-		this.self._01 = this.self._10;
-		this.self._10 = f;
-		f = this.self._02;
-		this.self._02 = this.self._20;
-		this.self._20 = f;
-		f = this.self._03;
-		this.self._03 = this.self._30;
-		this.self._30 = f;
-		f = this.self._12;
-		this.self._12 = this.self._21;
-		this.self._21 = f;
-		f = this.self._13;
-		this.self._13 = this.self._31;
-		this.self._31 = f;
-		f = this.self._23;
-		this.self._23 = this.self._32;
-		this.self._32 = f;
-		return this;
-	}
-	transpose3x3() {
-		let f = this.self._01;
-		this.self._01 = this.self._10;
-		this.self._10 = f;
-		f = this.self._02;
-		this.self._02 = this.self._20;
-		this.self._20 = f;
-		f = this.self._12;
-		this.self._12 = this.self._21;
-		this.self._21 = f;
-		return this;
-	}
-	clone() {
-		return new iron_math_Mat4(this.self._00,this.self._10,this.self._20,this.self._30,this.self._01,this.self._11,this.self._21,this.self._31,this.self._02,this.self._12,this.self._22,this.self._32,this.self._03,this.self._13,this.self._23,this.self._33);
-	}
-	setF32(a,offset) {
-		if(offset == null) {
-			offset = 0;
-		}
-		this.self._00 = a.getFloat32(offset * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._10 = a.getFloat32((1 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._20 = a.getFloat32((2 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._30 = a.getFloat32((3 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._01 = a.getFloat32((4 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._11 = a.getFloat32((5 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._21 = a.getFloat32((6 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._31 = a.getFloat32((7 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._02 = a.getFloat32((8 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._12 = a.getFloat32((9 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._22 = a.getFloat32((10 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._32 = a.getFloat32((11 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._03 = a.getFloat32((12 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._13 = a.getFloat32((13 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._23 = a.getFloat32((14 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		this.self._33 = a.getFloat32((15 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-		return this;
-	}
-	setFrom(m) {
-		this.self._00 = m.self._00;
-		this.self._01 = m.self._01;
-		this.self._02 = m.self._02;
-		this.self._03 = m.self._03;
-		this.self._10 = m.self._10;
-		this.self._11 = m.self._11;
-		this.self._12 = m.self._12;
-		this.self._13 = m.self._13;
-		this.self._20 = m.self._20;
-		this.self._21 = m.self._21;
-		this.self._22 = m.self._22;
-		this.self._23 = m.self._23;
-		this.self._30 = m.self._30;
-		this.self._31 = m.self._31;
-		this.self._32 = m.self._32;
-		this.self._33 = m.self._33;
-		return this;
-	}
-	getLoc() {
-		return new iron_math_Vec4(this.self._30,this.self._31,this.self._32,this.self._33);
-	}
-	getScale() {
-		return new iron_math_Vec4(Math.sqrt(this.self._00 * this.self._00 + this.self._10 * this.self._10 + this.self._20 * this.self._20),Math.sqrt(this.self._01 * this.self._01 + this.self._11 * this.self._11 + this.self._21 * this.self._21),Math.sqrt(this.self._02 * this.self._02 + this.self._12 * this.self._12 + this.self._22 * this.self._22));
-	}
-	mult(s) {
-		this.self._00 *= s;
-		this.self._10 *= s;
-		this.self._20 *= s;
-		this.self._30 *= s;
-		this.self._01 *= s;
-		this.self._11 *= s;
-		this.self._21 *= s;
-		this.self._31 *= s;
-		this.self._02 *= s;
-		this.self._12 *= s;
-		this.self._22 *= s;
-		this.self._32 *= s;
-		this.self._03 *= s;
-		this.self._13 *= s;
-		this.self._23 *= s;
-		this.self._33 *= s;
-		return this;
-	}
-	toRotation() {
-		let _this = iron_math_Mat4.helpVec;
-		_this.x = this.self._00;
-		_this.y = this.self._01;
-		_this.z = this.self._02;
-		_this.w = 1.0;
-		let _this1 = _this;
-		let scale = 1.0 / Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z);
-		this.self._00 *= scale;
-		this.self._01 *= scale;
-		this.self._02 *= scale;
-		let _this2 = iron_math_Mat4.helpVec;
-		_this2.x = this.self._10;
-		_this2.y = this.self._11;
-		_this2.z = this.self._12;
-		_this2.w = 1.0;
-		let _this3 = _this2;
-		scale = 1.0 / Math.sqrt(_this3.x * _this3.x + _this3.y * _this3.y + _this3.z * _this3.z);
-		this.self._10 *= scale;
-		this.self._11 *= scale;
-		this.self._12 *= scale;
-		let _this4 = iron_math_Mat4.helpVec;
-		_this4.x = this.self._20;
-		_this4.y = this.self._21;
-		_this4.z = this.self._22;
-		_this4.w = 1.0;
-		let _this5 = _this4;
-		scale = 1.0 / Math.sqrt(_this5.x * _this5.x + _this5.y * _this5.y + _this5.z * _this5.z);
-		this.self._20 *= scale;
-		this.self._21 *= scale;
-		this.self._22 *= scale;
-		this.self._03 = 0.0;
-		this.self._13 = 0.0;
-		this.self._23 = 0.0;
-		this.self._30 = 0.0;
-		this.self._31 = 0.0;
-		this.self._32 = 0.0;
-		this.self._33 = 1.0;
-		return this;
-	}
-	setLookAt(eye,center,up) {
-		let f0 = center.x - eye.x;
-		let f1 = center.y - eye.y;
-		let f2 = center.z - eye.z;
-		let n = 1.0 / Math.sqrt(f0 * f0 + f1 * f1 + f2 * f2);
-		f0 *= n;
-		f1 *= n;
-		f2 *= n;
-		let s0 = f1 * up.z - f2 * up.y;
-		let s1 = f2 * up.x - f0 * up.z;
-		let s2 = f0 * up.y - f1 * up.x;
-		n = 1.0 / Math.sqrt(s0 * s0 + s1 * s1 + s2 * s2);
-		s0 *= n;
-		s1 *= n;
-		s2 *= n;
-		let u0 = s1 * f2 - s2 * f1;
-		let u1 = s2 * f0 - s0 * f2;
-		let u2 = s0 * f1 - s1 * f0;
-		let d0 = -eye.x * s0 - eye.y * s1 - eye.z * s2;
-		let d1 = -eye.x * u0 - eye.y * u1 - eye.z * u2;
-		let d2 = eye.x * f0 + eye.y * f1 + eye.z * f2;
-		this.self._00 = s0;
-		this.self._10 = s1;
-		this.self._20 = s2;
-		this.self._30 = d0;
-		this.self._01 = u0;
-		this.self._11 = u1;
-		this.self._21 = u2;
-		this.self._31 = d1;
-		this.self._02 = -f0;
-		this.self._12 = -f1;
-		this.self._22 = -f2;
-		this.self._32 = d2;
-		this.self._03 = 0.0;
-		this.self._13 = 0.0;
-		this.self._23 = 0.0;
-		this.self._33 = 1.0;
-		return this;
-	}
-	applyQuat(q) {
-		let _this = iron_math_Mat4.helpMat;
-		let x = q.x;
-		let y = q.y;
-		let z = q.z;
-		let w = q.w;
-		let x2 = x + x;
-		let y2 = y + y;
-		let z2 = z + z;
-		let xx = x * x2;
-		let xy = x * y2;
-		let xz = x * z2;
-		let yy = y * y2;
-		let yz = y * z2;
-		let zz = z * z2;
-		let wx = w * x2;
-		let wy = w * y2;
-		let wz = w * z2;
-		_this.self._00 = 1.0 - (yy + zz);
-		_this.self._10 = xy - wz;
-		_this.self._20 = xz + wy;
-		_this.self._01 = xy + wz;
-		_this.self._11 = 1.0 - (xx + zz);
-		_this.self._21 = yz - wx;
-		_this.self._02 = xz - wy;
-		_this.self._12 = yz + wx;
-		_this.self._22 = 1.0 - (xx + yy);
-		_this.self._03 = 0.0;
-		_this.self._13 = 0.0;
-		_this.self._23 = 0.0;
-		_this.self._30 = 0.0;
-		_this.self._31 = 0.0;
-		_this.self._32 = 0.0;
-		_this.self._33 = 1.0;
-		let m = iron_math_Mat4.helpMat;
-		let a00 = this.self._00;
-		let a01 = this.self._01;
-		let a02 = this.self._02;
-		let a03 = this.self._03;
-		let a10 = this.self._10;
-		let a11 = this.self._11;
-		let a12 = this.self._12;
-		let a13 = this.self._13;
-		let a20 = this.self._20;
-		let a21 = this.self._21;
-		let a22 = this.self._22;
-		let a23 = this.self._23;
-		let a30 = this.self._30;
-		let a31 = this.self._31;
-		let a32 = this.self._32;
-		let a33 = this.self._33;
-		let b0 = m.self._00;
-		let b1 = m.self._10;
-		let b2 = m.self._20;
-		let b3 = m.self._30;
-		this.self._00 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._10 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._20 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._30 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = m.self._01;
-		b1 = m.self._11;
-		b2 = m.self._21;
-		b3 = m.self._31;
-		this.self._01 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._11 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._21 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._31 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = m.self._02;
-		b1 = m.self._12;
-		b2 = m.self._22;
-		b3 = m.self._32;
-		this.self._02 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._12 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._22 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._32 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-		b0 = m.self._03;
-		b1 = m.self._13;
-		b2 = m.self._23;
-		b3 = m.self._33;
-		this.self._03 = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3;
-		this.self._13 = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3;
-		this.self._23 = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3;
-		this.self._33 = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3;
-	}
-	right() {
-		return new iron_math_Vec4(this.self._00,this.self._01,this.self._02);
-	}
-	look() {
-		return new iron_math_Vec4(this.self._10,this.self._11,this.self._12);
-	}
-	up() {
-		return new iron_math_Vec4(this.self._20,this.self._21,this.self._22);
-	}
-	get__00() {
-		return this.self._00;
-	}
-	set__00(f) {
-		return this.self._00 = f;
-	}
-	get__01() {
-		return this.self._01;
-	}
-	set__01(f) {
-		return this.self._01 = f;
-	}
-	get__02() {
-		return this.self._02;
-	}
-	set__02(f) {
-		return this.self._02 = f;
-	}
-	get__03() {
-		return this.self._03;
-	}
-	set__03(f) {
-		return this.self._03 = f;
-	}
-	get__10() {
-		return this.self._10;
-	}
-	set__10(f) {
-		return this.self._10 = f;
-	}
-	get__11() {
-		return this.self._11;
-	}
-	set__11(f) {
-		return this.self._11 = f;
-	}
-	get__12() {
-		return this.self._12;
-	}
-	set__12(f) {
-		return this.self._12 = f;
-	}
-	get__13() {
-		return this.self._13;
-	}
-	set__13(f) {
-		return this.self._13 = f;
-	}
-	get__20() {
-		return this.self._20;
-	}
-	set__20(f) {
-		return this.self._20 = f;
-	}
-	get__21() {
-		return this.self._21;
-	}
-	set__21(f) {
-		return this.self._21 = f;
-	}
-	get__22() {
-		return this.self._22;
-	}
-	set__22(f) {
-		return this.self._22 = f;
-	}
-	get__23() {
-		return this.self._23;
-	}
-	set__23(f) {
-		return this.self._23 = f;
-	}
-	get__30() {
-		return this.self._30;
-	}
-	set__30(f) {
-		return this.self._30 = f;
-	}
-	get__31() {
-		return this.self._31;
-	}
-	set__31(f) {
-		return this.self._31 = f;
-	}
-	get__32() {
-		return this.self._32;
-	}
-	set__32(f) {
-		return this.self._32 = f;
-	}
-	get__33() {
-		return this.self._33;
-	}
-	set__33(f) {
-		return this.self._33 = f;
-	}
-	toString() {
-		return "[[" + this.self._00 + ", " + this.self._10 + ", " + this.self._20 + ", " + this.self._30 + "], [" + this.self._01 + ", " + this.self._11 + ", " + this.self._21 + ", " + this.self._31 + "], [" + this.self._02 + ", " + this.self._12 + ", " + this.self._22 + ", " + this.self._32 + "], [" + this.self._03 + ", " + this.self._13 + ", " + this.self._23 + ", " + this.self._33 + "]]";
-	}
-	toFloat32Array() {
-		let array = kha_arrays_Float32Array._new(16);
-		let v = this.self._00;
-		array.setFloat32(0,v,true);
-		let v1 = this.self._10;
-		array.setFloat32(4,v1,true);
-		let v2 = this.self._20;
-		array.setFloat32(8,v2,true);
-		let v3 = this.self._30;
-		array.setFloat32(12,v3,true);
-		let v4 = this.self._01;
-		array.setFloat32(16,v4,true);
-		let v5 = this.self._11;
-		array.setFloat32(20,v5,true);
-		let v6 = this.self._21;
-		array.setFloat32(24,v6,true);
-		let v7 = this.self._31;
-		array.setFloat32(28,v7,true);
-		let v8 = this.self._02;
-		array.setFloat32(32,v8,true);
-		let v9 = this.self._12;
-		array.setFloat32(36,v9,true);
-		let v10 = this.self._22;
-		array.setFloat32(40,v10,true);
-		let v11 = this.self._32;
-		array.setFloat32(44,v11,true);
-		let v12 = this.self._03;
-		array.setFloat32(48,v12,true);
-		let v13 = this.self._13;
-		array.setFloat32(52,v13,true);
-		let v14 = this.self._23;
-		array.setFloat32(56,v14,true);
-		let v15 = this.self._33;
-		array.setFloat32(60,v15,true);
-		return array;
-	}
-	static fromFloat32Array(a,offset) {
-		if(offset == null) {
-			offset = 0;
-		}
-		return new iron_math_Mat4(a.getFloat32(offset * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((1 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((2 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((3 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((4 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((5 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((6 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((7 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((8 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((9 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((10 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((11 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((12 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((13 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((14 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN),a.getFloat32((15 + offset) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN));
-	}
-	static identity() {
-		return new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
-	}
-	static persp(fovY,aspect,zn,zf) {
-		let uh = 1.0 / Math.tan(fovY / 2);
-		let uw = uh / aspect;
-		return new iron_math_Mat4(uw,0,0,0,0,uh,0,0,0,0,(zf + zn) / (zn - zf),2 * zf * zn / (zn - zf),0,0,-1,0);
-	}
-	static ortho(left,right,bottom,top,near,far) {
-		let rl = right - left;
-		let tb = top - bottom;
-		let fn = far - near;
-		let tx = -(right + left) / rl;
-		let ty = -(top + bottom) / tb;
-		let tz = -(far + near) / fn;
-		return new iron_math_Mat4(2 / rl,0,0,tx,0,2 / tb,0,ty,0,0,-2 / fn,tz,0,0,0,1);
-	}
-}
-$hxClasses["iron.math.Mat4"] = iron_math_Mat4;
-iron_math_Mat4.__name__ = true;
-Object.assign(iron_math_Mat4.prototype, {
-	__class__: iron_math_Mat4
-	,self: null
-	,__properties__: {set__33: "set__33",get__33: "get__33",set__32: "set__32",get__32: "get__32",set__31: "set__31",get__31: "get__31",set__30: "set__30",get__30: "get__30",set__23: "set__23",get__23: "get__23",set__22: "set__22",get__22: "get__22",set__21: "set__21",get__21: "get__21",set__20: "set__20",get__20: "get__20",set__13: "set__13",get__13: "get__13",set__12: "set__12",get__12: "get__12",set__11: "set__11",get__11: "get__11",set__10: "set__10",get__10: "get__10",set__03: "set__03",get__03: "get__03",set__02: "set__02",get__02: "get__02",set__01: "set__01",get__01: "get__01",set__00: "set__00",get__00: "get__00"}
-});
-class iron_math_Quat {
-	constructor(x,y,z,w) {
-		if(w == null) {
-			w = 1.0;
-		}
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.w = w;
-	}
-	set(x,y,z,w) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.w = w;
-		return this;
-	}
-	add(q) {
-		this.x += q.x;
-		this.y += q.y;
-		this.z += q.z;
-		this.w += q.w;
-		return this;
-	}
-	addquat(a,b) {
-		this.x = a.x + b.x;
-		this.y = a.y + b.y;
-		this.z = a.z + b.z;
-		this.w = a.w + b.w;
-		return this;
-	}
-	sub(q) {
-		this.x -= q.x;
-		this.y -= q.y;
-		this.z -= q.z;
-		this.w -= q.w;
-		return this;
-	}
-	subquat(a,b) {
-		this.x = a.x - b.x;
-		this.y = a.y - b.y;
-		this.z = a.z - b.z;
-		this.w = a.w - b.w;
-		return this;
-	}
-	fromAxisAngle(axis,angle) {
-		let s = Math.sin(angle * 0.5);
-		this.x = axis.x * s;
-		this.y = axis.y * s;
-		this.z = axis.z * s;
-		this.w = Math.cos(angle * 0.5);
-		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-		if(l == 0.0) {
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-			this.w = 0;
-		} else {
-			l = 1.0 / l;
-			this.x *= l;
-			this.y *= l;
-			this.z *= l;
-			this.w *= l;
-		}
-		return this;
-	}
-	toAxisAngle(axis) {
-		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-		if(l == 0.0) {
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-			this.w = 0;
-		} else {
-			l = 1.0 / l;
-			this.x *= l;
-			this.y *= l;
-			this.z *= l;
-			this.w *= l;
-		}
-		let angle = 2 * Math.acos(this.w);
-		let s = Math.sqrt(1 - this.w * this.w);
-		if(s < 0.001) {
-			axis.x = this.x;
-			axis.y = this.y;
-			axis.z = this.z;
-		} else {
-			axis.x = this.x / s;
-			axis.y = this.y / s;
-			axis.z = this.z / s;
-		}
-		return angle;
-	}
-	fromMat(m) {
-		let _this = iron_math_Quat.helpMat;
-		_this.self._00 = m.self._00;
-		_this.self._01 = m.self._01;
-		_this.self._02 = m.self._02;
-		_this.self._03 = m.self._03;
-		_this.self._10 = m.self._10;
-		_this.self._11 = m.self._11;
-		_this.self._12 = m.self._12;
-		_this.self._13 = m.self._13;
-		_this.self._20 = m.self._20;
-		_this.self._21 = m.self._21;
-		_this.self._22 = m.self._22;
-		_this.self._23 = m.self._23;
-		_this.self._30 = m.self._30;
-		_this.self._31 = m.self._31;
-		_this.self._32 = m.self._32;
-		_this.self._33 = m.self._33;
-		let _this1 = iron_math_Quat.helpMat;
-		let _this2 = iron_math_Mat4.helpVec;
-		_this2.x = _this1.self._00;
-		_this2.y = _this1.self._01;
-		_this2.z = _this1.self._02;
-		_this2.w = 1.0;
-		let _this3 = _this2;
-		let scale = 1.0 / Math.sqrt(_this3.x * _this3.x + _this3.y * _this3.y + _this3.z * _this3.z);
-		_this1.self._00 *= scale;
-		_this1.self._01 *= scale;
-		_this1.self._02 *= scale;
-		let _this4 = iron_math_Mat4.helpVec;
-		_this4.x = _this1.self._10;
-		_this4.y = _this1.self._11;
-		_this4.z = _this1.self._12;
-		_this4.w = 1.0;
-		let _this5 = _this4;
-		scale = 1.0 / Math.sqrt(_this5.x * _this5.x + _this5.y * _this5.y + _this5.z * _this5.z);
-		_this1.self._10 *= scale;
-		_this1.self._11 *= scale;
-		_this1.self._12 *= scale;
-		let _this6 = iron_math_Mat4.helpVec;
-		_this6.x = _this1.self._20;
-		_this6.y = _this1.self._21;
-		_this6.z = _this1.self._22;
-		_this6.w = 1.0;
-		let _this7 = _this6;
-		scale = 1.0 / Math.sqrt(_this7.x * _this7.x + _this7.y * _this7.y + _this7.z * _this7.z);
-		_this1.self._20 *= scale;
-		_this1.self._21 *= scale;
-		_this1.self._22 *= scale;
-		_this1.self._03 = 0.0;
-		_this1.self._13 = 0.0;
-		_this1.self._23 = 0.0;
-		_this1.self._30 = 0.0;
-		_this1.self._31 = 0.0;
-		_this1.self._32 = 0.0;
-		_this1.self._33 = 1.0;
-		let m1 = iron_math_Quat.helpMat;
-		let m11 = m1.self._00;
-		let m12 = m1.self._10;
-		let m13 = m1.self._20;
-		let m21 = m1.self._01;
-		let m22 = m1.self._11;
-		let m23 = m1.self._21;
-		let m31 = m1.self._02;
-		let m32 = m1.self._12;
-		let m33 = m1.self._22;
-		let tr = m11 + m22 + m33;
-		let s = 0.0;
-		if(tr > 0) {
-			s = 0.5 / Math.sqrt(tr + 1.0);
-			this.w = 0.25 / s;
-			this.x = (m32 - m23) * s;
-			this.y = (m13 - m31) * s;
-			this.z = (m21 - m12) * s;
-		} else if(m11 > m22 && m11 > m33) {
-			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
-			this.w = (m32 - m23) / s;
-			this.x = 0.25 * s;
-			this.y = (m12 + m21) / s;
-			this.z = (m13 + m31) / s;
-		} else if(m22 > m33) {
-			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
-			this.w = (m13 - m31) / s;
-			this.x = (m12 + m21) / s;
-			this.y = 0.25 * s;
-			this.z = (m23 + m32) / s;
-		} else {
-			s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
-			this.w = (m21 - m12) / s;
-			this.x = (m13 + m31) / s;
-			this.y = (m23 + m32) / s;
-			this.z = 0.25 * s;
-		}
-		return this;
-	}
-	fromRotationMat(m) {
-		let m11 = m.self._00;
-		let m12 = m.self._10;
-		let m13 = m.self._20;
-		let m21 = m.self._01;
-		let m22 = m.self._11;
-		let m23 = m.self._21;
-		let m31 = m.self._02;
-		let m32 = m.self._12;
-		let m33 = m.self._22;
-		let tr = m11 + m22 + m33;
-		let s = 0.0;
-		if(tr > 0) {
-			s = 0.5 / Math.sqrt(tr + 1.0);
-			this.w = 0.25 / s;
-			this.x = (m32 - m23) * s;
-			this.y = (m13 - m31) * s;
-			this.z = (m21 - m12) * s;
-		} else if(m11 > m22 && m11 > m33) {
-			s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
-			this.w = (m32 - m23) / s;
-			this.x = 0.25 * s;
-			this.y = (m12 + m21) / s;
-			this.z = (m13 + m31) / s;
-		} else if(m22 > m33) {
-			s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
-			this.w = (m13 - m31) / s;
-			this.x = (m12 + m21) / s;
-			this.y = 0.25 * s;
-			this.z = (m23 + m32) / s;
-		} else {
-			s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
-			this.w = (m21 - m12) / s;
-			this.x = (m13 + m31) / s;
-			this.y = (m23 + m32) / s;
-			this.z = 0.25 * s;
-		}
-		return this;
-	}
-	scale(scale) {
-		this.x *= scale;
-		this.y *= scale;
-		this.z *= scale;
-		this.w *= scale;
-		return this;
-	}
-	scalequat(q,scale) {
-		q.x *= scale;
-		q.y *= scale;
-		q.z *= scale;
-		q.w *= scale;
-		return q;
-	}
-	mult(q) {
-		let q1x = this.x;
-		let q1y = this.y;
-		let q1z = this.z;
-		let q1w = this.w;
-		let q2x = q.x;
-		let q2y = q.y;
-		let q2z = q.z;
-		let q2w = q.w;
-		this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-		this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-		this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-		this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		return this;
-	}
-	multquats(q1,q2) {
-		let q1x = q1.x;
-		let q1y = q1.y;
-		let q1z = q1.z;
-		let q1w = q1.w;
-		let q2x = q2.x;
-		let q2y = q2.y;
-		let q2z = q2.z;
-		let q2w = q2.w;
-		this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-		this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-		this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-		this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		return this;
-	}
-	module() {
-		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-	}
-	normalize() {
-		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-		if(l == 0.0) {
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-			this.w = 0;
-		} else {
-			l = 1.0 / l;
-			this.x *= l;
-			this.y *= l;
-			this.z *= l;
-			this.w *= l;
-		}
-		return this;
-	}
-	inverse(q) {
-		let sqsum = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
-		sqsum = -1 / sqsum;
-		this.x = q.x * sqsum;
-		this.y = q.y * sqsum;
-		this.z = q.z * sqsum;
-		this.w = -q.w * sqsum;
-		return this;
-	}
-	setFrom(q) {
-		this.x = q.x;
-		this.y = q.y;
-		this.z = q.z;
-		this.w = q.w;
-		return this;
-	}
-	getEuler() {
-		let a = -2 * (this.x * this.z - this.w * this.y);
-		let b = this.w * this.w + this.x * this.x - this.y * this.y - this.z * this.z;
-		let c = 2 * (this.x * this.y + this.w * this.z);
-		let d = -2 * (this.y * this.z - this.w * this.x);
-		let e = this.w * this.w - this.x * this.x + this.y * this.y - this.z * this.z;
-		return new iron_math_Vec4(Math.atan2(d,e),Math.atan2(a,b),Math.asin(c));
-	}
-	fromEuler(x,y,z) {
-		let f = x / 2;
-		let c1 = Math.cos(f);
-		let s1 = Math.sin(f);
-		f = y / 2;
-		let c2 = Math.cos(f);
-		let s2 = Math.sin(f);
-		f = z / 2;
-		let c3 = Math.cos(f);
-		let s3 = Math.sin(f);
-		this.x = s1 * c2 * c3 + c1 * s2 * s3;
-		this.y = c1 * s2 * c3 + s1 * c2 * s3;
-		this.z = c1 * c2 * s3 - s1 * s2 * c3;
-		this.w = c1 * c2 * c3 - s1 * s2 * s3;
-		return this;
-	}
-	toEulerOrdered(p) {
-		let q0 = 1.4142135623730951 * this.w;
-		let q1 = 1.4142135623730951 * this.x;
-		let q2 = 1.4142135623730951 * this.y;
-		let q3 = 1.4142135623730951 * this.z;
-		let qda = q0 * q1;
-		let qdb = q0 * q2;
-		let qdc = q0 * q3;
-		let qaa = q1 * q1;
-		let qab = q1 * q2;
-		let qac = q1 * q3;
-		let qbb = q2 * q2;
-		let qbc = q2 * q3;
-		let qcc = q3 * q3;
-		let m_self__00 = 1.0 - qbb - qcc;
-		let m_self__10 = qdc + qab;
-		let m_self__20 = -qdb + qac;
-		let m_self__01 = -qdc + qab;
-		let m_self__11 = 1.0 - qaa - qcc;
-		let m_self__21 = qda + qbc;
-		let m_self__02 = qdb + qac;
-		let m_self__12 = -qda + qbc;
-		let m_self__22 = 1.0 - qaa - qbb;
-		let ml = [[m_self__00,m_self__10,m_self__20],[m_self__01,m_self__11,m_self__21],[m_self__02,m_self__12,m_self__22]];
-		let eull = [0,0,0];
-		let i = HxOverrides.cca(p,0) - HxOverrides.cca("X",0);
-		let j = HxOverrides.cca(p,1) - HxOverrides.cca("X",0);
-		let k = HxOverrides.cca(p,2) - HxOverrides.cca("X",0);
-		if(p.charAt(0) == "X") {
-			i = 0;
-		} else if(p.charAt(0) == "Y") {
-			i = 1;
-		} else {
-			i = 2;
-		}
-		if(p.charAt(1) == "X") {
-			j = 0;
-		} else if(p.charAt(1) == "Y") {
-			j = 1;
-		} else {
-			j = 2;
-		}
-		if(p.charAt(2) == "X") {
-			k = 0;
-		} else if(p.charAt(2) == "Y") {
-			k = 1;
-		} else {
-			k = 2;
-		}
-		let cy = Math.sqrt(ml[i][i] * ml[i][i] + ml[i][j] * ml[i][j]);
-		let eul1 = new iron_math_Vec4();
-		if(cy > 0.016) {
-			eull[i] = Math.atan2(ml[j][k],ml[k][k]);
-			eull[j] = Math.atan2(-ml[i][k],cy);
-			eull[k] = Math.atan2(ml[i][j],ml[i][i]);
-		} else {
-			eull[i] = Math.atan2(-ml[k][j],ml[j][j]);
-			eull[j] = Math.atan2(-ml[i][k],cy);
-			eull[k] = 0;
-		}
-		eul1.x = eull[0];
-		eul1.y = eull[1];
-		eul1.z = eull[2];
-		if(p == "XZY" || p == "YXZ" || p == "ZYX") {
-			eul1.x *= -1;
-			eul1.y *= -1;
-			eul1.z *= -1;
-		}
-		return eul1;
-	}
-	fromEulerOrdered(e,order) {
-		let c1 = Math.cos(e.x / 2);
-		let c2 = Math.cos(e.y / 2);
-		let c3 = Math.cos(e.z / 2);
-		let s1 = Math.sin(e.x / 2);
-		let s2 = Math.sin(e.y / 2);
-		let s3 = Math.sin(e.z / 2);
-		let x = s1;
-		let y = 0;
-		let z = 0;
-		let w = c1;
-		if(w == null) {
-			w = 1.0;
-		}
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		let qx_x = x;
-		let qx_y = y;
-		let qx_z = z;
-		let qx_w = w;
-		let x1 = 0;
-		let y1 = s2;
-		let z1 = 0;
-		let w1 = c2;
-		if(w1 == null) {
-			w1 = 1.0;
-		}
-		if(z1 == null) {
-			z1 = 0.0;
-		}
-		if(y1 == null) {
-			y1 = 0.0;
-		}
-		if(x1 == null) {
-			x1 = 0.0;
-		}
-		let qy_x = x1;
-		let qy_y = y1;
-		let qy_z = z1;
-		let qy_w = w1;
-		let x2 = 0;
-		let y2 = 0;
-		let z2 = s3;
-		let w2 = c3;
-		if(w2 == null) {
-			w2 = 1.0;
-		}
-		if(z2 == null) {
-			z2 = 0.0;
-		}
-		if(y2 == null) {
-			y2 = 0.0;
-		}
-		if(x2 == null) {
-			x2 = 0.0;
-		}
-		let qz_x = x2;
-		let qz_y = y2;
-		let qz_z = z2;
-		let qz_w = w2;
-		if(order.charAt(2) == "X") {
-			this.x = qx_x;
-			this.y = qx_y;
-			this.z = qx_z;
-			this.w = qx_w;
-		} else if(order.charAt(2) == "Y") {
-			this.x = qy_x;
-			this.y = qy_y;
-			this.z = qy_z;
-			this.w = qy_w;
-		} else {
-			this.x = qz_x;
-			this.y = qz_y;
-			this.z = qz_z;
-			this.w = qz_w;
-		}
-		if(order.charAt(1) == "X") {
-			let q1x = this.x;
-			let q1y = this.y;
-			let q1z = this.z;
-			let q1w = this.w;
-			let q2x = qx_x;
-			let q2y = qx_y;
-			let q2z = qx_z;
-			let q2w = qx_w;
-			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		} else if(order.charAt(1) == "Y") {
-			let q1x = this.x;
-			let q1y = this.y;
-			let q1z = this.z;
-			let q1w = this.w;
-			let q2x = qy_x;
-			let q2y = qy_y;
-			let q2z = qy_z;
-			let q2w = qy_w;
-			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		} else {
-			let q1x = this.x;
-			let q1y = this.y;
-			let q1z = this.z;
-			let q1w = this.w;
-			let q2x = qz_x;
-			let q2y = qz_y;
-			let q2z = qz_z;
-			let q2w = qz_w;
-			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		}
-		if(order.charAt(0) == "X") {
-			let q1x = this.x;
-			let q1y = this.y;
-			let q1z = this.z;
-			let q1w = this.w;
-			let q2x = qx_x;
-			let q2y = qx_y;
-			let q2z = qx_z;
-			let q2w = qx_w;
-			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		} else if(order.charAt(0) == "Y") {
-			let q1x = this.x;
-			let q1y = this.y;
-			let q1z = this.z;
-			let q1w = this.w;
-			let q2x = qy_x;
-			let q2y = qy_y;
-			let q2z = qy_z;
-			let q2w = qy_w;
-			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		} else {
-			let q1x = this.x;
-			let q1y = this.y;
-			let q1z = this.z;
-			let q1w = this.w;
-			let q2x = qz_x;
-			let q2y = qz_y;
-			let q2z = qz_z;
-			let q2w = qz_w;
-			this.x = q1x * q2w + q1w * q2x + q1y * q2z - q1z * q2y;
-			this.y = q1w * q2y - q1x * q2z + q1y * q2w + q1z * q2x;
-			this.z = q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w;
-			this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
-		}
-		return this;
-	}
-	lerp(from,to,s) {
-		let fromx = from.x;
-		let fromy = from.y;
-		let fromz = from.z;
-		let fromw = from.w;
-		let dot = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w;
-		if(dot < 0.0) {
-			fromx = -fromx;
-			fromy = -fromy;
-			fromz = -fromz;
-			fromw = -fromw;
-		}
-		this.x = fromx + (to.x - fromx) * s;
-		this.y = fromy + (to.y - fromy) * s;
-		this.z = fromz + (to.z - fromz) * s;
-		this.w = fromw + (to.w - fromw) * s;
-		let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-		if(l == 0.0) {
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-			this.w = 0;
-		} else {
-			l = 1.0 / l;
-			this.x *= l;
-			this.y *= l;
-			this.z *= l;
-			this.w *= l;
-		}
-		return this;
-	}
-	slerp(from,to,t) {
-		let epsilon = 0.0005;
-		let dot = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w;
-		if(dot > 1 - epsilon) {
-			from.x -= to.x;
-			from.y -= to.y;
-			from.z -= to.z;
-			from.w -= to.w;
-			let _this = from;
-			_this.x *= t;
-			_this.y *= t;
-			_this.z *= t;
-			_this.w *= t;
-			let q = _this;
-			to.x += q.x;
-			to.y += q.y;
-			to.z += q.z;
-			to.w += q.w;
-			let result = to;
-			let l = Math.sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
-			if(l == 0.0) {
-				result.x = 0;
-				result.y = 0;
-				result.z = 0;
-				result.w = 0;
-			} else {
-				l = 1.0 / l;
-				result.x *= l;
-				result.y *= l;
-				result.z *= l;
-				result.w *= l;
-			}
-			return result;
-		}
-		if(dot < 0) {
-			dot = 0;
-		}
-		if(dot > 1) {
-			dot = 1;
-		}
-		let theta0 = Math.acos(dot);
-		let theta = theta0 * t;
-		this.x *= dot;
-		this.y *= dot;
-		this.z *= dot;
-		this.w *= dot;
-		let q = this;
-		to.x -= q.x;
-		to.y -= q.y;
-		to.z -= q.z;
-		to.w -= q.w;
-		let q2 = to;
-		let l = Math.sqrt(q2.x * q2.x + q2.y * q2.y + q2.z * q2.z + q2.w * q2.w);
-		if(l == 0.0) {
-			q2.x = 0;
-			q2.y = 0;
-			q2.z = 0;
-			q2.w = 0;
-		} else {
-			l = 1.0 / l;
-			q2.x *= l;
-			q2.y *= l;
-			q2.z *= l;
-			q2.w *= l;
-		}
-		let scale = Math.cos(theta);
-		this.x *= scale;
-		this.y *= scale;
-		this.z *= scale;
-		this.w *= scale;
-		let _this = this;
-		let scale1 = Math.sin(theta);
-		q2.x *= scale1;
-		q2.y *= scale1;
-		q2.z *= scale1;
-		q2.w *= scale1;
-		let q1 = q2;
-		_this.x += q1.x;
-		_this.y += q1.y;
-		_this.z += q1.z;
-		_this.w += q1.w;
-		let result = _this;
-		let l1 = Math.sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
-		if(l1 == 0.0) {
-			result.x = 0;
-			result.y = 0;
-			result.z = 0;
-			result.w = 0;
-		} else {
-			l1 = 1.0 / l1;
-			result.x *= l1;
-			result.y *= l1;
-			result.z *= l1;
-			result.w *= l1;
-		}
-		return result;
-	}
-	dot(q) {
-		return this.x * q.x + this.y * q.y + this.z * q.z + this.w * q.w;
-	}
-	fromTo(v1,v2) {
-		let a = iron_math_Quat.helpVec0;
-		let dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-		if(dot < -0.999999) {
-			let a1 = iron_math_Quat.xAxis;
-			let ax = a1.x;
-			let ay = a1.y;
-			let az = a1.z;
-			let bx = v1.x;
-			let by = v1.y;
-			let bz = v1.z;
-			a.x = ay * bz - az * by;
-			a.y = az * bx - ax * bz;
-			a.z = ax * by - ay * bx;
-			if(Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z) < 0.000001) {
-				let a1 = iron_math_Quat.yAxis;
-				let ax = a1.x;
-				let ay = a1.y;
-				let az = a1.z;
-				let bx = v1.x;
-				let by = v1.y;
-				let bz = v1.z;
-				a.x = ay * bz - az * by;
-				a.y = az * bx - ax * bz;
-				a.z = ax * by - ay * bx;
-			}
-			let n = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
-			if(n > 0.0) {
-				let invN = 1.0 / n;
-				a.x *= invN;
-				a.y *= invN;
-				a.z *= invN;
-			}
-			let angle = Math.PI;
-			let s = Math.sin(angle * 0.5);
-			this.x = a.x * s;
-			this.y = a.y * s;
-			this.z = a.z * s;
-			this.w = Math.cos(angle * 0.5);
-			let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-			if(l == 0.0) {
-				this.x = 0;
-				this.y = 0;
-				this.z = 0;
-				this.w = 0;
-			} else {
-				l = 1.0 / l;
-				this.x *= l;
-				this.y *= l;
-				this.z *= l;
-				this.w *= l;
-			}
-		} else if(dot > 0.999999) {
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-			this.w = 1;
-		} else {
-			let ax = v1.x;
-			let ay = v1.y;
-			let az = v1.z;
-			let bx = v2.x;
-			let by = v2.y;
-			let bz = v2.z;
-			a.x = ay * bz - az * by;
-			a.y = az * bx - ax * bz;
-			a.z = ax * by - ay * bx;
-			this.x = a.x;
-			this.y = a.y;
-			this.z = a.z;
-			this.w = 1 + dot;
-			let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-			if(l == 0.0) {
-				this.x = 0;
-				this.y = 0;
-				this.z = 0;
-				this.w = 0;
-			} else {
-				l = 1.0 / l;
-				this.x *= l;
-				this.y *= l;
-				this.z *= l;
-				this.w *= l;
-			}
-		}
-		return this;
-	}
-	toString() {
-		return this.x + ", " + this.y + ", " + this.z + ", " + this.w;
-	}
-}
-$hxClasses["iron.math.Quat"] = iron_math_Quat;
-iron_math_Quat.__name__ = true;
-Object.assign(iron_math_Quat.prototype, {
-	__class__: iron_math_Quat
-	,x: null
-	,y: null
-	,z: null
-	,w: null
-});
 class iron_math_Ray {
 	constructor(origin,direction) {
 		this.origin = origin == null ? new iron_math_Vec4() : origin;
@@ -12017,6 +14782,522 @@ Object.assign(iron_math_Plane.prototype, {
 	,normal: null
 	,constant: null
 });
+class iron_math_RayCaster {
+	static getRay(inputX,inputY,camera) {
+		let start = new iron_math_Vec4();
+		let end = new iron_math_Vec4();
+		iron_math_RayCaster.getDirection(start,end,inputX,inputY,camera);
+		end.x -= start.x;
+		end.y -= start.y;
+		end.z -= start.z;
+		let n = Math.sqrt(end.x * end.x + end.y * end.y + end.z * end.z);
+		if(n > 0.0) {
+			let invN = 1.0 / n;
+			end.x *= invN;
+			end.y *= invN;
+			end.z *= invN;
+		}
+		end.x *= camera.data.raw.far_plane;
+		end.y *= camera.data.raw.far_plane;
+		end.z *= camera.data.raw.far_plane;
+		return new iron_math_Ray(start,end);
+	}
+	static getDirection(start,end,inputX,inputY,camera) {
+		start.x = inputX / iron_App.w() * 2.0 - 1.0;
+		start.y = -(inputY / iron_App.h() * 2.0 - 1.0);
+		start.z = -1.0;
+		end.x = start.x;
+		end.y = start.y;
+		end.z = 1.0;
+		let _this = iron_math_RayCaster.PInv;
+		let m = camera.P;
+		let a00 = m.self._00;
+		let a01 = m.self._01;
+		let a02 = m.self._02;
+		let a03 = m.self._03;
+		let a10 = m.self._10;
+		let a11 = m.self._11;
+		let a12 = m.self._12;
+		let a13 = m.self._13;
+		let a20 = m.self._20;
+		let a21 = m.self._21;
+		let a22 = m.self._22;
+		let a23 = m.self._23;
+		let a30 = m.self._30;
+		let a31 = m.self._31;
+		let a32 = m.self._32;
+		let a33 = m.self._33;
+		let b00 = a00 * a11 - a01 * a10;
+		let b01 = a00 * a12 - a02 * a10;
+		let b02 = a00 * a13 - a03 * a10;
+		let b03 = a01 * a12 - a02 * a11;
+		let b04 = a01 * a13 - a03 * a11;
+		let b05 = a02 * a13 - a03 * a12;
+		let b06 = a20 * a31 - a21 * a30;
+		let b07 = a20 * a32 - a22 * a30;
+		let b08 = a20 * a33 - a23 * a30;
+		let b09 = a21 * a32 - a22 * a31;
+		let b10 = a21 * a33 - a23 * a31;
+		let b11 = a22 * a33 - a23 * a32;
+		let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+		if(det == 0.0) {
+			_this.self._00 = 1.0;
+			_this.self._01 = 0.0;
+			_this.self._02 = 0.0;
+			_this.self._03 = 0.0;
+			_this.self._10 = 0.0;
+			_this.self._11 = 1.0;
+			_this.self._12 = 0.0;
+			_this.self._13 = 0.0;
+			_this.self._20 = 0.0;
+			_this.self._21 = 0.0;
+			_this.self._22 = 1.0;
+			_this.self._23 = 0.0;
+			_this.self._30 = 0.0;
+			_this.self._31 = 0.0;
+			_this.self._32 = 0.0;
+			_this.self._33 = 1.0;
+		} else {
+			det = 1.0 / det;
+			_this.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+			_this.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+			_this.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+			_this.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+			_this.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+			_this.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+			_this.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+			_this.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+			_this.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+			_this.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+			_this.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+			_this.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+			_this.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+			_this.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+			_this.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+			_this.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+		}
+		let _this1 = iron_math_RayCaster.VInv;
+		let m1 = camera.V;
+		let a001 = m1.self._00;
+		let a011 = m1.self._01;
+		let a021 = m1.self._02;
+		let a031 = m1.self._03;
+		let a101 = m1.self._10;
+		let a111 = m1.self._11;
+		let a121 = m1.self._12;
+		let a131 = m1.self._13;
+		let a201 = m1.self._20;
+		let a211 = m1.self._21;
+		let a221 = m1.self._22;
+		let a231 = m1.self._23;
+		let a301 = m1.self._30;
+		let a311 = m1.self._31;
+		let a321 = m1.self._32;
+		let a331 = m1.self._33;
+		let b001 = a001 * a111 - a011 * a101;
+		let b011 = a001 * a121 - a021 * a101;
+		let b021 = a001 * a131 - a031 * a101;
+		let b031 = a011 * a121 - a021 * a111;
+		let b041 = a011 * a131 - a031 * a111;
+		let b051 = a021 * a131 - a031 * a121;
+		let b061 = a201 * a311 - a211 * a301;
+		let b071 = a201 * a321 - a221 * a301;
+		let b081 = a201 * a331 - a231 * a301;
+		let b091 = a211 * a321 - a221 * a311;
+		let b101 = a211 * a331 - a231 * a311;
+		let b111 = a221 * a331 - a231 * a321;
+		let det1 = b001 * b111 - b011 * b101 + b021 * b091 + b031 * b081 - b041 * b071 + b051 * b061;
+		if(det1 == 0.0) {
+			_this1.self._00 = 1.0;
+			_this1.self._01 = 0.0;
+			_this1.self._02 = 0.0;
+			_this1.self._03 = 0.0;
+			_this1.self._10 = 0.0;
+			_this1.self._11 = 1.0;
+			_this1.self._12 = 0.0;
+			_this1.self._13 = 0.0;
+			_this1.self._20 = 0.0;
+			_this1.self._21 = 0.0;
+			_this1.self._22 = 1.0;
+			_this1.self._23 = 0.0;
+			_this1.self._30 = 0.0;
+			_this1.self._31 = 0.0;
+			_this1.self._32 = 0.0;
+			_this1.self._33 = 1.0;
+		} else {
+			det1 = 1.0 / det1;
+			_this1.self._00 = (a111 * b111 - a121 * b101 + a131 * b091) * det1;
+			_this1.self._01 = (a021 * b101 - a011 * b111 - a031 * b091) * det1;
+			_this1.self._02 = (a311 * b051 - a321 * b041 + a331 * b031) * det1;
+			_this1.self._03 = (a221 * b041 - a211 * b051 - a231 * b031) * det1;
+			_this1.self._10 = (a121 * b081 - a101 * b111 - a131 * b071) * det1;
+			_this1.self._11 = (a001 * b111 - a021 * b081 + a031 * b071) * det1;
+			_this1.self._12 = (a321 * b021 - a301 * b051 - a331 * b011) * det1;
+			_this1.self._13 = (a201 * b051 - a221 * b021 + a231 * b011) * det1;
+			_this1.self._20 = (a101 * b101 - a111 * b081 + a131 * b061) * det1;
+			_this1.self._21 = (a011 * b081 - a001 * b101 - a031 * b061) * det1;
+			_this1.self._22 = (a301 * b041 - a311 * b021 + a331 * b001) * det1;
+			_this1.self._23 = (a211 * b021 - a201 * b041 - a231 * b001) * det1;
+			_this1.self._30 = (a111 * b071 - a101 * b091 - a121 * b061) * det1;
+			_this1.self._31 = (a001 * b091 - a011 * b071 + a021 * b061) * det1;
+			_this1.self._32 = (a311 * b011 - a301 * b031 - a321 * b001) * det1;
+			_this1.self._33 = (a201 * b031 - a211 * b011 + a221 * b001) * det1;
+		}
+		let _this2 = iron_math_RayCaster.VPInv;
+		let b = iron_math_RayCaster.VInv;
+		let a = iron_math_RayCaster.PInv;
+		let a002 = a.self._00;
+		let a012 = a.self._01;
+		let a022 = a.self._02;
+		let a032 = a.self._03;
+		let a102 = a.self._10;
+		let a112 = a.self._11;
+		let a122 = a.self._12;
+		let a132 = a.self._13;
+		let a202 = a.self._20;
+		let a212 = a.self._21;
+		let a222 = a.self._22;
+		let a232 = a.self._23;
+		let a302 = a.self._30;
+		let a312 = a.self._31;
+		let a322 = a.self._32;
+		let a332 = a.self._33;
+		let b0 = b.self._00;
+		let b1 = b.self._10;
+		let b2 = b.self._20;
+		let b3 = b.self._30;
+		_this2.self._00 = a002 * b0 + a012 * b1 + a022 * b2 + a032 * b3;
+		_this2.self._10 = a102 * b0 + a112 * b1 + a122 * b2 + a132 * b3;
+		_this2.self._20 = a202 * b0 + a212 * b1 + a222 * b2 + a232 * b3;
+		_this2.self._30 = a302 * b0 + a312 * b1 + a322 * b2 + a332 * b3;
+		b0 = b.self._01;
+		b1 = b.self._11;
+		b2 = b.self._21;
+		b3 = b.self._31;
+		_this2.self._01 = a002 * b0 + a012 * b1 + a022 * b2 + a032 * b3;
+		_this2.self._11 = a102 * b0 + a112 * b1 + a122 * b2 + a132 * b3;
+		_this2.self._21 = a202 * b0 + a212 * b1 + a222 * b2 + a232 * b3;
+		_this2.self._31 = a302 * b0 + a312 * b1 + a322 * b2 + a332 * b3;
+		b0 = b.self._02;
+		b1 = b.self._12;
+		b2 = b.self._22;
+		b3 = b.self._32;
+		_this2.self._02 = a002 * b0 + a012 * b1 + a022 * b2 + a032 * b3;
+		_this2.self._12 = a102 * b0 + a112 * b1 + a122 * b2 + a132 * b3;
+		_this2.self._22 = a202 * b0 + a212 * b1 + a222 * b2 + a232 * b3;
+		_this2.self._32 = a302 * b0 + a312 * b1 + a322 * b2 + a332 * b3;
+		b0 = b.self._03;
+		b1 = b.self._13;
+		b2 = b.self._23;
+		b3 = b.self._33;
+		_this2.self._03 = a002 * b0 + a012 * b1 + a022 * b2 + a032 * b3;
+		_this2.self._13 = a102 * b0 + a112 * b1 + a122 * b2 + a132 * b3;
+		_this2.self._23 = a202 * b0 + a212 * b1 + a222 * b2 + a232 * b3;
+		_this2.self._33 = a302 * b0 + a312 * b1 + a322 * b2 + a332 * b3;
+		let m2 = iron_math_RayCaster.VPInv;
+		let x = start.x;
+		let y = start.y;
+		let z = start.z;
+		let d = 1.0 / (m2.self._03 * x + m2.self._13 * y + m2.self._23 * z + m2.self._33);
+		start.x = (m2.self._00 * x + m2.self._10 * y + m2.self._20 * z + m2.self._30) * d;
+		start.y = (m2.self._01 * x + m2.self._11 * y + m2.self._21 * z + m2.self._31) * d;
+		start.z = (m2.self._02 * x + m2.self._12 * y + m2.self._22 * z + m2.self._32) * d;
+		let m3 = iron_math_RayCaster.VPInv;
+		let x1 = end.x;
+		let y1 = end.y;
+		let z1 = end.z;
+		let d1 = 1.0 / (m3.self._03 * x1 + m3.self._13 * y1 + m3.self._23 * z1 + m3.self._33);
+		end.x = (m3.self._00 * x1 + m3.self._10 * y1 + m3.self._20 * z1 + m3.self._30) * d1;
+		end.y = (m3.self._01 * x1 + m3.self._11 * y1 + m3.self._21 * z1 + m3.self._31) * d1;
+		end.z = (m3.self._02 * x1 + m3.self._12 * y1 + m3.self._22 * z1 + m3.self._32) * d1;
+	}
+	static boxIntersect(transform,inputX,inputY,camera) {
+		let ray = iron_math_RayCaster.getRay(inputX,inputY,camera);
+		let t = transform;
+		let c = new iron_math_Vec4(t.world.self._30,t.world.self._31,t.world.self._32);
+		let s = new iron_math_Vec4(t.dim.x,t.dim.y,t.dim.z);
+		return ray.intersectBox(c,s);
+	}
+	static boxIntersectObject(o,inputX,inputY,camera) {
+		let ray = iron_math_RayCaster.getRay(inputX,inputY,camera);
+		let t = o.transform;
+		let c = new iron_math_Vec4(t.world.self._30,t.world.self._31,t.world.self._32);
+		let s = new iron_math_Vec4(t.dim.x,t.dim.y,t.dim.z);
+		return ray.intersectBox(c,s);
+	}
+	static closestBoxIntersect(transforms,inputX,inputY,camera) {
+		let intersects = [];
+		let _g = 0;
+		while(_g < transforms.length) {
+			let t = transforms[_g];
+			++_g;
+			let intersect = iron_math_RayCaster.boxIntersect(t,inputX,inputY,camera);
+			if(intersect != null) {
+				intersects.push(t);
+			}
+		}
+		if(intersects.length == 0) {
+			return null;
+		}
+		let closest = null;
+		let minDist = Infinity;
+		let _g1 = 0;
+		while(_g1 < intersects.length) {
+			let t = intersects[_g1];
+			++_g1;
+			let v1 = t.loc;
+			let v2 = camera.transform.loc;
+			let vx = v1.x - v2.x;
+			let vy = v1.y - v2.y;
+			let vz = v1.z - v2.z;
+			let dist = Math.sqrt(vx * vx + vy * vy + vz * vz);
+			if(dist < minDist) {
+				minDist = dist;
+				closest = t;
+			}
+		}
+		return closest;
+	}
+	static closestBoxIntersectObject(objects,inputX,inputY,camera) {
+		let intersects = [];
+		let _g = 0;
+		while(_g < objects.length) {
+			let o = objects[_g];
+			++_g;
+			let intersect = iron_math_RayCaster.boxIntersectObject(o,inputX,inputY,camera);
+			if(intersect != null) {
+				intersects.push(o);
+			}
+		}
+		if(intersects.length == 0) {
+			return null;
+		}
+		let closest = null;
+		let minDist = Infinity;
+		let _g1 = 0;
+		while(_g1 < intersects.length) {
+			let t = intersects[_g1];
+			++_g1;
+			let v1 = t.transform.loc;
+			let v2 = camera.transform.loc;
+			let vx = v1.x - v2.x;
+			let vy = v1.y - v2.y;
+			let vz = v1.z - v2.z;
+			let dist = Math.sqrt(vx * vx + vy * vy + vz * vz);
+			if(dist < minDist) {
+				minDist = dist;
+				closest = t;
+			}
+		}
+		return closest;
+	}
+	static planeIntersect(normal,a,inputX,inputY,camera) {
+		let ray = iron_math_RayCaster.getRay(inputX,inputY,camera);
+		let plane = new iron_math_Plane();
+		plane.set(normal,a);
+		return ray.intersectPlane(plane);
+	}
+	static getPlaneUV(obj,screenX,screenY,camera) {
+		let _this = obj.transform.world;
+		iron_math_RayCaster.nor = new iron_math_Vec4(_this.self._20,_this.self._21,_this.self._22);
+		let _this1 = iron_math_RayCaster.loc;
+		_this1.x = obj.transform.world.self._30;
+		_this1.y = obj.transform.world.self._31;
+		_this1.z = obj.transform.world.self._32;
+		_this1.w = 1.0;
+		let hit = iron_math_RayCaster.planeIntersect(iron_math_RayCaster.nor,iron_math_RayCaster.loc,screenX,screenY,camera);
+		if(hit != null) {
+			let normals = obj.data.geom.normals.values;
+			let _this = iron_math_RayCaster.nor;
+			let y = normals.getInt16(2,kha_arrays_ByteArray.LITTLE_ENDIAN);
+			let z = normals.getInt16(4,kha_arrays_ByteArray.LITTLE_ENDIAN);
+			_this.x = normals.getInt16(0,kha_arrays_ByteArray.LITTLE_ENDIAN);
+			_this.y = y;
+			_this.z = z;
+			_this.w = 1.0;
+			let a = iron_math_RayCaster.nor.x;
+			let b = iron_math_RayCaster.nor.y;
+			let c = iron_math_RayCaster.nor.z;
+			let e = 0.0001;
+			let u = a >= e && b >= e ? new iron_math_Vec4(b,-a,0) : new iron_math_Vec4(c,-a,0);
+			let n = Math.sqrt(u.x * u.x + u.y * u.y + u.z * u.z);
+			if(n > 0.0) {
+				let invN = 1.0 / n;
+				u.x *= invN;
+				u.y *= invN;
+				u.z *= invN;
+			}
+			let _this1 = iron_math_RayCaster.nor;
+			let x = _this1.x;
+			let y1 = _this1.y;
+			let z1 = _this1.z;
+			let w = _this1.w;
+			if(w == null) {
+				w = 1.0;
+			}
+			if(z1 == null) {
+				z1 = 0.0;
+			}
+			if(y1 == null) {
+				y1 = 0.0;
+			}
+			if(x == null) {
+				x = 0.0;
+			}
+			let v_x = x;
+			let v_y = y1;
+			let v_z = z1;
+			let v_w = w;
+			let ax = v_x;
+			let ay = v_y;
+			let az = v_z;
+			let vx = u.x;
+			let vy = u.y;
+			let vz = u.z;
+			v_x = ay * vz - az * vy;
+			v_y = az * vx - ax * vz;
+			v_z = ax * vy - ay * vx;
+			let _this2 = iron_math_RayCaster.m;
+			let m = obj.transform.world;
+			_this2.self._00 = m.self._00;
+			_this2.self._01 = m.self._01;
+			_this2.self._02 = m.self._02;
+			_this2.self._03 = m.self._03;
+			_this2.self._10 = m.self._10;
+			_this2.self._11 = m.self._11;
+			_this2.self._12 = m.self._12;
+			_this2.self._13 = m.self._13;
+			_this2.self._20 = m.self._20;
+			_this2.self._21 = m.self._21;
+			_this2.self._22 = m.self._22;
+			_this2.self._23 = m.self._23;
+			_this2.self._30 = m.self._30;
+			_this2.self._31 = m.self._31;
+			_this2.self._32 = m.self._32;
+			_this2.self._33 = m.self._33;
+			let _this3 = iron_math_RayCaster.m;
+			let m1 = iron_math_RayCaster.m;
+			let a00 = m1.self._00;
+			let a01 = m1.self._01;
+			let a02 = m1.self._02;
+			let a03 = m1.self._03;
+			let a10 = m1.self._10;
+			let a11 = m1.self._11;
+			let a12 = m1.self._12;
+			let a13 = m1.self._13;
+			let a20 = m1.self._20;
+			let a21 = m1.self._21;
+			let a22 = m1.self._22;
+			let a23 = m1.self._23;
+			let a30 = m1.self._30;
+			let a31 = m1.self._31;
+			let a32 = m1.self._32;
+			let a33 = m1.self._33;
+			let b00 = a00 * a11 - a01 * a10;
+			let b01 = a00 * a12 - a02 * a10;
+			let b02 = a00 * a13 - a03 * a10;
+			let b03 = a01 * a12 - a02 * a11;
+			let b04 = a01 * a13 - a03 * a11;
+			let b05 = a02 * a13 - a03 * a12;
+			let b06 = a20 * a31 - a21 * a30;
+			let b07 = a20 * a32 - a22 * a30;
+			let b08 = a20 * a33 - a23 * a30;
+			let b09 = a21 * a32 - a22 * a31;
+			let b10 = a21 * a33 - a23 * a31;
+			let b11 = a22 * a33 - a23 * a32;
+			let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+			if(det == 0.0) {
+				_this3.self._00 = 1.0;
+				_this3.self._01 = 0.0;
+				_this3.self._02 = 0.0;
+				_this3.self._03 = 0.0;
+				_this3.self._10 = 0.0;
+				_this3.self._11 = 1.0;
+				_this3.self._12 = 0.0;
+				_this3.self._13 = 0.0;
+				_this3.self._20 = 0.0;
+				_this3.self._21 = 0.0;
+				_this3.self._22 = 1.0;
+				_this3.self._23 = 0.0;
+				_this3.self._30 = 0.0;
+				_this3.self._31 = 0.0;
+				_this3.self._32 = 0.0;
+				_this3.self._33 = 1.0;
+			} else {
+				det = 1.0 / det;
+				_this3.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+				_this3.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+				_this3.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+				_this3.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+				_this3.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+				_this3.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+				_this3.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+				_this3.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+				_this3.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+				_this3.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+				_this3.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+				_this3.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+				_this3.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+				_this3.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+				_this3.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+				_this3.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+			}
+			let _this4 = iron_math_RayCaster.m;
+			let f = _this4.self._01;
+			_this4.self._01 = _this4.self._10;
+			_this4.self._10 = f;
+			f = _this4.self._02;
+			_this4.self._02 = _this4.self._20;
+			_this4.self._20 = f;
+			f = _this4.self._12;
+			_this4.self._12 = _this4.self._21;
+			_this4.self._21 = f;
+			iron_math_RayCaster.m.self._30 = iron_math_RayCaster.m.self._31 = iron_math_RayCaster.m.self._32 = 0;
+			let m2 = iron_math_RayCaster.m;
+			let x1 = u.x;
+			let y2 = u.y;
+			let z2 = u.z;
+			u.x = m2.self._00 * x1 + m2.self._10 * y2 + m2.self._20 * z2 + m2.self._30;
+			u.y = m2.self._01 * x1 + m2.self._11 * y2 + m2.self._21 * z2 + m2.self._31;
+			u.z = m2.self._02 * x1 + m2.self._12 * y2 + m2.self._22 * z2 + m2.self._32;
+			let n1 = Math.sqrt(u.x * u.x + u.y * u.y + u.z * u.z);
+			if(n1 > 0.0) {
+				let invN = 1.0 / n1;
+				u.x *= invN;
+				u.y *= invN;
+				u.z *= invN;
+			}
+			let m3 = iron_math_RayCaster.m;
+			let x2 = v_x;
+			let y3 = v_y;
+			let z3 = v_z;
+			v_x = m3.self._00 * x2 + m3.self._10 * y3 + m3.self._20 * z3 + m3.self._30;
+			v_y = m3.self._01 * x2 + m3.self._11 * y3 + m3.self._21 * z3 + m3.self._31;
+			v_z = m3.self._02 * x2 + m3.self._12 * y3 + m3.self._22 * z3 + m3.self._32;
+			let n2 = Math.sqrt(v_x * v_x + v_y * v_y + v_z * v_z);
+			if(n2 > 0.0) {
+				let invN = 1.0 / n2;
+				v_x *= invN;
+				v_y *= invN;
+				v_z *= invN;
+			}
+			let v = iron_math_RayCaster.loc;
+			hit.x -= v.x;
+			hit.y -= v.y;
+			hit.z -= v.z;
+			let ucoord = u.x * hit.x + u.y * hit.y + u.z * hit.z;
+			let vcoord = v_x * hit.x + v_y * hit.y + v_z * hit.z;
+			let dim = obj.transform.dim;
+			let size = dim.x > dim.y ? dim.x / 2 : dim.y / 2;
+			let ix = ucoord / size * -0.5 + 0.5;
+			let iy = vcoord / size * -0.5 + 0.5;
+			return new iron_math_Vec2(ix,iy);
+		}
+		return null;
+	}
+}
+$hxClasses["iron.math.RayCaster"] = iron_math_RayCaster;
+iron_math_RayCaster.__name__ = true;
 class iron_math_Vec2 {
 	constructor(x,y) {
 		if(y == null) {
@@ -27539,223 +30820,294 @@ kha_Scheduler.__properties__ = {get_onedifhz: "get_onedifhz"};
 class kha_Shaders {
 	static init() {
 		let blobs = [];
-		let data = Reflect.field(kha_Shaders,"Material_mesh_fragData" + 0);
+		let data = Reflect.field(kha_Shaders,"Door_material_mesh_fragData" + 0);
 		let bytes = haxe_Unserializer.run(data);
 		blobs.push(kha_internal_BytesBlob.fromBytes(bytes));
-		kha_Shaders.Material_mesh_frag = new kha_graphics4_FragmentShader(blobs,["Material_mesh-webgl2.frag.essl"]);
+		kha_Shaders.Door_material_mesh_frag = new kha_graphics4_FragmentShader(blobs,["Door_material_mesh-webgl2.frag.essl"]);
 		let blobs1 = [];
-		let data1 = Reflect.field(kha_Shaders,"Material_mesh_vertData" + 0);
+		let data1 = Reflect.field(kha_Shaders,"Handle_material_mesh_fragData" + 0);
 		let bytes1 = haxe_Unserializer.run(data1);
 		blobs1.push(kha_internal_BytesBlob.fromBytes(bytes1));
-		let data2 = Reflect.field(kha_Shaders,"Material_mesh_vertData" + 1);
-		let bytes2 = haxe_Unserializer.run(data2);
-		blobs1.push(kha_internal_BytesBlob.fromBytes(bytes2));
-		kha_Shaders.Material_mesh_vert = new kha_graphics4_VertexShader(blobs1,["Material_mesh.vert.essl","Material_mesh-webgl2.vert.essl"]);
+		kha_Shaders.Handle_material_mesh_frag = new kha_graphics4_FragmentShader(blobs1,["Handle_material_mesh-webgl2.frag.essl"]);
 		let blobs2 = [];
-		let data3 = Reflect.field(kha_Shaders,"Material_shadowmap_fragData" + 0);
-		let bytes3 = haxe_Unserializer.run(data3);
-		blobs2.push(kha_internal_BytesBlob.fromBytes(bytes3));
-		let data4 = Reflect.field(kha_Shaders,"Material_shadowmap_fragData" + 1);
-		let bytes4 = haxe_Unserializer.run(data4);
-		blobs2.push(kha_internal_BytesBlob.fromBytes(bytes4));
-		kha_Shaders.Material_shadowmap_frag = new kha_graphics4_FragmentShader(blobs2,["Material_shadowmap.frag.essl","Material_shadowmap-webgl2.frag.essl"]);
+		let data2 = Reflect.field(kha_Shaders,"Material_001_mesh_fragData" + 0);
+		let bytes2 = haxe_Unserializer.run(data2);
+		blobs2.push(kha_internal_BytesBlob.fromBytes(bytes2));
+		kha_Shaders.Material_001_mesh_frag = new kha_graphics4_FragmentShader(blobs2,["Material_001_mesh-webgl2.frag.essl"]);
 		let blobs3 = [];
-		let data5 = Reflect.field(kha_Shaders,"Material_shadowmap_vertData" + 0);
-		let bytes5 = haxe_Unserializer.run(data5);
-		blobs3.push(kha_internal_BytesBlob.fromBytes(bytes5));
-		let data6 = Reflect.field(kha_Shaders,"Material_shadowmap_vertData" + 1);
-		let bytes6 = haxe_Unserializer.run(data6);
-		blobs3.push(kha_internal_BytesBlob.fromBytes(bytes6));
-		kha_Shaders.Material_shadowmap_vert = new kha_graphics4_VertexShader(blobs3,["Material_shadowmap.vert.essl","Material_shadowmap-webgl2.vert.essl"]);
+		let data3 = Reflect.field(kha_Shaders,"Material_002_mesh_fragData" + 0);
+		let bytes3 = haxe_Unserializer.run(data3);
+		blobs3.push(kha_internal_BytesBlob.fromBytes(bytes3));
+		kha_Shaders.Material_002_mesh_frag = new kha_graphics4_FragmentShader(blobs3,["Material_002_mesh-webgl2.frag.essl"]);
 		let blobs4 = [];
-		let data7 = Reflect.field(kha_Shaders,"World_World_fragData" + 0);
-		let bytes7 = haxe_Unserializer.run(data7);
-		blobs4.push(kha_internal_BytesBlob.fromBytes(bytes7));
-		let data8 = Reflect.field(kha_Shaders,"World_World_fragData" + 1);
-		let bytes8 = haxe_Unserializer.run(data8);
-		blobs4.push(kha_internal_BytesBlob.fromBytes(bytes8));
-		kha_Shaders.World_World_frag = new kha_graphics4_FragmentShader(blobs4,["World_World.frag.essl","World_World-webgl2.frag.essl"]);
+		let data4 = Reflect.field(kha_Shaders,"Material_mesh_fragData" + 0);
+		let bytes4 = haxe_Unserializer.run(data4);
+		blobs4.push(kha_internal_BytesBlob.fromBytes(bytes4));
+		kha_Shaders.Material_mesh_frag = new kha_graphics4_FragmentShader(blobs4,["Material_mesh-webgl2.frag.essl"]);
 		let blobs5 = [];
-		let data9 = Reflect.field(kha_Shaders,"World_World_vertData" + 0);
-		let bytes9 = haxe_Unserializer.run(data9);
-		blobs5.push(kha_internal_BytesBlob.fromBytes(bytes9));
-		let data10 = Reflect.field(kha_Shaders,"World_World_vertData" + 1);
-		let bytes10 = haxe_Unserializer.run(data10);
-		blobs5.push(kha_internal_BytesBlob.fromBytes(bytes10));
-		kha_Shaders.World_World_vert = new kha_graphics4_VertexShader(blobs5,["World_World.vert.essl","World_World-webgl2.vert.essl"]);
+		let data5 = Reflect.field(kha_Shaders,"Wall_material_mesh_fragData" + 0);
+		let bytes5 = haxe_Unserializer.run(data5);
+		blobs5.push(kha_internal_BytesBlob.fromBytes(bytes5));
+		kha_Shaders.Wall_material_mesh_frag = new kha_graphics4_FragmentShader(blobs5,["Wall_material_mesh-webgl2.frag.essl"]);
 		let blobs6 = [];
-		let data11 = Reflect.field(kha_Shaders,"blur_edge_pass_fragData" + 0);
-		let bytes11 = haxe_Unserializer.run(data11);
-		blobs6.push(kha_internal_BytesBlob.fromBytes(bytes11));
-		let data12 = Reflect.field(kha_Shaders,"blur_edge_pass_fragData" + 1);
-		let bytes12 = haxe_Unserializer.run(data12);
-		blobs6.push(kha_internal_BytesBlob.fromBytes(bytes12));
-		kha_Shaders.blur_edge_pass_frag = new kha_graphics4_FragmentShader(blobs6,["blur_edge_pass.frag.essl","blur_edge_pass-webgl2.frag.essl"]);
+		let data6 = Reflect.field(kha_Shaders,"World_World_fragData" + 0);
+		let bytes6 = haxe_Unserializer.run(data6);
+		blobs6.push(kha_internal_BytesBlob.fromBytes(bytes6));
+		let data7 = Reflect.field(kha_Shaders,"World_World_fragData" + 1);
+		let bytes7 = haxe_Unserializer.run(data7);
+		blobs6.push(kha_internal_BytesBlob.fromBytes(bytes7));
+		kha_Shaders.World_World_frag = new kha_graphics4_FragmentShader(blobs6,["World_World.frag.essl","World_World-webgl2.frag.essl"]);
 		let blobs7 = [];
-		let data13 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 0);
-		let bytes13 = haxe_Unserializer.run(data13);
-		blobs7.push(kha_internal_BytesBlob.fromBytes(bytes13));
-		let data14 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 1);
-		let bytes14 = haxe_Unserializer.run(data14);
-		blobs7.push(kha_internal_BytesBlob.fromBytes(bytes14));
-		kha_Shaders.compositor_pass_frag = new kha_graphics4_FragmentShader(blobs7,["compositor_pass.frag.essl","compositor_pass-webgl2.frag.essl"]);
+		let data8 = Reflect.field(kha_Shaders,"World_World_vertData" + 0);
+		let bytes8 = haxe_Unserializer.run(data8);
+		blobs7.push(kha_internal_BytesBlob.fromBytes(bytes8));
+		let data9 = Reflect.field(kha_Shaders,"World_World_vertData" + 1);
+		let bytes9 = haxe_Unserializer.run(data9);
+		blobs7.push(kha_internal_BytesBlob.fromBytes(bytes9));
+		kha_Shaders.World_World_vert = new kha_graphics4_VertexShader(blobs7,["World_World.vert.essl","World_World-webgl2.vert.essl"]);
 		let blobs8 = [];
-		let data15 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 0);
-		let bytes15 = haxe_Unserializer.run(data15);
-		blobs8.push(kha_internal_BytesBlob.fromBytes(bytes15));
-		let data16 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 1);
-		let bytes16 = haxe_Unserializer.run(data16);
-		blobs8.push(kha_internal_BytesBlob.fromBytes(bytes16));
-		kha_Shaders.compositor_pass_vert = new kha_graphics4_VertexShader(blobs8,["compositor_pass.vert.essl","compositor_pass-webgl2.vert.essl"]);
+		let data10 = Reflect.field(kha_Shaders,"____________mesh_fragData" + 0);
+		let bytes10 = haxe_Unserializer.run(data10);
+		blobs8.push(kha_internal_BytesBlob.fromBytes(bytes10));
+		kha_Shaders.____________mesh_frag = new kha_graphics4_FragmentShader(blobs8,["____________mesh-webgl2.frag.essl"]);
 		let blobs9 = [];
-		let data17 = Reflect.field(kha_Shaders,"deferred_light_fragData" + 0);
-		let bytes17 = haxe_Unserializer.run(data17);
-		blobs9.push(kha_internal_BytesBlob.fromBytes(bytes17));
-		kha_Shaders.deferred_light_frag = new kha_graphics4_FragmentShader(blobs9,["deferred_light-webgl2.frag.essl"]);
+		let data11 = Reflect.field(kha_Shaders,"____________mesh_vertData" + 0);
+		let bytes11 = haxe_Unserializer.run(data11);
+		blobs9.push(kha_internal_BytesBlob.fromBytes(bytes11));
+		let data12 = Reflect.field(kha_Shaders,"____________mesh_vertData" + 1);
+		let bytes12 = haxe_Unserializer.run(data12);
+		blobs9.push(kha_internal_BytesBlob.fromBytes(bytes12));
+		kha_Shaders.____________mesh_vert = new kha_graphics4_VertexShader(blobs9,["____________mesh.vert.essl","____________mesh-webgl2.vert.essl"]);
 		let blobs10 = [];
-		let data18 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 0);
-		let bytes18 = haxe_Unserializer.run(data18);
-		blobs10.push(kha_internal_BytesBlob.fromBytes(bytes18));
-		let data19 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 1);
-		let bytes19 = haxe_Unserializer.run(data19);
-		blobs10.push(kha_internal_BytesBlob.fromBytes(bytes19));
-		kha_Shaders.painter_colored_frag = new kha_graphics4_FragmentShader(blobs10,["painter-colored.frag.essl","painter-colored-webgl2.frag.essl"]);
+		let data13 = Reflect.field(kha_Shaders,"__________mesh_fragData" + 0);
+		let bytes13 = haxe_Unserializer.run(data13);
+		blobs10.push(kha_internal_BytesBlob.fromBytes(bytes13));
+		kha_Shaders.__________mesh_frag = new kha_graphics4_FragmentShader(blobs10,["__________mesh-webgl2.frag.essl"]);
 		let blobs11 = [];
-		let data20 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 0);
-		let bytes20 = haxe_Unserializer.run(data20);
-		blobs11.push(kha_internal_BytesBlob.fromBytes(bytes20));
-		let data21 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 1);
-		let bytes21 = haxe_Unserializer.run(data21);
-		blobs11.push(kha_internal_BytesBlob.fromBytes(bytes21));
-		kha_Shaders.painter_colored_vert = new kha_graphics4_VertexShader(blobs11,["painter-colored.vert.essl","painter-colored-webgl2.vert.essl"]);
+		let data14 = Reflect.field(kha_Shaders,"__________mesh_vertData" + 0);
+		let bytes14 = haxe_Unserializer.run(data14);
+		blobs11.push(kha_internal_BytesBlob.fromBytes(bytes14));
+		let data15 = Reflect.field(kha_Shaders,"__________mesh_vertData" + 1);
+		let bytes15 = haxe_Unserializer.run(data15);
+		blobs11.push(kha_internal_BytesBlob.fromBytes(bytes15));
+		kha_Shaders.__________mesh_vert = new kha_graphics4_VertexShader(blobs11,["__________mesh.vert.essl","__________mesh-webgl2.vert.essl"]);
 		let blobs12 = [];
-		let data22 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
-		let bytes22 = haxe_Unserializer.run(data22);
-		blobs12.push(kha_internal_BytesBlob.fromBytes(bytes22));
-		let data23 = Reflect.field(kha_Shaders,"painter_image_fragData" + 1);
-		let bytes23 = haxe_Unserializer.run(data23);
-		blobs12.push(kha_internal_BytesBlob.fromBytes(bytes23));
-		kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs12,["painter-image.frag.essl","painter-image-webgl2.frag.essl"]);
+		let data16 = Reflect.field(kha_Shaders,"_________mesh_fragData" + 0);
+		let bytes16 = haxe_Unserializer.run(data16);
+		blobs12.push(kha_internal_BytesBlob.fromBytes(bytes16));
+		kha_Shaders._________mesh_frag = new kha_graphics4_FragmentShader(blobs12,["_________mesh-webgl2.frag.essl"]);
 		let blobs13 = [];
-		let data24 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
-		let bytes24 = haxe_Unserializer.run(data24);
-		blobs13.push(kha_internal_BytesBlob.fromBytes(bytes24));
-		let data25 = Reflect.field(kha_Shaders,"painter_image_vertData" + 1);
-		let bytes25 = haxe_Unserializer.run(data25);
-		blobs13.push(kha_internal_BytesBlob.fromBytes(bytes25));
-		kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs13,["painter-image.vert.essl","painter-image-webgl2.vert.essl"]);
+		let data17 = Reflect.field(kha_Shaders,"_________mesh_vertData" + 0);
+		let bytes17 = haxe_Unserializer.run(data17);
+		blobs13.push(kha_internal_BytesBlob.fromBytes(bytes17));
+		let data18 = Reflect.field(kha_Shaders,"_________mesh_vertData" + 1);
+		let bytes18 = haxe_Unserializer.run(data18);
+		blobs13.push(kha_internal_BytesBlob.fromBytes(bytes18));
+		kha_Shaders._________mesh_vert = new kha_graphics4_VertexShader(blobs13,["_________mesh.vert.essl","_________mesh-webgl2.vert.essl"]);
 		let blobs14 = [];
-		let data26 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
-		let bytes26 = haxe_Unserializer.run(data26);
-		blobs14.push(kha_internal_BytesBlob.fromBytes(bytes26));
-		let data27 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
-		let bytes27 = haxe_Unserializer.run(data27);
-		blobs14.push(kha_internal_BytesBlob.fromBytes(bytes27));
-		kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs14,["painter-text.frag.essl","painter-text-webgl2.frag.essl"]);
+		let data19 = Reflect.field(kha_Shaders,"______mesh_fragData" + 0);
+		let bytes19 = haxe_Unserializer.run(data19);
+		blobs14.push(kha_internal_BytesBlob.fromBytes(bytes19));
+		kha_Shaders.______mesh_frag = new kha_graphics4_FragmentShader(blobs14,["______mesh-webgl2.frag.essl"]);
 		let blobs15 = [];
-		let data28 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
-		let bytes28 = haxe_Unserializer.run(data28);
-		blobs15.push(kha_internal_BytesBlob.fromBytes(bytes28));
-		let data29 = Reflect.field(kha_Shaders,"painter_text_vertData" + 1);
-		let bytes29 = haxe_Unserializer.run(data29);
-		blobs15.push(kha_internal_BytesBlob.fromBytes(bytes29));
-		kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs15,["painter-text.vert.essl","painter-text-webgl2.vert.essl"]);
+		let data20 = Reflect.field(kha_Shaders,"______mesh_vertData" + 0);
+		let bytes20 = haxe_Unserializer.run(data20);
+		blobs15.push(kha_internal_BytesBlob.fromBytes(bytes20));
+		let data21 = Reflect.field(kha_Shaders,"______mesh_vertData" + 1);
+		let bytes21 = haxe_Unserializer.run(data21);
+		blobs15.push(kha_internal_BytesBlob.fromBytes(bytes21));
+		kha_Shaders.______mesh_vert = new kha_graphics4_VertexShader(blobs15,["______mesh.vert.essl","______mesh-webgl2.vert.essl"]);
 		let blobs16 = [];
-		let data30 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
-		let bytes30 = haxe_Unserializer.run(data30);
-		blobs16.push(kha_internal_BytesBlob.fromBytes(bytes30));
-		let data31 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
-		let bytes31 = haxe_Unserializer.run(data31);
-		blobs16.push(kha_internal_BytesBlob.fromBytes(bytes31));
-		kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs16,["painter-video.frag.essl","painter-video-webgl2.frag.essl"]);
+		let data22 = Reflect.field(kha_Shaders,"armdefault_mesh_fragData" + 0);
+		let bytes22 = haxe_Unserializer.run(data22);
+		blobs16.push(kha_internal_BytesBlob.fromBytes(bytes22));
+		kha_Shaders.armdefault_mesh_frag = new kha_graphics4_FragmentShader(blobs16,["armdefault_mesh-webgl2.frag.essl"]);
 		let blobs17 = [];
-		let data32 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
-		let bytes32 = haxe_Unserializer.run(data32);
-		blobs17.push(kha_internal_BytesBlob.fromBytes(bytes32));
-		let data33 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
-		let bytes33 = haxe_Unserializer.run(data33);
-		blobs17.push(kha_internal_BytesBlob.fromBytes(bytes33));
-		kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs17,["painter-video.vert.essl","painter-video-webgl2.vert.essl"]);
+		let data23 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 0);
+		let bytes23 = haxe_Unserializer.run(data23);
+		blobs17.push(kha_internal_BytesBlob.fromBytes(bytes23));
+		let data24 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 1);
+		let bytes24 = haxe_Unserializer.run(data24);
+		blobs17.push(kha_internal_BytesBlob.fromBytes(bytes24));
+		kha_Shaders.armdefault_mesh_vert = new kha_graphics4_VertexShader(blobs17,["armdefault_mesh.vert.essl","armdefault_mesh-webgl2.vert.essl"]);
 		let blobs18 = [];
-		let data34 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 0);
-		let bytes34 = haxe_Unserializer.run(data34);
-		blobs18.push(kha_internal_BytesBlob.fromBytes(bytes34));
-		let data35 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 1);
-		let bytes35 = haxe_Unserializer.run(data35);
-		blobs18.push(kha_internal_BytesBlob.fromBytes(bytes35));
-		kha_Shaders.pass_copy_frag = new kha_graphics4_FragmentShader(blobs18,["pass_copy.frag.essl","pass_copy-webgl2.frag.essl"]);
+		let data25 = Reflect.field(kha_Shaders,"armdefault_shadowmap_fragData" + 0);
+		let bytes25 = haxe_Unserializer.run(data25);
+		blobs18.push(kha_internal_BytesBlob.fromBytes(bytes25));
+		let data26 = Reflect.field(kha_Shaders,"armdefault_shadowmap_fragData" + 1);
+		let bytes26 = haxe_Unserializer.run(data26);
+		blobs18.push(kha_internal_BytesBlob.fromBytes(bytes26));
+		kha_Shaders.armdefault_shadowmap_frag = new kha_graphics4_FragmentShader(blobs18,["armdefault_shadowmap.frag.essl","armdefault_shadowmap-webgl2.frag.essl"]);
 		let blobs19 = [];
-		let data36 = Reflect.field(kha_Shaders,"pass_vertData" + 0);
-		let bytes36 = haxe_Unserializer.run(data36);
-		blobs19.push(kha_internal_BytesBlob.fromBytes(bytes36));
-		let data37 = Reflect.field(kha_Shaders,"pass_vertData" + 1);
-		let bytes37 = haxe_Unserializer.run(data37);
-		blobs19.push(kha_internal_BytesBlob.fromBytes(bytes37));
-		kha_Shaders.pass_vert = new kha_graphics4_VertexShader(blobs19,["pass.vert.essl","pass-webgl2.vert.essl"]);
+		let data27 = Reflect.field(kha_Shaders,"armdefault_shadowmap_vertData" + 0);
+		let bytes27 = haxe_Unserializer.run(data27);
+		blobs19.push(kha_internal_BytesBlob.fromBytes(bytes27));
+		let data28 = Reflect.field(kha_Shaders,"armdefault_shadowmap_vertData" + 1);
+		let bytes28 = haxe_Unserializer.run(data28);
+		blobs19.push(kha_internal_BytesBlob.fromBytes(bytes28));
+		kha_Shaders.armdefault_shadowmap_vert = new kha_graphics4_VertexShader(blobs19,["armdefault_shadowmap.vert.essl","armdefault_shadowmap-webgl2.vert.essl"]);
 		let blobs20 = [];
-		let data38 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 0);
-		let bytes38 = haxe_Unserializer.run(data38);
-		blobs20.push(kha_internal_BytesBlob.fromBytes(bytes38));
-		let data39 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 1);
-		let bytes39 = haxe_Unserializer.run(data39);
-		blobs20.push(kha_internal_BytesBlob.fromBytes(bytes39));
-		kha_Shaders.pass_viewray_vert = new kha_graphics4_VertexShader(blobs20,["pass_viewray.vert.essl","pass_viewray-webgl2.vert.essl"]);
+		let data29 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 0);
+		let bytes29 = haxe_Unserializer.run(data29);
+		blobs20.push(kha_internal_BytesBlob.fromBytes(bytes29));
+		let data30 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 1);
+		let bytes30 = haxe_Unserializer.run(data30);
+		blobs20.push(kha_internal_BytesBlob.fromBytes(bytes30));
+		kha_Shaders.compositor_pass_frag = new kha_graphics4_FragmentShader(blobs20,["compositor_pass.frag.essl","compositor_pass-webgl2.frag.essl"]);
 		let blobs21 = [];
-		let data40 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 0);
-		let bytes40 = haxe_Unserializer.run(data40);
-		blobs21.push(kha_internal_BytesBlob.fromBytes(bytes40));
-		let data41 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 1);
-		let bytes41 = haxe_Unserializer.run(data41);
-		blobs21.push(kha_internal_BytesBlob.fromBytes(bytes41));
-		kha_Shaders.smaa_blend_weight_frag = new kha_graphics4_FragmentShader(blobs21,["smaa_blend_weight.frag.essl","smaa_blend_weight-webgl2.frag.essl"]);
+		let data31 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 0);
+		let bytes31 = haxe_Unserializer.run(data31);
+		blobs21.push(kha_internal_BytesBlob.fromBytes(bytes31));
+		let data32 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 1);
+		let bytes32 = haxe_Unserializer.run(data32);
+		blobs21.push(kha_internal_BytesBlob.fromBytes(bytes32));
+		kha_Shaders.compositor_pass_vert = new kha_graphics4_VertexShader(blobs21,["compositor_pass.vert.essl","compositor_pass-webgl2.vert.essl"]);
 		let blobs22 = [];
-		let data42 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 0);
-		let bytes42 = haxe_Unserializer.run(data42);
-		blobs22.push(kha_internal_BytesBlob.fromBytes(bytes42));
-		let data43 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 1);
-		let bytes43 = haxe_Unserializer.run(data43);
-		blobs22.push(kha_internal_BytesBlob.fromBytes(bytes43));
-		kha_Shaders.smaa_blend_weight_vert = new kha_graphics4_VertexShader(blobs22,["smaa_blend_weight.vert.essl","smaa_blend_weight-webgl2.vert.essl"]);
+		let data33 = Reflect.field(kha_Shaders,"deferred_light_fragData" + 0);
+		let bytes33 = haxe_Unserializer.run(data33);
+		blobs22.push(kha_internal_BytesBlob.fromBytes(bytes33));
+		kha_Shaders.deferred_light_frag = new kha_graphics4_FragmentShader(blobs22,["deferred_light-webgl2.frag.essl"]);
 		let blobs23 = [];
-		let data44 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 0);
-		let bytes44 = haxe_Unserializer.run(data44);
-		blobs23.push(kha_internal_BytesBlob.fromBytes(bytes44));
-		let data45 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 1);
-		let bytes45 = haxe_Unserializer.run(data45);
-		blobs23.push(kha_internal_BytesBlob.fromBytes(bytes45));
-		kha_Shaders.smaa_edge_detect_frag = new kha_graphics4_FragmentShader(blobs23,["smaa_edge_detect.frag.essl","smaa_edge_detect-webgl2.frag.essl"]);
+		let data34 = Reflect.field(kha_Shaders,"hidden_material_mesh_fragData" + 0);
+		let bytes34 = haxe_Unserializer.run(data34);
+		blobs23.push(kha_internal_BytesBlob.fromBytes(bytes34));
+		kha_Shaders.hidden_material_mesh_frag = new kha_graphics4_FragmentShader(blobs23,["hidden_material_mesh-webgl2.frag.essl"]);
 		let blobs24 = [];
-		let data46 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 0);
-		let bytes46 = haxe_Unserializer.run(data46);
-		blobs24.push(kha_internal_BytesBlob.fromBytes(bytes46));
-		let data47 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 1);
-		let bytes47 = haxe_Unserializer.run(data47);
-		blobs24.push(kha_internal_BytesBlob.fromBytes(bytes47));
-		kha_Shaders.smaa_edge_detect_vert = new kha_graphics4_VertexShader(blobs24,["smaa_edge_detect.vert.essl","smaa_edge_detect-webgl2.vert.essl"]);
+		let data35 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 0);
+		let bytes35 = haxe_Unserializer.run(data35);
+		blobs24.push(kha_internal_BytesBlob.fromBytes(bytes35));
+		let data36 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 1);
+		let bytes36 = haxe_Unserializer.run(data36);
+		blobs24.push(kha_internal_BytesBlob.fromBytes(bytes36));
+		kha_Shaders.painter_colored_frag = new kha_graphics4_FragmentShader(blobs24,["painter-colored.frag.essl","painter-colored-webgl2.frag.essl"]);
 		let blobs25 = [];
-		let data48 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 0);
-		let bytes48 = haxe_Unserializer.run(data48);
-		blobs25.push(kha_internal_BytesBlob.fromBytes(bytes48));
-		let data49 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 1);
-		let bytes49 = haxe_Unserializer.run(data49);
-		blobs25.push(kha_internal_BytesBlob.fromBytes(bytes49));
-		kha_Shaders.smaa_neighborhood_blend_frag = new kha_graphics4_FragmentShader(blobs25,["smaa_neighborhood_blend.frag.essl","smaa_neighborhood_blend-webgl2.frag.essl"]);
+		let data37 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 0);
+		let bytes37 = haxe_Unserializer.run(data37);
+		blobs25.push(kha_internal_BytesBlob.fromBytes(bytes37));
+		let data38 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 1);
+		let bytes38 = haxe_Unserializer.run(data38);
+		blobs25.push(kha_internal_BytesBlob.fromBytes(bytes38));
+		kha_Shaders.painter_colored_vert = new kha_graphics4_VertexShader(blobs25,["painter-colored.vert.essl","painter-colored-webgl2.vert.essl"]);
 		let blobs26 = [];
-		let data50 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 0);
-		let bytes50 = haxe_Unserializer.run(data50);
-		blobs26.push(kha_internal_BytesBlob.fromBytes(bytes50));
-		let data51 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 1);
-		let bytes51 = haxe_Unserializer.run(data51);
-		blobs26.push(kha_internal_BytesBlob.fromBytes(bytes51));
-		kha_Shaders.smaa_neighborhood_blend_vert = new kha_graphics4_VertexShader(blobs26,["smaa_neighborhood_blend.vert.essl","smaa_neighborhood_blend-webgl2.vert.essl"]);
+		let data39 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
+		let bytes39 = haxe_Unserializer.run(data39);
+		blobs26.push(kha_internal_BytesBlob.fromBytes(bytes39));
+		let data40 = Reflect.field(kha_Shaders,"painter_image_fragData" + 1);
+		let bytes40 = haxe_Unserializer.run(data40);
+		blobs26.push(kha_internal_BytesBlob.fromBytes(bytes40));
+		kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs26,["painter-image.frag.essl","painter-image-webgl2.frag.essl"]);
 		let blobs27 = [];
-		let data52 = Reflect.field(kha_Shaders,"ssao_pass_fragData" + 0);
+		let data41 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
+		let bytes41 = haxe_Unserializer.run(data41);
+		blobs27.push(kha_internal_BytesBlob.fromBytes(bytes41));
+		let data42 = Reflect.field(kha_Shaders,"painter_image_vertData" + 1);
+		let bytes42 = haxe_Unserializer.run(data42);
+		blobs27.push(kha_internal_BytesBlob.fromBytes(bytes42));
+		kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs27,["painter-image.vert.essl","painter-image-webgl2.vert.essl"]);
+		let blobs28 = [];
+		let data43 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
+		let bytes43 = haxe_Unserializer.run(data43);
+		blobs28.push(kha_internal_BytesBlob.fromBytes(bytes43));
+		let data44 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
+		let bytes44 = haxe_Unserializer.run(data44);
+		blobs28.push(kha_internal_BytesBlob.fromBytes(bytes44));
+		kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs28,["painter-text.frag.essl","painter-text-webgl2.frag.essl"]);
+		let blobs29 = [];
+		let data45 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
+		let bytes45 = haxe_Unserializer.run(data45);
+		blobs29.push(kha_internal_BytesBlob.fromBytes(bytes45));
+		let data46 = Reflect.field(kha_Shaders,"painter_text_vertData" + 1);
+		let bytes46 = haxe_Unserializer.run(data46);
+		blobs29.push(kha_internal_BytesBlob.fromBytes(bytes46));
+		kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs29,["painter-text.vert.essl","painter-text-webgl2.vert.essl"]);
+		let blobs30 = [];
+		let data47 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
+		let bytes47 = haxe_Unserializer.run(data47);
+		blobs30.push(kha_internal_BytesBlob.fromBytes(bytes47));
+		let data48 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
+		let bytes48 = haxe_Unserializer.run(data48);
+		blobs30.push(kha_internal_BytesBlob.fromBytes(bytes48));
+		kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs30,["painter-video.frag.essl","painter-video-webgl2.frag.essl"]);
+		let blobs31 = [];
+		let data49 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
+		let bytes49 = haxe_Unserializer.run(data49);
+		blobs31.push(kha_internal_BytesBlob.fromBytes(bytes49));
+		let data50 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
+		let bytes50 = haxe_Unserializer.run(data50);
+		blobs31.push(kha_internal_BytesBlob.fromBytes(bytes50));
+		kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs31,["painter-video.vert.essl","painter-video-webgl2.vert.essl"]);
+		let blobs32 = [];
+		let data51 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 0);
+		let bytes51 = haxe_Unserializer.run(data51);
+		blobs32.push(kha_internal_BytesBlob.fromBytes(bytes51));
+		let data52 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 1);
 		let bytes52 = haxe_Unserializer.run(data52);
-		blobs27.push(kha_internal_BytesBlob.fromBytes(bytes52));
-		let data53 = Reflect.field(kha_Shaders,"ssao_pass_fragData" + 1);
+		blobs32.push(kha_internal_BytesBlob.fromBytes(bytes52));
+		kha_Shaders.pass_copy_frag = new kha_graphics4_FragmentShader(blobs32,["pass_copy.frag.essl","pass_copy-webgl2.frag.essl"]);
+		let blobs33 = [];
+		let data53 = Reflect.field(kha_Shaders,"pass_vertData" + 0);
 		let bytes53 = haxe_Unserializer.run(data53);
-		blobs27.push(kha_internal_BytesBlob.fromBytes(bytes53));
-		kha_Shaders.ssao_pass_frag = new kha_graphics4_FragmentShader(blobs27,["ssao_pass.frag.essl","ssao_pass-webgl2.frag.essl"]);
+		blobs33.push(kha_internal_BytesBlob.fromBytes(bytes53));
+		let data54 = Reflect.field(kha_Shaders,"pass_vertData" + 1);
+		let bytes54 = haxe_Unserializer.run(data54);
+		blobs33.push(kha_internal_BytesBlob.fromBytes(bytes54));
+		kha_Shaders.pass_vert = new kha_graphics4_VertexShader(blobs33,["pass.vert.essl","pass-webgl2.vert.essl"]);
+		let blobs34 = [];
+		let data55 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 0);
+		let bytes55 = haxe_Unserializer.run(data55);
+		blobs34.push(kha_internal_BytesBlob.fromBytes(bytes55));
+		let data56 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 1);
+		let bytes56 = haxe_Unserializer.run(data56);
+		blobs34.push(kha_internal_BytesBlob.fromBytes(bytes56));
+		kha_Shaders.pass_viewray_vert = new kha_graphics4_VertexShader(blobs34,["pass_viewray.vert.essl","pass_viewray-webgl2.vert.essl"]);
+		let blobs35 = [];
+		let data57 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 0);
+		let bytes57 = haxe_Unserializer.run(data57);
+		blobs35.push(kha_internal_BytesBlob.fromBytes(bytes57));
+		let data58 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 1);
+		let bytes58 = haxe_Unserializer.run(data58);
+		blobs35.push(kha_internal_BytesBlob.fromBytes(bytes58));
+		kha_Shaders.smaa_blend_weight_frag = new kha_graphics4_FragmentShader(blobs35,["smaa_blend_weight.frag.essl","smaa_blend_weight-webgl2.frag.essl"]);
+		let blobs36 = [];
+		let data59 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 0);
+		let bytes59 = haxe_Unserializer.run(data59);
+		blobs36.push(kha_internal_BytesBlob.fromBytes(bytes59));
+		let data60 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 1);
+		let bytes60 = haxe_Unserializer.run(data60);
+		blobs36.push(kha_internal_BytesBlob.fromBytes(bytes60));
+		kha_Shaders.smaa_blend_weight_vert = new kha_graphics4_VertexShader(blobs36,["smaa_blend_weight.vert.essl","smaa_blend_weight-webgl2.vert.essl"]);
+		let blobs37 = [];
+		let data61 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 0);
+		let bytes61 = haxe_Unserializer.run(data61);
+		blobs37.push(kha_internal_BytesBlob.fromBytes(bytes61));
+		let data62 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 1);
+		let bytes62 = haxe_Unserializer.run(data62);
+		blobs37.push(kha_internal_BytesBlob.fromBytes(bytes62));
+		kha_Shaders.smaa_edge_detect_frag = new kha_graphics4_FragmentShader(blobs37,["smaa_edge_detect.frag.essl","smaa_edge_detect-webgl2.frag.essl"]);
+		let blobs38 = [];
+		let data63 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 0);
+		let bytes63 = haxe_Unserializer.run(data63);
+		blobs38.push(kha_internal_BytesBlob.fromBytes(bytes63));
+		let data64 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 1);
+		let bytes64 = haxe_Unserializer.run(data64);
+		blobs38.push(kha_internal_BytesBlob.fromBytes(bytes64));
+		kha_Shaders.smaa_edge_detect_vert = new kha_graphics4_VertexShader(blobs38,["smaa_edge_detect.vert.essl","smaa_edge_detect-webgl2.vert.essl"]);
+		let blobs39 = [];
+		let data65 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 0);
+		let bytes65 = haxe_Unserializer.run(data65);
+		blobs39.push(kha_internal_BytesBlob.fromBytes(bytes65));
+		let data66 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 1);
+		let bytes66 = haxe_Unserializer.run(data66);
+		blobs39.push(kha_internal_BytesBlob.fromBytes(bytes66));
+		kha_Shaders.smaa_neighborhood_blend_frag = new kha_graphics4_FragmentShader(blobs39,["smaa_neighborhood_blend.frag.essl","smaa_neighborhood_blend-webgl2.frag.essl"]);
+		let blobs40 = [];
+		let data67 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 0);
+		let bytes67 = haxe_Unserializer.run(data67);
+		blobs40.push(kha_internal_BytesBlob.fromBytes(bytes67));
+		let data68 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 1);
+		let bytes68 = haxe_Unserializer.run(data68);
+		blobs40.push(kha_internal_BytesBlob.fromBytes(bytes68));
+		kha_Shaders.smaa_neighborhood_blend_vert = new kha_graphics4_VertexShader(blobs40,["smaa_neighborhood_blend.vert.essl","smaa_neighborhood_blend-webgl2.vert.essl"]);
 	}
 }
 $hxClasses["kha.Shaders"] = kha_Shaders;
@@ -59029,6 +62381,15 @@ js_Boot.__toStr = ({ }).toString;
 Main.projectName = "Game";
 Main.projectVersion = "1.0.0";
 Main.projectPackage = "arm";
+iron_Trait._hx_skip_constructor = false;
+armory_trait_internal_CameraController.keyUp = "w";
+armory_trait_internal_CameraController.keyDown = "s";
+armory_trait_internal_CameraController.keyLeft = "a";
+armory_trait_internal_CameraController.keyRight = "d";
+armory_trait_internal_CameraController.keyStrafeUp = "e";
+armory_trait_internal_CameraController.keyStrafeDown = "q";
+arm_FirstPersonController.__meta__ = { fields : { speed : { prop : null}}};
+arm_FirstPersonController.rotationSpeed = 2.0;
 armory_data_Config.configLoaded = false;
 armory_renderpath_Downsampler.currentMipLevel = 0;
 armory_renderpath_Downsampler.numMipLevels = 0;
@@ -59065,7 +62426,6 @@ armory_renderpath_RenderPathCreator.applyConfig = armory_renderpath_RenderPathDe
 armory_system_AssertLevel.Warning = 0;
 armory_system_AssertLevel.Error = 1;
 armory_system_AssertLevel.NoAssertions = 2;
-iron_Trait._hx_skip_constructor = false;
 armory_trait_internal_UniformsManager.floatsRegistered = false;
 armory_trait_internal_UniformsManager.floatsMap = new haxe_ds_ObjectMap();
 armory_trait_internal_UniformsManager.vectorsRegistered = false;
@@ -59073,6 +62433,52 @@ armory_trait_internal_UniformsManager.vectorsMap = new haxe_ds_ObjectMap();
 armory_trait_internal_UniformsManager.texturesRegistered = false;
 armory_trait_internal_UniformsManager.texturesMap = new haxe_ds_ObjectMap();
 armory_trait_internal_UniformsManager.sceneRemoveInitalized = false;
+armory_trait_physics_bullet_DebugDrawHelper.contactPointSizePx = 4;
+armory_trait_physics_bullet_DebugDrawHelper.contactPointNormalColor = -1;
+armory_trait_physics_bullet_DebugDrawHelper.contactPointDrawLifetime = true;
+armory_trait_physics_bullet_PhysicsConstraint.nextId = 0;
+armory_trait_physics_bullet_PhysicsConstraint.nullvec = true;
+armory_trait_physics_bullet_PhysicsWorld.sceneRemoved = false;
+armory_trait_physics_bullet_PhysicsWorld.nullvec = true;
+armory_trait_physics_bullet_DebugDrawMode.NoDebug = 0;
+armory_trait_physics_bullet_DebugDrawMode.DrawWireframe = 1;
+armory_trait_physics_bullet_DebugDrawMode.DrawAABB = 2;
+armory_trait_physics_bullet_DebugDrawMode.DrawFeaturesText = 4;
+armory_trait_physics_bullet_DebugDrawMode.DrawContactPoints = 8;
+armory_trait_physics_bullet_DebugDrawMode.NoDeactivation = 16;
+armory_trait_physics_bullet_DebugDrawMode.NoHelpText = 32;
+armory_trait_physics_bullet_DebugDrawMode.DrawText = 64;
+armory_trait_physics_bullet_DebugDrawMode.ProfileTimings = 128;
+armory_trait_physics_bullet_DebugDrawMode.EnableSatComparison = 256;
+armory_trait_physics_bullet_DebugDrawMode.DisableBulletLCP = 512;
+armory_trait_physics_bullet_DebugDrawMode.EnableCCD = 1024;
+armory_trait_physics_bullet_DebugDrawMode.DrawConstraints = 2048;
+armory_trait_physics_bullet_DebugDrawMode.DrawConstraintLimits = 4096;
+armory_trait_physics_bullet_DebugDrawMode.FastWireframe = 8192;
+armory_trait_physics_bullet_DebugDrawMode.DrawNormals = 16384;
+armory_trait_physics_bullet_DebugDrawMode.DrawFrames = 32768;
+kha_math_FastMatrix4.width = 4;
+kha_math_FastMatrix4.height = 4;
+iron_math_Mat4.helpVec = new iron_math_Vec4();
+iron_math_Mat4.helpMat = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
+iron_math_Quat.helpVec0 = new iron_math_Vec4();
+iron_math_Quat.helpVec1 = new iron_math_Vec4();
+iron_math_Quat.helpVec2 = new iron_math_Vec4();
+iron_math_Quat.helpMat = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
+iron_math_Quat.xAxis = new iron_math_Vec4(1.0,0.0,0.0);
+iron_math_Quat.yAxis = new iron_math_Vec4(0.0,1.0,0.0);
+iron_math_Quat.SQRT2 = 1.4142135623730951;
+armory_trait_physics_bullet_RigidBody.nextId = 0;
+armory_trait_physics_bullet_RigidBody.ammoArray = -1;
+armory_trait_physics_bullet_RigidBody.nullvec = true;
+armory_trait_physics_bullet_RigidBody.quat = new iron_math_Quat();
+armory_trait_physics_bullet_RigidBody.CF_STATIC_OBJECT = 1;
+armory_trait_physics_bullet_RigidBody.CF_KINEMATIC_OBJECT = 2;
+armory_trait_physics_bullet_RigidBody.CF_NO_CONTACT_RESPONSE = 4;
+armory_trait_physics_bullet_RigidBody.CF_CHARACTER_OBJECT = 16;
+armory_trait_physics_bullet_RigidBody.convexHullCache = new haxe_ds_ObjectMap();
+armory_trait_physics_bullet_RigidBody.triangleMeshCache = new haxe_ds_ObjectMap();
+armory_trait_physics_bullet_RigidBody.usersCache = new haxe_ds_ObjectMap();
 zui_Handle.global = new zui_Handle();
 armory_ui_Canvas.defaultFontName = "font_default.ttf";
 armory_ui_Canvas.assetMap = new haxe_ds_IntMap();
@@ -59142,17 +62548,12 @@ iron_data_Data.sep = "/";
 iron_data_Data.dataPath = "";
 iron_data_MaterialData.uidCounter = 0;
 iron_data_MaterialContext.num = 0;
-kha_math_FastMatrix4.width = 4;
-kha_math_FastMatrix4.height = 4;
-iron_math_Mat4.helpVec = new iron_math_Vec4();
-iron_math_Mat4.helpMat = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
-iron_math_Quat.helpVec0 = new iron_math_Vec4();
-iron_math_Quat.helpVec1 = new iron_math_Vec4();
-iron_math_Quat.helpVec2 = new iron_math_Vec4();
-iron_math_Quat.helpMat = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
-iron_math_Quat.xAxis = new iron_math_Vec4(1.0,0.0,0.0);
-iron_math_Quat.yAxis = new iron_math_Vec4(0.0,1.0,0.0);
-iron_math_Quat.SQRT2 = 1.4142135623730951;
+iron_math_RayCaster.VPInv = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
+iron_math_RayCaster.PInv = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
+iron_math_RayCaster.VInv = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
+iron_math_RayCaster.loc = new iron_math_Vec4();
+iron_math_RayCaster.nor = new iron_math_Vec4();
+iron_math_RayCaster.m = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
 iron_object_Animation._hx_skip_constructor = false;
 iron_object_Animation.m1 = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
 iron_object_Animation.m2 = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
@@ -59243,24 +62644,41 @@ kha_Scheduler.timeWarpSaveTime = 10.0;
 kha_Scheduler.DIF_COUNT = 3;
 kha_Scheduler.maxframetime = 0.5;
 kha_Scheduler.startTime = 0;
-kha_Shaders.Material_mesh_fragData0 = "s1587:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC44MDAwMDAwMTE5MjA5Mjg5NTUwNzgxMjUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC41OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDAuNTsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSB2ZWMzKDAuMCk7CiAgICBuIC89IHZlYzMoKGFicyhuLngpICsgYWJzKG4ueSkpICsgYWJzKG4ueikpOwogICAgaGlnaHAgdmVjMiBfMTAyOwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzEwMiA9IG4ueHk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzEwMiA9IG9jdGFoZWRyb25XcmFwKG4ueHkpOwogICAgfQogICAgbiA9IHZlYzMoXzEwMi54LCBfMTAyLnksIG4ueik7CiAgICBmcmFnQ29sb3JbMF0gPSB2ZWM0KG4ueHksIHJvdWdobmVzcywgcGFja0Zsb2F0SW50MTYobWV0YWxsaWMsIDB1KSk7CiAgICBmcmFnQ29sb3JbMV0gPSB2ZWM0KGJhc2Vjb2wsIHBhY2tGbG9hdDIob2NjbHVzaW9uLCBzcGVjdWxhcikpOwp9Cgo";
-kha_Shaders.Material_mesh_vertData0 = "s323:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBtYXQ0IFdWUDsKCmF0dHJpYnV0ZSB2ZWM0IHBvczsKdmFyeWluZyB2ZWMzIHdub3JtYWw7CmF0dHJpYnV0ZSB2ZWMyIG5vcjsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgZ2xfUG9zaXRpb24gPSBXVlAgKiBzcG9zOwp9Cgo";
-kha_Shaders.Material_mesh_vertData1 = "s303:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBtYXQ0IFdWUDsKCmluIHZlYzQgcG9zOwpvdXQgdmVjMyB3bm9ybWFsOwppbiB2ZWMyIG5vcjsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgZ2xfUG9zaXRpb24gPSBXVlAgKiBzcG9zOwp9Cgo";
-kha_Shaders.Material_shadowmap_fragData0 = "s103:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdm9pZCBtYWluKCkKewp9Cgo";
-kha_Shaders.Material_shadowmap_fragData1 = "s107:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdm9pZCBtYWluKCkKewp9Cgo";
-kha_Shaders.Material_shadowmap_vertData0 = "s186:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgTFdWUDsKCmF0dHJpYnV0ZSB2ZWM0IHBvczsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIGdsX1Bvc2l0aW9uID0gTFdWUCAqIHNwb3M7Cn0KCg";
-kha_Shaders.Material_shadowmap_vertData1 = "s180:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgTFdWUDsKCmluIHZlYzQgcG9zOwoKdm9pZCBtYWluKCkKewogICAgdmVjNCBzcG9zID0gdmVjNChwb3MueHl6LCAxLjApOwogICAgZ2xfUG9zaXRpb24gPSBMV1ZQICogc3BvczsKfQoK";
+kha_Shaders.Door_material_mesh_fragData0 = "s1692:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC44MDAwMDAwMTE5MjA5Mjg5NTUwNzgxMjUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC4wNTAwMDAwMDA3NDUwNTgwNTk2OTIzODI4MTI1OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjEwMDAwMDAwMTQ5MDExNjExOTM4NDc2NTYyNTsKICAgIGhpZ2hwIGZsb2F0IG9jY2x1c2lvbiA9IDEuMDsKICAgIGhpZ2hwIGZsb2F0IHNwZWN1bGFyID0gMC4xMDAwMDAwMDE0OTAxMTYxMTkzODQ3NjU2MjU7CiAgICBoaWdocCB2ZWMzIGVtaXNzaW9uQ29sID0gdmVjMygwLjApOwogICAgbiAvPSB2ZWMzKChhYnMobi54KSArIGFicyhuLnkpKSArIGFicyhuLnopKTsKICAgIGhpZ2hwIHZlYzIgXzEwMzsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF8xMDMgPSBuLnh5OwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIF8xMDMgPSBvY3RhaGVkcm9uV3JhcChuLnh5KTsKICAgIH0KICAgIG4gPSB2ZWMzKF8xMDMueCwgXzEwMy55LCBuLnopOwogICAgZnJhZ0NvbG9yWzBdID0gdmVjNChuLnh5LCByb3VnaG5lc3MsIHBhY2tGbG9hdEludDE2KG1ldGFsbGljLCAwdSkpOwogICAgZnJhZ0NvbG9yWzFdID0gdmVjNChiYXNlY29sLCBwYWNrRmxvYXQyKG9jY2x1c2lvbiwgc3BlY3VsYXIpKTsKfQoK";
+kha_Shaders.Handle_material_mesh_fragData0 = "s1587:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC44MDAwMDAwMTE5MjA5Mjg5NTUwNzgxMjUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC4wOwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDEuMDsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSB2ZWMzKDAuMCk7CiAgICBuIC89IHZlYzMoKGFicyhuLngpICsgYWJzKG4ueSkpICsgYWJzKG4ueikpOwogICAgaGlnaHAgdmVjMiBfMTAxOwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzEwMSA9IG4ueHk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzEwMSA9IG9jdGFoZWRyb25XcmFwKG4ueHkpOwogICAgfQogICAgbiA9IHZlYzMoXzEwMS54LCBfMTAxLnksIG4ueik7CiAgICBmcmFnQ29sb3JbMF0gPSB2ZWM0KG4ueHksIHJvdWdobmVzcywgcGFja0Zsb2F0SW50MTYobWV0YWxsaWMsIDB1KSk7CiAgICBmcmFnQ29sb3JbMV0gPSB2ZWM0KGJhc2Vjb2wsIHBhY2tGbG9hdDIob2NjbHVzaW9uLCBzcGVjdWxhcikpOwp9Cgo";
+kha_Shaders.Material_001_mesh_fragData0 = "s1659:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC4zNTIzNjk1NDY4OTAyNTg3ODkwNjI1LCAwLjgwMDAwMDA3MTUyNTU3MzczMDQ2ODc1LCAwLjM3ODAzODU1NTM4MzY4MjI1MDk3NjU2MjUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC41OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDAuNTsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSB2ZWMzKDAuMCk7CiAgICBuIC89IHZlYzMoKGFicyhuLngpICsgYWJzKG4ueSkpICsgYWJzKG4ueikpOwogICAgaGlnaHAgdmVjMiBfMTA0OwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzEwNCA9IG4ueHk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzEwNCA9IG9jdGFoZWRyb25XcmFwKG4ueHkpOwogICAgfQogICAgbiA9IHZlYzMoXzEwNC54LCBfMTA0LnksIG4ueik7CiAgICBmcmFnQ29sb3JbMF0gPSB2ZWM0KG4ueHksIHJvdWdobmVzcywgcGFja0Zsb2F0SW50MTYobWV0YWxsaWMsIDB1KSk7CiAgICBmcmFnQ29sb3JbMV0gPSB2ZWM0KGJhc2Vjb2wsIHBhY2tGbG9hdDIob2NjbHVzaW9uLCBzcGVjdWxhcikpOwp9Cgo";
+kha_Shaders.Material_002_mesh_fragData0 = "s1663:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC44MDAwMDAwNzE1MjU1NzM3MzA0Njg3NSwgMC40NDg0MzAyMTAzNTE5NDM5Njk3MjY1NjI1LCAwLjE2NTY1NzI1MjA3MzI4Nzk2Mzg2NzE4NzUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC41OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDAuNTsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSB2ZWMzKDAuMCk7CiAgICBuIC89IHZlYzMoKGFicyhuLngpICsgYWJzKG4ueSkpICsgYWJzKG4ueikpOwogICAgaGlnaHAgdmVjMiBfMTA0OwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzEwNCA9IG4ueHk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzEwNCA9IG9jdGFoZWRyb25XcmFwKG4ueHkpOwogICAgfQogICAgbiA9IHZlYzMoXzEwNC54LCBfMTA0LnksIG4ueik7CiAgICBmcmFnQ29sb3JbMF0gPSB2ZWM0KG4ueHksIHJvdWdobmVzcywgcGFja0Zsb2F0SW50MTYobWV0YWxsaWMsIDB1KSk7CiAgICBmcmFnQ29sb3JbMV0gPSB2ZWM0KGJhc2Vjb2wsIHBhY2tGbG9hdDIob2NjbHVzaW9uLCBzcGVjdWxhcikpOwp9Cgo";
+kha_Shaders.Material_mesh_fragData0 = "s1732:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC43NzYwNzY3OTM2NzA2NTQyOTY4NzUsIDAuODAwMDAwMDcxNTI1NTczNzMwNDY4NzUsIDAuODAwMDAwMDcxNTI1NTczNzMwNDY4NzUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC41OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDAuNTsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSB2ZWMzKDAuMCk7CiAgICBpZiAoIWdsX0Zyb250RmFjaW5nKQogICAgewogICAgICAgIG4gKj0gKC0xLjApOwogICAgfQogICAgbiAvPSB2ZWMzKChhYnMobi54KSArIGFicyhuLnkpKSArIGFicyhuLnopKTsKICAgIGhpZ2hwIHZlYzIgXzExMTsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF8xMTEgPSBuLnh5OwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIF8xMTEgPSBvY3RhaGVkcm9uV3JhcChuLnh5KTsKICAgIH0KICAgIG4gPSB2ZWMzKF8xMTEueCwgXzExMS55LCBuLnopOwogICAgZnJhZ0NvbG9yWzBdID0gdmVjNChuLnh5LCByb3VnaG5lc3MsIHBhY2tGbG9hdEludDE2KG1ldGFsbGljLCAwdSkpOwogICAgZnJhZ0NvbG9yWzFdID0gdmVjNChiYXNlY29sLCBwYWNrRmxvYXQyKG9jY2x1c2lvbiwgc3BlY3VsYXIpKTsKfQoK";
+kha_Shaders.Wall_material_mesh_fragData0 = "s2358:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIGZsb2F0IElucHV0XzFfQmFja2ZhY2luZ19yZXMgPSAxLjAgLSBmbG9hdChnbF9Gcm9udEZhY2luZyk7CiAgICBoaWdocCBmbG9hdCBNaXhfMV9mYWMgPSBjbGFtcChJbnB1dF8xX0JhY2tmYWNpbmdfcmVzLCAwLjAsIDEuMCk7CiAgICBoaWdocCBmbG9hdCBNaXhfMV9mYWNfaW52ID0gMS4wIC0gTWl4XzFfZmFjOwogICAgaGlnaHAgdmVjMyBiYXNlY29sID0gKHZlYzMoMC43Njg0OTk5NzA0MzYwOTYxOTE0MDYyNSwgMC42NjQ5OTk5NjE4NTMwMjczNDM3NSwgMC42MDkyMDAwMDA3NjI5Mzk0NTMxMjUpICogTWl4XzFfZmFjX2ludikgKyAodmVjMygwLjMwMDAwMDAxMTkyMDkyODk1NTA3ODEyNSkgKiBNaXhfMV9mYWMpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gKDAuMDUwMDAwMDAwNzQ1MDU4MDU5NjkyMzgyODEyNSAqIE1peF8xX2ZhY19pbnYpICsgKDAuMCAqIE1peF8xX2ZhYyk7CiAgICBoaWdocCBmbG9hdCBtZXRhbGxpYyA9ICgwLjEwMDAwMDAwMTQ5MDExNjExOTM4NDc2NTYyNSAqIE1peF8xX2ZhY19pbnYpICsgKDAuMCAqIE1peF8xX2ZhYyk7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAoMS4wICogTWl4XzFfZmFjX2ludikgKyAoMS4wICogTWl4XzFfZmFjKTsKICAgIGhpZ2hwIGZsb2F0IHNwZWN1bGFyID0gKDAuMTAwMDAwMDAxNDkwMTE2MTE5Mzg0NzY1NjI1ICogTWl4XzFfZmFjX2ludikgKyAoMC4wICogTWl4XzFfZmFjKTsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSAodmVjMygwLjApICogTWl4XzFfZmFjX2ludikgKyAodmVjMygwLjApICogTWl4XzFfZmFjKTsKICAgIG4gLz0gdmVjMygoYWJzKG4ueCkgKyBhYnMobi55KSkgKyBhYnMobi56KSk7CiAgICBoaWdocCB2ZWMyIF8xNDk7CiAgICBpZiAobi56ID49IDAuMCkKICAgIHsKICAgICAgICBfMTQ5ID0gbi54eTsKICAgIH0KICAgIGVsc2UKICAgIHsKICAgICAgICBfMTQ5ID0gb2N0YWhlZHJvbldyYXAobi54eSk7CiAgICB9CiAgICBuID0gdmVjMyhfMTQ5LngsIF8xNDkueSwgbi56KTsKICAgIGZyYWdDb2xvclswXSA9IHZlYzQobi54eSwgcm91Z2huZXNzLCBwYWNrRmxvYXRJbnQxNihtZXRhbGxpYywgMHUpKTsKICAgIGZyYWdDb2xvclsxXSA9IHZlYzQoYmFzZWNvbCwgcGFja0Zsb2F0MihvY2NsdXNpb24sIHNwZWN1bGFyKSk7Cn0KCg";
 kha_Shaders.World_World_fragData0 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdmFyeWluZyBoaWdocCB2ZWMzIG5vcm1hbDsKCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZShub3JtYWwpOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB2ZWM0KHZlYzMoMC4wNTA4NzYwODg0NDA0MTgyNDM0MDgyMDMxMjUpLngsIHZlYzMoMC4wNTA4NzYwODg0NDA0MTgyNDM0MDgyMDMxMjUpLnksIHZlYzMoMC4wNTA4NzYwODg0NDA0MTgyNDM0MDgyMDMxMjUpLnosIGdsX0ZyYWdEYXRhWzBdLncpOwogICAgZ2xfRnJhZ0RhdGFbMF0udyA9IDAuMDsKfQoK";
 kha_Shaders.World_World_fragData1 = "s456:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyBub3JtYWw7Cm91dCBoaWdocCB2ZWM0IGZyYWdDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZShub3JtYWwpOwogICAgZnJhZ0NvbG9yID0gdmVjNCh2ZWMzKDAuMDUwODc2MDg4NDQwNDE4MjQzNDA4MjAzMTI1KS54LCB2ZWMzKDAuMDUwODc2MDg4NDQwNDE4MjQzNDA4MjAzMTI1KS55LCB2ZWMzKDAuMDUwODc2MDg4NDQwNDE4MjQzNDA4MjAzMTI1KS56LCBmcmFnQ29sb3Iudyk7CiAgICBmcmFnQ29sb3IudyA9IDAuMDsKfQoK";
 kha_Shaders.World_World_vertData0 = "s278:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgU01WUDsKCnZhcnlpbmcgdmVjMyBub3JtYWw7CmF0dHJpYnV0ZSB2ZWMzIG5vcjsKYXR0cmlidXRlIHZlYzMgcG9zOwoKdm9pZCBtYWluKCkKewogICAgbm9ybWFsID0gbm9yOwogICAgdmVjNCBwb3NpdGlvbiA9IFNNVlAgKiB2ZWM0KHBvcywgMS4wKTsKICAgIGdsX1Bvc2l0aW9uID0gdmVjNChwb3NpdGlvbik7Cn0KCg";
 kha_Shaders.World_World_vertData1 = "s258:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgU01WUDsKCm91dCB2ZWMzIG5vcm1hbDsKaW4gdmVjMyBub3I7CmluIHZlYzMgcG9zOwoKdm9pZCBtYWluKCkKewogICAgbm9ybWFsID0gbm9yOwogICAgdmVjNCBwb3NpdGlvbiA9IFNNVlAgKiB2ZWM0KHBvcywgMS4wKTsKICAgIGdsX1Bvc2l0aW9uID0gdmVjNChwb3NpdGlvbik7Cn0KCg";
-kha_Shaders.blur_edge_pass_fragData0 = "s2767:I3ZlcnNpb24gMTAwCiNleHRlbnNpb24gR0xfRVhUX3NoYWRlcl90ZXh0dXJlX2xvZCA6IHJlcXVpcmUKcHJlY2lzaW9uIG1lZGl1bXAgZmxvYXQ7CnByZWNpc2lvbiBoaWdocCBpbnQ7Cgpjb25zdCBmbG9hdCBfMTQ0WzEwXSA9IGZsb2F0W10oMC4xMzI1NzE5OTUyNTgzMzEyOTg4MjgxMjUsIDAuMTI1NDcxOTk0MjgwODE1MTI0NTExNzE4NzUsIDAuMTA2MzcyOTk3MTY0NzI2MjU3MzI0MjE4NzUsIDAuMDgwNzc5OTk5NDk0NTUyNjEyMzA0Njg3NSwgMC4wNTQ5NDk5OTg4NTU1OTA4MjAzMTI1LCAwLjAzMzQ4MjAwMDIzMTc0Mjg1ODg4NjcxODc1LCAwLjAxODI3NTAwMDE1NDk3MjA3NjQxNjAxNTYyNSwgMC4wMDg5MzM5OTk1NzU2NzQ1MzM4NDM5OTQxNDA2MjUsIDAuMDAzOTExOTk5OTg1NTc1Njc1OTY0MzU1NDY4NzUsIDAuMDAxNTM1MDAwMDQ2NzE1MTQwMzQyNzEyNDAyMzQzNzUpOwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgZ2J1ZmZlcjA7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIHRleDsKdW5pZm9ybSBoaWdocCB2ZWMyIGRpckludjsKCnZhcnlpbmcgaGlnaHAgdmVjMiB0ZXhDb29yZDsKCmhpZ2hwIHZlYzIgb2N0YWhlZHJvbldyYXAoaGlnaHAgdmVjMiB2KQp7CiAgICByZXR1cm4gKHZlYzIoMS4wKSAtIGFicyh2Lnl4KSkgKiB2ZWMyKCh2LnggPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSwgKHYueSA%PSAwLjApID8gMS4wIDogKC0xLjApKTsKfQoKaGlnaHAgdmVjMyBnZXROb3IoaGlnaHAgdmVjMiBlbmMpCnsKICAgIGhpZ2hwIHZlYzMgbjsKICAgIG4ueiA9ICgxLjAgLSBhYnMoZW5jLngpKSAtIGFicyhlbmMueSk7CiAgICBoaWdocCB2ZWMyIF81MzsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF81MyA9IGVuYzsKICAgIH0KICAgIGVsc2UKICAgIHsKICAgICAgICBfNTMgPSBvY3RhaGVkcm9uV3JhcChlbmMpOwogICAgfQogICAgbiA9IHZlYzMoXzUzLngsIF81My55LCBuLnopOwogICAgbiA9IG5vcm1hbGl6ZShuKTsKICAgIHJldHVybiBuOwp9Cgp2b2lkIG1haW4oKQp7CiAgICBoaWdocCB2ZWMzIG5vciA9IGdldE5vcih0ZXh0dXJlMkRMb2RFWFQoZ2J1ZmZlcjAsIHRleENvb3JkLCAwLjApLnh5KTsKICAgIGdsX0ZyYWdEYXRhWzBdID0gdGV4dHVyZTJETG9kRVhUKHRleCwgdGV4Q29vcmQsIDAuMCkueCAqIDAuMTMyNTcxOTk1MjU4MzMxMjk4ODI4MTI1OwogICAgaGlnaHAgZmxvYXQgd2VpZ2h0ID0gMC4xMzI1NzE5OTUyNTgzMzEyOTg4MjgxMjU7CiAgICBmb3IgKGludCBpID0gMTsgaSA8IDg7IGkrKykKICAgIHsKICAgICAgICBoaWdocCBmbG9hdCBwb3NhZGQgPSBmbG9hdChpKTsKICAgICAgICBoaWdocCB2ZWMzIG5vcjIgPSBnZXROb3IodGV4dHVyZTJETG9kRVhUKGdidWZmZXIwLCB0ZXhDb29yZCArIChkaXJJbnYgKiBmbG9hdChpKSksIDAuMCkueHkpOwogICAgICAgIGhpZ2hwIGZsb2F0IGluZmx1ZW5jZUZhY3RvciA9IHN0ZXAoMC45NDk5OTk5ODgwNzkwNzEwNDQ5MjE4NzUsIGRvdChub3IyLCBub3IpKTsKICAgICAgICBoaWdocCBmbG9hdCBjb2wgPSB0ZXh0dXJlMkRMb2RFWFQodGV4LCB0ZXhDb29yZCArIChkaXJJbnYgKiBwb3NhZGQpLCAwLjApLng7CiAgICAgICAgaGlnaHAgZmxvYXQgdyA9IF8xNDRbaV0gKiBpbmZsdWVuY2VGYWN0b3I7CiAgICAgICAgZ2xfRnJhZ0RhdGFbMF0gKz0gKGNvbCAqIHcpOwogICAgICAgIHdlaWdodCArPSB3OwogICAgICAgIG5vcjIgPSBnZXROb3IodGV4dHVyZTJETG9kRVhUKGdidWZmZXIwLCB0ZXhDb29yZCAtIChkaXJJbnYgKiBmbG9hdChpKSksIDAuMCkueHkpOwogICAgICAgIGluZmx1ZW5jZUZhY3RvciA9IHN0ZXAoMC45NDk5OTk5ODgwNzkwNzEwNDQ5MjE4NzUsIGRvdChub3IyLCBub3IpKTsKICAgICAgICBjb2wgPSB0ZXh0dXJlMkRMb2RFWFQodGV4LCB0ZXhDb29yZCAtIChkaXJJbnYgKiBwb3NhZGQpLCAwLjApLng7CiAgICAgICAgdyA9IF8xNDRbaV0gKiBpbmZsdWVuY2VGYWN0b3I7CiAgICAgICAgZ2xfRnJhZ0RhdGFbMF0gKz0gKGNvbCAqIHcpOwogICAgICAgIHdlaWdodCArPSB3OwogICAgfQogICAgZ2xfRnJhZ0RhdGFbMF0gLz0gd2VpZ2h0Owp9Cgo";
-kha_Shaders.blur_edge_pass_fragData1 = "s2671:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKY29uc3QgZmxvYXQgXzE0NFsxMF0gPSBmbG9hdFtdKDAuMTMyNTcxOTk1MjU4MzMxMjk4ODI4MTI1LCAwLjEyNTQ3MTk5NDI4MDgxNTEyNDUxMTcxODc1LCAwLjEwNjM3Mjk5NzE2NDcyNjI1NzMyNDIxODc1LCAwLjA4MDc3OTk5OTQ5NDU1MjYxMjMwNDY4NzUsIDAuMDU0OTQ5OTk4ODU1NTkwODIwMzEyNSwgMC4wMzM0ODIwMDAyMzE3NDI4NTg4ODY3MTg3NSwgMC4wMTgyNzUwMDAxNTQ5NzIwNzY0MTYwMTU2MjUsIDAuMDA4OTMzOTk5NTc1Njc0NTMzODQzOTk0MTQwNjI1LCAwLjAwMzkxMTk5OTk4NTU3NTY3NTk2NDM1NTQ2ODc1LCAwLjAwMTUzNTAwMDA0NjcxNTE0MDM0MjcxMjQwMjM0Mzc1KTsKCnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIGdidWZmZXIwOwp1bmlmb3JtIGhpZ2hwIHNhbXBsZXIyRCB0ZXg7CnVuaWZvcm0gaGlnaHAgdmVjMiBkaXJJbnY7CgppbiBoaWdocCB2ZWMyIHRleENvb3JkOwpvdXQgaGlnaHAgZmxvYXQgZnJhZ0NvbG9yOwoKaGlnaHAgdmVjMiBvY3RhaGVkcm9uV3JhcChoaWdocCB2ZWMyIHYpCnsKICAgIHJldHVybiAodmVjMigxLjApIC0gYWJzKHYueXgpKSAqIHZlYzIoKHYueCA%PSAwLjApID8gMS4wIDogKC0xLjApLCAodi55ID49IDAuMCkgPyAxLjAgOiAoLTEuMCkpOwp9CgpoaWdocCB2ZWMzIGdldE5vcihoaWdocCB2ZWMyIGVuYykKewogICAgaGlnaHAgdmVjMyBuOwogICAgbi56ID0gKDEuMCAtIGFicyhlbmMueCkpIC0gYWJzKGVuYy55KTsKICAgIGhpZ2hwIHZlYzIgXzUzOwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzUzID0gZW5jOwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIF81MyA9IG9jdGFoZWRyb25XcmFwKGVuYyk7CiAgICB9CiAgICBuID0gdmVjMyhfNTMueCwgXzUzLnksIG4ueik7CiAgICBuID0gbm9ybWFsaXplKG4pOwogICAgcmV0dXJuIG47Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbm9yID0gZ2V0Tm9yKHRleHR1cmVMb2QoZ2J1ZmZlcjAsIHRleENvb3JkLCAwLjApLnh5KTsKICAgIGZyYWdDb2xvciA9IHRleHR1cmVMb2QodGV4LCB0ZXhDb29yZCwgMC4wKS54ICogMC4xMzI1NzE5OTUyNTgzMzEyOTg4MjgxMjU7CiAgICBoaWdocCBmbG9hdCB3ZWlnaHQgPSAwLjEzMjU3MTk5NTI1ODMzMTI5ODgyODEyNTsKICAgIGZvciAoaW50IGkgPSAxOyBpIDwgODsgaSsrKQogICAgewogICAgICAgIGhpZ2hwIGZsb2F0IHBvc2FkZCA9IGZsb2F0KGkpOwogICAgICAgIGhpZ2hwIHZlYzMgbm9yMiA9IGdldE5vcih0ZXh0dXJlTG9kKGdidWZmZXIwLCB0ZXhDb29yZCArIChkaXJJbnYgKiBmbG9hdChpKSksIDAuMCkueHkpOwogICAgICAgIGhpZ2hwIGZsb2F0IGluZmx1ZW5jZUZhY3RvciA9IHN0ZXAoMC45NDk5OTk5ODgwNzkwNzEwNDQ5MjE4NzUsIGRvdChub3IyLCBub3IpKTsKICAgICAgICBoaWdocCBmbG9hdCBjb2wgPSB0ZXh0dXJlTG9kKHRleCwgdGV4Q29vcmQgKyAoZGlySW52ICogcG9zYWRkKSwgMC4wKS54OwogICAgICAgIGhpZ2hwIGZsb2F0IHcgPSBfMTQ0W2ldICogaW5mbHVlbmNlRmFjdG9yOwogICAgICAgIGZyYWdDb2xvciArPSAoY29sICogdyk7CiAgICAgICAgd2VpZ2h0ICs9IHc7CiAgICAgICAgbm9yMiA9IGdldE5vcih0ZXh0dXJlTG9kKGdidWZmZXIwLCB0ZXhDb29yZCAtIChkaXJJbnYgKiBmbG9hdChpKSksIDAuMCkueHkpOwogICAgICAgIGluZmx1ZW5jZUZhY3RvciA9IHN0ZXAoMC45NDk5OTk5ODgwNzkwNzEwNDQ5MjE4NzUsIGRvdChub3IyLCBub3IpKTsKICAgICAgICBjb2wgPSB0ZXh0dXJlTG9kKHRleCwgdGV4Q29vcmQgLSAoZGlySW52ICogcG9zYWRkKSwgMC4wKS54OwogICAgICAgIHcgPSBfMTQ0W2ldICogaW5mbHVlbmNlRmFjdG9yOwogICAgICAgIGZyYWdDb2xvciArPSAoY29sICogdyk7CiAgICAgICAgd2VpZ2h0ICs9IHc7CiAgICB9CiAgICBmcmFnQ29sb3IgLz0gd2VpZ2h0Owp9Cgo";
+kha_Shaders.____________mesh_fragData0 = "s3204:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgSW1hZ2VUZXh0dXJlOwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwppbiBoaWdocCB2ZWMyIHRleENvb3JkOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgVGV4dHVyZUNvb3JkaW5hdGVfdGV4cmVhZF9VVl9yZXMgPSB2ZWMzKHRleENvb3JkLngsIDEuMCAtIHRleENvb3JkLnksIDAuMCk7CiAgICBUZXh0dXJlQ29vcmRpbmF0ZV90ZXhyZWFkX1VWX3JlcyA9IFRleHR1cmVDb29yZGluYXRlX3RleHJlYWRfVVZfcmVzOwogICAgaGlnaHAgbWF0MyBNYXBwaW5nX3RleHJlYWRfcm90YXRpb25YID0gbWF0Myh2ZWMzKDEuMCwgMC4wLCAwLjApLCB2ZWMzKDAuMCwgMS4wLCAtMC4wKSwgdmVjMygwLjAsIDAuMCwgMS4wKSk7CiAgICBoaWdocCBtYXQzIE1hcHBpbmdfdGV4cmVhZF9yb3RhdGlvblkgPSBtYXQzKHZlYzMoMS4wLCAwLjAsIDAuMCksIHZlYzMoMC4wLCAxLjAsIDAuMCksIHZlYzMoLTAuMCwgMC4wLCAxLjApKTsKICAgIGhpZ2hwIG1hdDMgTWFwcGluZ190ZXhyZWFkX3JvdGF0aW9uWiA9IG1hdDModmVjMygtNC4zNzExMzg4Mjg2NzM3OTI4ODY1NDc3NDQyNzQxMzk0ZS0wOCwgMS4wLCAwLjApLCB2ZWMzKC0xLjAsIC00LjM3MTEzODgyODY3Mzc5Mjg4NjU0Nzc0NDI3NDEzOTRlLTA4LCAwLjApLCB2ZWMzKDAuMCwgMC4wLCAxLjApKTsKICAgIGhpZ2hwIHZlYzMgTWFwcGluZ190ZXhyZWFkX1ZlY3Rvcl9yZXMgPSAoKChUZXh0dXJlQ29vcmRpbmF0ZV90ZXhyZWFkX1VWX3JlcyAqIE1hcHBpbmdfdGV4cmVhZF9yb3RhdGlvblgpICogTWFwcGluZ190ZXhyZWFkX3JvdGF0aW9uWSkgKiBNYXBwaW5nX3RleHJlYWRfcm90YXRpb25aKSAqIHZlYzMoMjAuMCwgMjAuMCwgMS4wKTsKICAgIGhpZ2hwIHZlYzQgSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUgPSB0ZXh0dXJlKEltYWdlVGV4dHVyZSwgdmVjMihNYXBwaW5nX3RleHJlYWRfVmVjdG9yX3Jlcy54LCAxLjAgLSBNYXBwaW5nX3RleHJlYWRfVmVjdG9yX3Jlcy55KSk7CiAgICBoaWdocCB2ZWMzIF8xMzEgPSBwb3coSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUueHl6LCB2ZWMzKDIuMjAwMDAwMDQ3NjgzNzE1ODIwMzEyNSkpOwogICAgSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUgPSB2ZWM0KF8xMzEueCwgXzEzMS55LCBfMTMxLnosIEltYWdlVGV4dHVyZV90ZXhyZWFkX3N0b3JlLncpOwogICAgaGlnaHAgdmVjMyBJbWFnZVRleHR1cmVfQ29sb3JfcmVzID0gSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUueHl6OwogICAgaGlnaHAgdmVjMyBiYXNlY29sID0gSW1hZ2VUZXh0dXJlX0NvbG9yX3JlczsKICAgIGhpZ2hwIGZsb2F0IHJvdWdobmVzcyA9IDAuNTsKICAgIGhpZ2hwIGZsb2F0IG1ldGFsbGljID0gMC4wOwogICAgaGlnaHAgZmxvYXQgb2NjbHVzaW9uID0gMS4wOwogICAgaGlnaHAgZmxvYXQgc3BlY3VsYXIgPSAwLjU7CiAgICBoaWdocCB2ZWMzIGVtaXNzaW9uQ29sID0gdmVjMygwLjApOwogICAgbiAvPSB2ZWMzKChhYnMobi54KSArIGFicyhuLnkpKSArIGFicyhuLnopKTsKICAgIGhpZ2hwIHZlYzIgXzE2NTsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF8xNjUgPSBuLnh5OwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIF8xNjUgPSBvY3RhaGVkcm9uV3JhcChuLnh5KTsKICAgIH0KICAgIG4gPSB2ZWMzKF8xNjUueCwgXzE2NS55LCBuLnopOwogICAgZnJhZ0NvbG9yWzBdID0gdmVjNChuLnh5LCByb3VnaG5lc3MsIHBhY2tGbG9hdEludDE2KG1ldGFsbGljLCAwdSkpOwogICAgZnJhZ0NvbG9yWzFdID0gdmVjNChiYXNlY29sLCBwYWNrRmxvYXQyKG9jY2x1c2lvbiwgc3BlY3VsYXIpKTsKfQoK";
+kha_Shaders.____________mesh_vertData0 = "s456:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgphdHRyaWJ1dGUgdmVjNCBwb3M7CnZhcnlpbmcgdmVjMyB3bm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBub3I7CnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKYXR0cmlidXRlIHZlYzIgdGV4OwoKdm9pZCBtYWluKCkKewogICAgdmVjNCBzcG9zID0gdmVjNChwb3MueHl6LCAxLjApOwogICAgd25vcm1hbCA9IG5vcm1hbGl6ZShOICogdmVjMyhub3IsIHBvcy53KSk7CiAgICB0ZXhDb29yZCA9IHRleCAqIHRleFVucGFjazsKICAgIGdsX1Bvc2l0aW9uID0gV1ZQICogc3BvczsKfQoK";
+kha_Shaders.____________mesh_vertData1 = "s422:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgppbiB2ZWM0IHBvczsKb3V0IHZlYzMgd25vcm1hbDsKaW4gdmVjMiBub3I7Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleDsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgdGV4Q29vcmQgPSB0ZXggKiB0ZXhVbnBhY2s7CiAgICBnbF9Qb3NpdGlvbiA9IFdWUCAqIHNwb3M7Cn0KCg";
+kha_Shaders.__________mesh_fragData0 = "s2538:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgSW1hZ2VUZXh0dXJlOwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwppbiBoaWdocCB2ZWMyIHRleENvb3JkOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgVGV4dHVyZUNvb3JkaW5hdGVfdGV4cmVhZF9VVl9yZXMgPSB2ZWMzKHRleENvb3JkLngsIDEuMCAtIHRleENvb3JkLnksIDAuMCk7CiAgICBUZXh0dXJlQ29vcmRpbmF0ZV90ZXhyZWFkX1VWX3JlcyA9IFRleHR1cmVDb29yZGluYXRlX3RleHJlYWRfVVZfcmVzOwogICAgaGlnaHAgdmVjMyBNYXBwaW5nX3RleHJlYWRfVmVjdG9yX3JlcyA9IFRleHR1cmVDb29yZGluYXRlX3RleHJlYWRfVVZfcmVzICogdmVjMyg1LjAsIDUuMCwgMTAuMCk7CiAgICBoaWdocCB2ZWM0IEltYWdlVGV4dHVyZV90ZXhyZWFkX3N0b3JlID0gdGV4dHVyZShJbWFnZVRleHR1cmUsIHZlYzIoTWFwcGluZ190ZXhyZWFkX1ZlY3Rvcl9yZXMueCwgMS4wIC0gTWFwcGluZ190ZXhyZWFkX1ZlY3Rvcl9yZXMueSkpOwogICAgaGlnaHAgdmVjMyBfMTA5ID0gcG93KEltYWdlVGV4dHVyZV90ZXhyZWFkX3N0b3JlLnh5eiwgdmVjMygyLjIwMDAwMDA0NzY4MzcxNTgyMDMxMjUpKTsKICAgIEltYWdlVGV4dHVyZV90ZXhyZWFkX3N0b3JlID0gdmVjNChfMTA5LngsIF8xMDkueSwgXzEwOS56LCBJbWFnZVRleHR1cmVfdGV4cmVhZF9zdG9yZS53KTsKICAgIGhpZ2hwIHZlYzMgSW1hZ2VUZXh0dXJlX0NvbG9yX3JlcyA9IEltYWdlVGV4dHVyZV90ZXhyZWFkX3N0b3JlLnh5ejsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IEltYWdlVGV4dHVyZV9Db2xvcl9yZXM7CiAgICBoaWdocCBmbG9hdCByb3VnaG5lc3MgPSAwLjU7CiAgICBoaWdocCBmbG9hdCBtZXRhbGxpYyA9IDAuMDsKICAgIGhpZ2hwIGZsb2F0IG9jY2x1c2lvbiA9IDEuMDsKICAgIGhpZ2hwIGZsb2F0IHNwZWN1bGFyID0gMC41OwogICAgaGlnaHAgdmVjMyBlbWlzc2lvbkNvbCA9IHZlYzMoMC4wKTsKICAgIG4gLz0gdmVjMygoYWJzKG4ueCkgKyBhYnMobi55KSkgKyBhYnMobi56KSk7CiAgICBoaWdocCB2ZWMyIF8xNDM7CiAgICBpZiAobi56ID49IDAuMCkKICAgIHsKICAgICAgICBfMTQzID0gbi54eTsKICAgIH0KICAgIGVsc2UKICAgIHsKICAgICAgICBfMTQzID0gb2N0YWhlZHJvbldyYXAobi54eSk7CiAgICB9CiAgICBuID0gdmVjMyhfMTQzLngsIF8xNDMueSwgbi56KTsKICAgIGZyYWdDb2xvclswXSA9IHZlYzQobi54eSwgcm91Z2huZXNzLCBwYWNrRmxvYXRJbnQxNihtZXRhbGxpYywgMHUpKTsKICAgIGZyYWdDb2xvclsxXSA9IHZlYzQoYmFzZWNvbCwgcGFja0Zsb2F0MihvY2NsdXNpb24sIHNwZWN1bGFyKSk7Cn0KCg";
+kha_Shaders.__________mesh_vertData0 = "s456:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgphdHRyaWJ1dGUgdmVjNCBwb3M7CnZhcnlpbmcgdmVjMyB3bm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBub3I7CnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKYXR0cmlidXRlIHZlYzIgdGV4OwoKdm9pZCBtYWluKCkKewogICAgdmVjNCBzcG9zID0gdmVjNChwb3MueHl6LCAxLjApOwogICAgd25vcm1hbCA9IG5vcm1hbGl6ZShOICogdmVjMyhub3IsIHBvcy53KSk7CiAgICB0ZXhDb29yZCA9IHRleCAqIHRleFVucGFjazsKICAgIGdsX1Bvc2l0aW9uID0gV1ZQICogc3BvczsKfQoK";
+kha_Shaders.__________mesh_vertData1 = "s422:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgppbiB2ZWM0IHBvczsKb3V0IHZlYzMgd25vcm1hbDsKaW4gdmVjMiBub3I7Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleDsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgdGV4Q29vcmQgPSB0ZXggKiB0ZXhVbnBhY2s7CiAgICBnbF9Qb3NpdGlvbiA9IFdWUCAqIHNwb3M7Cn0KCg";
+kha_Shaders._________mesh_fragData0 = "s2539:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgSW1hZ2VUZXh0dXJlOwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwppbiBoaWdocCB2ZWMyIHRleENvb3JkOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgVGV4dHVyZUNvb3JkaW5hdGVfdGV4cmVhZF9VVl9yZXMgPSB2ZWMzKHRleENvb3JkLngsIDEuMCAtIHRleENvb3JkLnksIDAuMCk7CiAgICBUZXh0dXJlQ29vcmRpbmF0ZV90ZXhyZWFkX1VWX3JlcyA9IFRleHR1cmVDb29yZGluYXRlX3RleHJlYWRfVVZfcmVzOwogICAgaGlnaHAgdmVjMyBNYXBwaW5nX3RleHJlYWRfVmVjdG9yX3JlcyA9IFRleHR1cmVDb29yZGluYXRlX3RleHJlYWRfVVZfcmVzICogdmVjMygxMC4wLCAxMC4wLCAxLjApOwogICAgaGlnaHAgdmVjNCBJbWFnZVRleHR1cmVfdGV4cmVhZF9zdG9yZSA9IHRleHR1cmUoSW1hZ2VUZXh0dXJlLCB2ZWMyKE1hcHBpbmdfdGV4cmVhZF9WZWN0b3JfcmVzLngsIDEuMCAtIE1hcHBpbmdfdGV4cmVhZF9WZWN0b3JfcmVzLnkpKTsKICAgIGhpZ2hwIHZlYzMgXzEwOCA9IHBvdyhJbWFnZVRleHR1cmVfdGV4cmVhZF9zdG9yZS54eXosIHZlYzMoMi4yMDAwMDAwNDc2ODM3MTU4MjAzMTI1KSk7CiAgICBJbWFnZVRleHR1cmVfdGV4cmVhZF9zdG9yZSA9IHZlYzQoXzEwOC54LCBfMTA4LnksIF8xMDgueiwgSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUudyk7CiAgICBoaWdocCB2ZWMzIEltYWdlVGV4dHVyZV9Db2xvcl9yZXMgPSBJbWFnZVRleHR1cmVfdGV4cmVhZF9zdG9yZS54eXo7CiAgICBoaWdocCB2ZWMzIGJhc2Vjb2wgPSBJbWFnZVRleHR1cmVfQ29sb3JfcmVzOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC41OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDAuNTsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSB2ZWMzKDAuMCk7CiAgICBuIC89IHZlYzMoKGFicyhuLngpICsgYWJzKG4ueSkpICsgYWJzKG4ueikpOwogICAgaGlnaHAgdmVjMiBfMTQyOwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzE0MiA9IG4ueHk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzE0MiA9IG9jdGFoZWRyb25XcmFwKG4ueHkpOwogICAgfQogICAgbiA9IHZlYzMoXzE0Mi54LCBfMTQyLnksIG4ueik7CiAgICBmcmFnQ29sb3JbMF0gPSB2ZWM0KG4ueHksIHJvdWdobmVzcywgcGFja0Zsb2F0SW50MTYobWV0YWxsaWMsIDB1KSk7CiAgICBmcmFnQ29sb3JbMV0gPSB2ZWM0KGJhc2Vjb2wsIHBhY2tGbG9hdDIob2NjbHVzaW9uLCBzcGVjdWxhcikpOwp9Cgo";
+kha_Shaders._________mesh_vertData0 = "s456:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgphdHRyaWJ1dGUgdmVjNCBwb3M7CnZhcnlpbmcgdmVjMyB3bm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBub3I7CnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKYXR0cmlidXRlIHZlYzIgdGV4OwoKdm9pZCBtYWluKCkKewogICAgdmVjNCBzcG9zID0gdmVjNChwb3MueHl6LCAxLjApOwogICAgd25vcm1hbCA9IG5vcm1hbGl6ZShOICogdmVjMyhub3IsIHBvcy53KSk7CiAgICB0ZXhDb29yZCA9IHRleCAqIHRleFVucGFjazsKICAgIGdsX1Bvc2l0aW9uID0gV1ZQICogc3BvczsKfQoK";
+kha_Shaders._________mesh_vertData1 = "s422:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgppbiB2ZWM0IHBvczsKb3V0IHZlYzMgd25vcm1hbDsKaW4gdmVjMiBub3I7Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleDsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgdGV4Q29vcmQgPSB0ZXggKiB0ZXhVbnBhY2s7CiAgICBnbF9Qb3NpdGlvbiA9IFdWUCAqIHNwb3M7Cn0KCg";
+kha_Shaders.______mesh_fragData0 = "s2536:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgSW1hZ2VUZXh0dXJlOwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwppbiBoaWdocCB2ZWMyIHRleENvb3JkOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgVGV4dHVyZUNvb3JkaW5hdGVfdGV4cmVhZF9VVl9yZXMgPSB2ZWMzKHRleENvb3JkLngsIDEuMCAtIHRleENvb3JkLnksIDAuMCk7CiAgICBUZXh0dXJlQ29vcmRpbmF0ZV90ZXhyZWFkX1VWX3JlcyA9IFRleHR1cmVDb29yZGluYXRlX3RleHJlYWRfVVZfcmVzOwogICAgaGlnaHAgdmVjMyBNYXBwaW5nX3RleHJlYWRfVmVjdG9yX3JlcyA9IFRleHR1cmVDb29yZGluYXRlX3RleHJlYWRfVVZfcmVzICogdmVjMyg1LjAsIDUuMCwgMS4wKTsKICAgIGhpZ2hwIHZlYzQgSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUgPSB0ZXh0dXJlKEltYWdlVGV4dHVyZSwgdmVjMihNYXBwaW5nX3RleHJlYWRfVmVjdG9yX3Jlcy54LCAxLjAgLSBNYXBwaW5nX3RleHJlYWRfVmVjdG9yX3Jlcy55KSk7CiAgICBoaWdocCB2ZWMzIF8xMDggPSBwb3coSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUueHl6LCB2ZWMzKDIuMjAwMDAwMDQ3NjgzNzE1ODIwMzEyNSkpOwogICAgSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUgPSB2ZWM0KF8xMDgueCwgXzEwOC55LCBfMTA4LnosIEltYWdlVGV4dHVyZV90ZXhyZWFkX3N0b3JlLncpOwogICAgaGlnaHAgdmVjMyBJbWFnZVRleHR1cmVfQ29sb3JfcmVzID0gSW1hZ2VUZXh0dXJlX3RleHJlYWRfc3RvcmUueHl6OwogICAgaGlnaHAgdmVjMyBiYXNlY29sID0gSW1hZ2VUZXh0dXJlX0NvbG9yX3JlczsKICAgIGhpZ2hwIGZsb2F0IHJvdWdobmVzcyA9IDAuNTsKICAgIGhpZ2hwIGZsb2F0IG1ldGFsbGljID0gMC4wOwogICAgaGlnaHAgZmxvYXQgb2NjbHVzaW9uID0gMS4wOwogICAgaGlnaHAgZmxvYXQgc3BlY3VsYXIgPSAwLjU7CiAgICBoaWdocCB2ZWMzIGVtaXNzaW9uQ29sID0gdmVjMygwLjApOwogICAgbiAvPSB2ZWMzKChhYnMobi54KSArIGFicyhuLnkpKSArIGFicyhuLnopKTsKICAgIGhpZ2hwIHZlYzIgXzE0MjsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF8xNDIgPSBuLnh5OwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIF8xNDIgPSBvY3RhaGVkcm9uV3JhcChuLnh5KTsKICAgIH0KICAgIG4gPSB2ZWMzKF8xNDIueCwgXzE0Mi55LCBuLnopOwogICAgZnJhZ0NvbG9yWzBdID0gdmVjNChuLnh5LCByb3VnaG5lc3MsIHBhY2tGbG9hdEludDE2KG1ldGFsbGljLCAwdSkpOwogICAgZnJhZ0NvbG9yWzFdID0gdmVjNChiYXNlY29sLCBwYWNrRmxvYXQyKG9jY2x1c2lvbiwgc3BlY3VsYXIpKTsKfQoK";
+kha_Shaders.______mesh_vertData0 = "s456:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgphdHRyaWJ1dGUgdmVjNCBwb3M7CnZhcnlpbmcgdmVjMyB3bm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBub3I7CnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKYXR0cmlidXRlIHZlYzIgdGV4OwoKdm9pZCBtYWluKCkKewogICAgdmVjNCBzcG9zID0gdmVjNChwb3MueHl6LCAxLjApOwogICAgd25vcm1hbCA9IG5vcm1hbGl6ZShOICogdmVjMyhub3IsIHBvcy53KSk7CiAgICB0ZXhDb29yZCA9IHRleCAqIHRleFVucGFjazsKICAgIGdsX1Bvc2l0aW9uID0gV1ZQICogc3BvczsKfQoK";
+kha_Shaders.______mesh_vertData1 = "s422:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBmbG9hdCB0ZXhVbnBhY2s7CnVuaWZvcm0gbWF0NCBXVlA7CgppbiB2ZWM0IHBvczsKb3V0IHZlYzMgd25vcm1hbDsKaW4gdmVjMiBub3I7Cm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHRleDsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgdGV4Q29vcmQgPSB0ZXggKiB0ZXhVbnBhY2s7CiAgICBnbF9Qb3NpdGlvbiA9IFdWUCAqIHNwb3M7Cn0KCg";
+kha_Shaders.armdefault_mesh_fragData0 = "s1588:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC44MDAwMDAwMTE5MjA5Mjg5NTUwNzgxMjUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC41OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDAuMjU7CiAgICBoaWdocCB2ZWMzIGVtaXNzaW9uQ29sID0gdmVjMygwLjApOwogICAgbiAvPSB2ZWMzKChhYnMobi54KSArIGFicyhuLnkpKSArIGFicyhuLnopKTsKICAgIGhpZ2hwIHZlYzIgXzEwMzsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF8xMDMgPSBuLnh5OwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIF8xMDMgPSBvY3RhaGVkcm9uV3JhcChuLnh5KTsKICAgIH0KICAgIG4gPSB2ZWMzKF8xMDMueCwgXzEwMy55LCBuLnopOwogICAgZnJhZ0NvbG9yWzBdID0gdmVjNChuLnh5LCByb3VnaG5lc3MsIHBhY2tGbG9hdEludDE2KG1ldGFsbGljLCAwdSkpOwogICAgZnJhZ0NvbG9yWzFdID0gdmVjNChiYXNlY29sLCBwYWNrRmxvYXQyKG9jY2x1c2lvbiwgc3BlY3VsYXIpKTsKfQoK";
+kha_Shaders.armdefault_mesh_vertData0 = "s323:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBtYXQ0IFdWUDsKCmF0dHJpYnV0ZSB2ZWM0IHBvczsKdmFyeWluZyB2ZWMzIHdub3JtYWw7CmF0dHJpYnV0ZSB2ZWMyIG5vcjsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgZ2xfUG9zaXRpb24gPSBXVlAgKiBzcG9zOwp9Cgo";
+kha_Shaders.armdefault_mesh_vertData1 = "s303:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBtYXQ0IFdWUDsKCmluIHZlYzQgcG9zOwpvdXQgdmVjMyB3bm9ybWFsOwppbiB2ZWMyIG5vcjsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqIHZlYzMobm9yLCBwb3MudykpOwogICAgZ2xfUG9zaXRpb24gPSBXVlAgKiBzcG9zOwp9Cgo";
+kha_Shaders.armdefault_shadowmap_fragData0 = "s103:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdm9pZCBtYWluKCkKewp9Cgo";
+kha_Shaders.armdefault_shadowmap_fragData1 = "s107:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdm9pZCBtYWluKCkKewp9Cgo";
+kha_Shaders.armdefault_shadowmap_vertData0 = "s186:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgTFdWUDsKCmF0dHJpYnV0ZSB2ZWM0IHBvczsKCnZvaWQgbWFpbigpCnsKICAgIHZlYzQgc3BvcyA9IHZlYzQocG9zLnh5eiwgMS4wKTsKICAgIGdsX1Bvc2l0aW9uID0gTFdWUCAqIHNwb3M7Cn0KCg";
+kha_Shaders.armdefault_shadowmap_vertData1 = "s180:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIG1hdDQgTFdWUDsKCmluIHZlYzQgcG9zOwoKdm9pZCBtYWluKCkKewogICAgdmVjNCBzcG9zID0gdmVjNChwb3MueHl6LCAxLjApOwogICAgZ2xfUG9zaXRpb24gPSBMV1ZQICogc3BvczsKfQoK";
 kha_Shaders.compositor_pass_fragData0 = "s1103:I3ZlcnNpb24gMTAwCiNleHRlbnNpb24gR0xfRVhUX3NoYWRlcl90ZXh0dXJlX2xvZCA6IHJlcXVpcmUKcHJlY2lzaW9uIG1lZGl1bXAgZmxvYXQ7CnByZWNpc2lvbiBoaWdocCBpbnQ7Cgp1bmlmb3JtIGhpZ2hwIHNhbXBsZXIyRCB0ZXg7Cgp2YXJ5aW5nIGhpZ2hwIHZlYzIgdGV4Q29vcmQ7CgpoaWdocCB2ZWMzIHRvbmVtYXBGaWxtaWMoaGlnaHAgdmVjMyBjb2xvcikKewogICAgaGlnaHAgdmVjMyB4ID0gbWF4KHZlYzMoMC4wKSwgY29sb3IgLSB2ZWMzKDAuMDA0MDAwMDAwMTg5OTg5ODA1MjIxNTU3NjE3MTg3NSkpOwogICAgcmV0dXJuICh4ICogKCh4ICogNi4xOTk5OTk4MDkyNjUxMzY3MTg3NSkgKyB2ZWMzKDAuNSkpKSAvICgoeCAqICgoeCAqIDYuMTk5OTk5ODA5MjY1MTM2NzE4NzUpICsgdmVjMygxLjcwMDAwMDA0NzY4MzcxNTgyMDMxMjUpKSkgKyB2ZWMzKDAuMDU5OTk5OTk4NjU4ODk1NDkyNTUzNzEwOTM3NSkpOwp9Cgp2b2lkIG1haW4oKQp7CiAgICBoaWdocCB2ZWMyIHRleENvID0gdGV4Q29vcmQ7CiAgICBnbF9GcmFnRGF0YVswXSA9IHRleHR1cmUyRExvZEVYVCh0ZXgsIHRleENvLCAwLjApOwogICAgaGlnaHAgdmVjMyBfNjEgPSBtaW4oZ2xfRnJhZ0RhdGFbMF0ueHl6LCB2ZWMzKDMyNzUyLjApKTsKICAgIGdsX0ZyYWdEYXRhWzBdID0gdmVjNChfNjEueCwgXzYxLnksIF82MS56LCBnbF9GcmFnRGF0YVswXS53KTsKICAgIGhpZ2hwIHZlYzMgXzY2ID0gdG9uZW1hcEZpbG1pYyhnbF9GcmFnRGF0YVswXS54eXopOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB2ZWM0KF82Ni54LCBfNjYueSwgXzY2LnosIGdsX0ZyYWdEYXRhWzBdLncpOwp9Cgo";
 kha_Shaders.compositor_pass_fragData1 = "s1019:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgdGV4OwoKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKb3V0IGhpZ2hwIHZlYzQgZnJhZ0NvbG9yOwoKaGlnaHAgdmVjMyB0b25lbWFwRmlsbWljKGhpZ2hwIHZlYzMgY29sb3IpCnsKICAgIGhpZ2hwIHZlYzMgeCA9IG1heCh2ZWMzKDAuMCksIGNvbG9yIC0gdmVjMygwLjAwNDAwMDAwMDE4OTk4OTgwNTIyMTU1NzYxNzE4NzUpKTsKICAgIHJldHVybiAoeCAqICgoeCAqIDYuMTk5OTk5ODA5MjY1MTM2NzE4NzUpICsgdmVjMygwLjUpKSkgLyAoKHggKiAoKHggKiA2LjE5OTk5OTgwOTI2NTEzNjcxODc1KSArIHZlYzMoMS43MDAwMDAwNDc2ODM3MTU4MjAzMTI1KSkpICsgdmVjMygwLjA1OTk5OTk5ODY1ODg5NTQ5MjU1MzcxMDkzNzUpKTsKfQoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjMiB0ZXhDbyA9IHRleENvb3JkOwogICAgZnJhZ0NvbG9yID0gdGV4dHVyZUxvZCh0ZXgsIHRleENvLCAwLjApOwogICAgaGlnaHAgdmVjMyBfNjEgPSBtaW4oZnJhZ0NvbG9yLnh5eiwgdmVjMygzMjc1Mi4wKSk7CiAgICBmcmFnQ29sb3IgPSB2ZWM0KF82MS54LCBfNjEueSwgXzYxLnosIGZyYWdDb2xvci53KTsKICAgIGhpZ2hwIHZlYzMgXzY2ID0gdG9uZW1hcEZpbG1pYyhmcmFnQ29sb3IueHl6KTsKICAgIGZyYWdDb2xvciA9IHZlYzQoXzY2LngsIF82Ni55LCBfNjYueiwgZnJhZ0NvbG9yLncpOwp9Cgo";
 kha_Shaders.compositor_pass_vertData0 = "s214:I3ZlcnNpb24gMTAwCgp2YXJ5aW5nIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHBvczsKCnZvaWQgbWFpbigpCnsKICAgIHRleENvb3JkID0gKHBvcyAqIHZlYzIoMC41KSkgKyB2ZWMyKDAuNSk7CiAgICBnbF9Qb3NpdGlvbiA9IHZlYzQocG9zLCAwLjAsIDEuMCk7Cn0KCg";
 kha_Shaders.compositor_pass_vertData1 = "s203:I3ZlcnNpb24gMzAwIGVzCgpvdXQgdmVjMiB0ZXhDb29yZDsKaW4gdmVjMiBwb3M7Cgp2b2lkIG1haW4oKQp7CiAgICB0ZXhDb29yZCA9IChwb3MgKiB2ZWMyKDAuNSkpICsgdmVjMigwLjUpOwogICAgZ2xfUG9zaXRpb24gPSB2ZWM0KHBvcywgMC4wLCAxLjApOwp9Cgo";
-kha_Shaders.deferred_light_fragData0 = "s13039:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyQ3ViZVNoYWRvdyBzaGFkb3dNYXBQb2ludFsxXTsKdW5pZm9ybSBoaWdocCB2ZWMyIGxpZ2h0UHJvajsKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgZ2J1ZmZlcjA7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIGdidWZmZXIxOwp1bmlmb3JtIGhpZ2hwIHNhbXBsZXIyRCBnYnVmZmVyRDsKdW5pZm9ybSBoaWdocCB2ZWMzIGV5ZTsKdW5pZm9ybSBoaWdocCB2ZWMzIGV5ZUxvb2s7CnVuaWZvcm0gaGlnaHAgdmVjMiBjYW1lcmFQcm9qOwp1bmlmb3JtIGhpZ2hwIHNhbXBsZXIyRCBzZW52bWFwQnJkZjsKdW5pZm9ybSBoaWdocCB2ZWM0IHNoaXJyWzddOwp1bmlmb3JtIGludCBlbnZtYXBOdW1NaXBtYXBzOwp1bmlmb3JtIGhpZ2hwIHNhbXBsZXIyRCBzZW52bWFwUmFkaWFuY2U7CnVuaWZvcm0gaGlnaHAgZmxvYXQgZW52bWFwU3RyZW5ndGg7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIHNzYW90ZXg7CnVuaWZvcm0gaGlnaHAgdmVjMyBwb2ludFBvczsKdW5pZm9ybSBoaWdocCB2ZWMzIHBvaW50Q29sOwp1bmlmb3JtIGhpZ2hwIGZsb2F0IHBvaW50QmlhczsKdW5pZm9ybSBoaWdocCB2ZWM0IGNhc0RhdGFbMjBdOwoKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKaW4gaGlnaHAgdmVjMyB2aWV3UmF5OwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3I7CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCnZvaWQgdW5wYWNrRmxvYXRJbnQxNihoaWdocCBmbG9hdCB2YWwsIG91dCBoaWdocCBmbG9hdCBmLCBvdXQgdWludCBpKQp7CiAgICB1aW50IGJpdHNWYWx1ZSA9IHVpbnQodmFsKTsKICAgIGkgPSBiaXRzVmFsdWUgPj4gMTJ1OwogICAgZiA9IGZsb2F0KGJpdHNWYWx1ZSAmIDQyOTQ5MDU4NTV1KSAvIDQwOTUuMDsKfQoKaGlnaHAgdmVjMiB1bnBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZikKewogICAgcmV0dXJuIHZlYzIoZmxvb3IoZikgLyAyNTUuMCwgZnJhY3QoZikpOwp9CgpoaWdocCB2ZWMzIHN1cmZhY2VBbGJlZG8oaGlnaHAgdmVjMyBiYXNlQ29sb3IsIGhpZ2hwIGZsb2F0IG1ldGFsbmVzcykKewogICAgcmV0dXJuIG1peChiYXNlQ29sb3IsIHZlYzMoMC4wKSwgdmVjMyhtZXRhbG5lc3MpKTsKfQoKaGlnaHAgdmVjMyBzdXJmYWNlRjAoaGlnaHAgdmVjMyBiYXNlQ29sb3IsIGhpZ2hwIGZsb2F0IG1ldGFsbmVzcykKewogICAgcmV0dXJuIG1peCh2ZWMzKDAuMDM5OTk5OTk5MTA1OTMwMzI4MzY5MTQwNjI1KSwgYmFzZUNvbG9yLCB2ZWMzKG1ldGFsbmVzcykpOwp9CgpoaWdocCB2ZWMzIGdldFBvcyhoaWdocCB2ZWMzIGV5ZV8xLCBoaWdocCB2ZWMzIGV5ZUxvb2tfMSwgaGlnaHAgdmVjMyB2aWV3UmF5XzEsIGhpZ2hwIGZsb2F0IGRlcHRoLCBoaWdocCB2ZWMyIGNhbWVyYVByb2pfMSkKewogICAgaGlnaHAgZmxvYXQgbGluZWFyRGVwdGggPSBjYW1lcmFQcm9qXzEueSAvICgoKGRlcHRoICogMC41KSArIDAuNSkgLSBjYW1lcmFQcm9qXzEueCk7CiAgICBoaWdocCBmbG9hdCB2aWV3WkRpc3QgPSBkb3QoZXllTG9va18xLCB2aWV3UmF5XzEpOwogICAgaGlnaHAgdmVjMyB3cG9zaXRpb24gPSBleWVfMSArICh2aWV3UmF5XzEgKiAobGluZWFyRGVwdGggLyB2aWV3WkRpc3QpKTsKICAgIHJldHVybiB3cG9zaXRpb247Cn0KCmhpZ2hwIHZlYzMgc2hJcnJhZGlhbmNlKGhpZ2hwIHZlYzMgbm9yLCBoaWdocCB2ZWM0IHNoaXJyXzFbN10pCnsKICAgIGhpZ2hwIHZlYzMgY2wwMCA9IHZlYzMoc2hpcnJfMVswXS54LCBzaGlycl8xWzBdLnksIHNoaXJyXzFbMF0ueik7CiAgICBoaWdocCB2ZWMzIGNsMW0xID0gdmVjMyhzaGlycl8xWzBdLncsIHNoaXJyXzFbMV0ueCwgc2hpcnJfMVsxXS55KTsKICAgIGhpZ2hwIHZlYzMgY2wxMCA9IHZlYzMoc2hpcnJfMVsxXS56LCBzaGlycl8xWzFdLncsIHNoaXJyXzFbMl0ueCk7CiAgICBoaWdocCB2ZWMzIGNsMTEgPSB2ZWMzKHNoaXJyXzFbMl0ueSwgc2hpcnJfMVsyXS56LCBzaGlycl8xWzJdLncpOwogICAgaGlnaHAgdmVjMyBjbDJtMiA9IHZlYzMoc2hpcnJfMVszXS54LCBzaGlycl8xWzNdLnksIHNoaXJyXzFbM10ueik7CiAgICBoaWdocCB2ZWMzIGNsMm0xID0gdmVjMyhzaGlycl8xWzNdLncsIHNoaXJyXzFbNF0ueCwgc2hpcnJfMVs0XS55KTsKICAgIGhpZ2hwIHZlYzMgY2wyMCA9IHZlYzMoc2hpcnJfMVs0XS56LCBzaGlycl8xWzRdLncsIHNoaXJyXzFbNV0ueCk7CiAgICBoaWdocCB2ZWMzIGNsMjEgPSB2ZWMzKHNoaXJyXzFbNV0ueSwgc2hpcnJfMVs1XS56LCBzaGlycl8xWzVdLncpOwogICAgaGlnaHAgdmVjMyBjbDIyID0gdmVjMyhzaGlycl8xWzZdLngsIHNoaXJyXzFbNl0ueSwgc2hpcnJfMVs2XS56KTsKICAgIHJldHVybiAoKCgoKCgoKCgoY2wyMiAqIDAuNDI5MDQyOTk0OTc2MDQzNzAxMTcxODc1KSAqICgobm9yLnkgKiBub3IueSkgLSAoKC1ub3IueikgKiAoLW5vci56KSkpKSArICgoKGNsMjAgKiAwLjc0MzEyNTAyMTQ1NzY3MjExOTE0MDYyNSkgKiBub3IueCkgKiBub3IueCkpICsgKGNsMDAgKiAwLjg4NjIyNzAxMTY4MDYwMzAyNzM0Mzc1KSkgLSAoY2wyMCAqIDAuMjQ3NzA3OTkyNzkyMTI5NTE2NjAxNTYyNSkpICsgKCgoY2wybTIgKiAwLjg1ODA4NTk4OTk1MjA4NzQwMjM0Mzc1KSAqIG5vci55KSAqICgtbm9yLnopKSkgKyAoKChjbDIxICogMC44NTgwODU5ODk5NTIwODc0MDIzNDM3NSkgKiBub3IueSkgKiBub3IueCkpICsgKCgoY2wybTEgKiAwLjg1ODA4NTk4OTk1MjA4NzQwMjM0Mzc1KSAqICgtbm9yLnopKSAqIG5vci54KSkgKyAoKGNsMTEgKiAxLjAyMzMyNzk0NjY2MjkwMjgzMjAzMTI1KSAqIG5vci55KSkgKyAoKGNsMW0xICogMS4wMjMzMjc5NDY2NjI5MDI4MzIwMzEyNSkgKiAoLW5vci56KSkpICsgKChjbDEwICogMS4wMjMzMjc5NDY2NjI5MDI4MzIwMzEyNSkgKiBub3IueCk7Cn0KCmhpZ2hwIGZsb2F0IGdldE1pcEZyb21Sb3VnaG5lc3MoaGlnaHAgZmxvYXQgcm91Z2huZXNzLCBoaWdocCBmbG9hdCBudW1NaXBtYXBzKQp7CiAgICByZXR1cm4gcm91Z2huZXNzICogbnVtTWlwbWFwczsKfQoKaGlnaHAgdmVjMiBlbnZNYXBFcXVpcmVjdChoaWdocCB2ZWMzIG5vcm1hbCkKewogICAgaGlnaHAgZmxvYXQgcGhpID0gYWNvcyhub3JtYWwueik7CiAgICBoaWdocCBmbG9hdCB0aGV0YSA9IGF0YW4oLW5vcm1hbC55LCBub3JtYWwueCkgKyAzLjE0MTU5Mjc0MTAxMjU3MzI0MjE4NzU7CiAgICByZXR1cm4gdmVjMih0aGV0YSAvIDYuMjgzMTg1NDgyMDI1MTQ2NDg0Mzc1LCBwaGkgLyAzLjE0MTU5Mjc0MTAxMjU3MzI0MjE4NzUpOwp9CgpoaWdocCB2ZWMzIGxhbWJlcnREaWZmdXNlQlJERihoaWdocCB2ZWMzIGFsYmVkbywgaGlnaHAgZmxvYXQgbmwpCnsKICAgIHJldHVybiBhbGJlZG8gKiBubDsKfQoKaGlnaHAgZmxvYXQgZF9nZ3goaGlnaHAgZmxvYXQgbmgsIGhpZ2hwIGZsb2F0IGEpCnsKICAgIGhpZ2hwIGZsb2F0IGEyID0gYSAqIGE7CiAgICBoaWdocCBmbG9hdCBkZW5vbSA9ICgobmggKiBuaCkgKiAoYTIgLSAxLjApKSArIDEuMDsKICAgIGRlbm9tID0gbWF4KGRlbm9tICogZGVub20sIDYuMTAzNTE1NjI1ZS0wNSk7CiAgICByZXR1cm4gKGEyICogMC4zMTgzMDk4NzMzNDI1MTQwMzgwODU5Mzc1KSAvIGRlbm9tOwp9CgpoaWdocCBmbG9hdCBnMl9hcHByb3goaGlnaHAgZmxvYXQgTmRvdEwsIGhpZ2hwIGZsb2F0IE5kb3RWLCBoaWdocCBmbG9hdCBhbHBoYSkKewogICAgaGlnaHAgdmVjMiBoZWxwZXIgPSAodmVjMihOZG90TCwgTmRvdFYpICogMi4wKSAqICh2ZWMyKDEuMCkgLyAoKHZlYzIoTmRvdEwsIE5kb3RWKSAqICgyLjAgLSBhbHBoYSkpICsgdmVjMihhbHBoYSkpKTsKICAgIHJldHVybiBtYXgoaGVscGVyLnggKiBoZWxwZXIueSwgMC4wKTsKfQoKaGlnaHAgdmVjMyBmX3NjaGxpY2soaGlnaHAgdmVjMyBmMCwgaGlnaHAgZmxvYXQgdmgpCnsKICAgIHJldHVybiBmMCArICgodmVjMygxLjApIC0gZjApICogZXhwMigoKCgtNS41NTQ3Mjk5Mzg1MDcwODAwNzgxMjUpICogdmgpIC0gNi45ODMxNjAwMTg5MjA4OTg0Mzc1KSAqIHZoKSk7Cn0KCmhpZ2hwIHZlYzMgc3BlY3VsYXJCUkRGKGhpZ2hwIHZlYzMgZjAsIGhpZ2hwIGZsb2F0IHJvdWdobmVzcywgaGlnaHAgZmxvYXQgbmwsIGhpZ2hwIGZsb2F0IG5oLCBoaWdocCBmbG9hdCBudiwgaGlnaHAgZmxvYXQgdmgpCnsKICAgIGhpZ2hwIGZsb2F0IGEgPSByb3VnaG5lc3MgKiByb3VnaG5lc3M7CiAgICByZXR1cm4gKGZfc2NobGljayhmMCwgdmgpICogKGRfZ2d4KG5oLCBhKSAqIGcyX2FwcHJveChubCwgbnYsIGEpKSkgLyB2ZWMzKG1heCg0LjAgKiBudiwgOS45OTk5OTk3NDczNzg3NTE2MzU1NTE0NTI2MzY3MTg4ZS0wNikpOwp9CgpoaWdocCBmbG9hdCBhdHRlbnVhdGUoaGlnaHAgZmxvYXQgZGlzdCkKewogICAgcmV0dXJuIDEuMCAvIChkaXN0ICogZGlzdCk7Cn0KCmhpZ2hwIGZsb2F0IGxwVG9EZXB0aChpbm91dCBoaWdocCB2ZWMzIGxwLCBoaWdocCB2ZWMyIGxpZ2h0UHJval8xKQp7CiAgICBscCA9IGFicyhscCk7CiAgICBoaWdocCBmbG9hdCB6Y29tcCA9IG1heChscC54LCBtYXgobHAueSwgbHAueikpOwogICAgemNvbXAgPSBsaWdodFByb2pfMS54IC0gKGxpZ2h0UHJval8xLnkgLyB6Y29tcCk7CiAgICByZXR1cm4gKHpjb21wICogMC41KSArIDAuNTsKfQoKaGlnaHAgZmxvYXQgUENGQ3ViZShoaWdocCBzYW1wbGVyQ3ViZVNoYWRvdyBzaGFkb3dNYXBDdWJlLCBoaWdocCB2ZWMzIGxwLCBpbm91dCBoaWdocCB2ZWMzIG1sLCBoaWdocCBmbG9hdCBiaWFzLCBoaWdocCB2ZWMyIGxpZ2h0UHJval8xLCBoaWdocCB2ZWMzIG4pCnsKICAgIGhpZ2hwIHZlYzMgcGFyYW0gPSBscDsKICAgIGhpZ2hwIGZsb2F0IF80NDMgPSBscFRvRGVwdGgocGFyYW0sIGxpZ2h0UHJval8xKTsKICAgIGhpZ2hwIGZsb2F0IGNvbXBhcmUgPSBfNDQzIC0gKGJpYXMgKiAxLjUpOwogICAgbWwgKz0gKChuICogYmlhcykgKiAyMC4wKTsKICAgIGhpZ2hwIHZlYzQgXzQ1OSA9IHZlYzQobWwsIGNvbXBhcmUpOwogICAgaGlnaHAgZmxvYXQgcmVzdWx0ID0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF80NTkueHl6LCBfNDU5LncpKTsKICAgIGhpZ2hwIHZlYzQgXzQ3MSA9IHZlYzQobWwgKyB2ZWMzKDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF80NzEueHl6LCBfNDcxLncpKTsKICAgIGhpZ2hwIHZlYzQgXzQ4NSA9IHZlYzQobWwgKyB2ZWMzKC0wLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgMC4wMDEwMDAwMDAwNDc0OTc0NTEzMDUzODk0MDQyOTY4NzUsIDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF80ODUueHl6LCBfNDg1LncpKTsKICAgIGhpZ2hwIHZlYzQgXzQ5OCA9IHZlYzQobWwgKyB2ZWMzKDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAtMC4wMDEwMDAwMDAwNDc0OTc0NTEzMDUzODk0MDQyOTY4NzUsIDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF80OTgueHl6LCBfNDk4LncpKTsKICAgIGhpZ2hwIHZlYzQgXzUxMSA9IHZlYzQobWwgKyB2ZWMzKDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF81MTEueHl6LCBfNTExLncpKTsKICAgIGhpZ2hwIHZlYzQgXzUyNCA9IHZlYzQobWwgKyB2ZWMzKC0wLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSksIGNvbXBhcmUpOwogICAgcmVzdWx0ICs9IHRleHR1cmUoc2hhZG93TWFwQ3ViZSwgdmVjNChfNTI0Lnh5eiwgXzUyNC53KSk7CiAgICBoaWdocCB2ZWM0IF81MzcgPSB2ZWM0KG1sICsgdmVjMygwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAtMC4wMDEwMDAwMDAwNDc0OTc0NTEzMDUzODk0MDQyOTY4NzUpLCBjb21wYXJlKTsKICAgIHJlc3VsdCArPSB0ZXh0dXJlKHNoYWRvd01hcEN1YmUsIHZlYzQoXzUzNy54eXosIF81MzcudykpOwogICAgaGlnaHAgdmVjNCBfNTUwID0gdmVjNChtbCArIHZlYzMoLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF81NTAueHl6LCBfNTUwLncpKTsKICAgIGhpZ2hwIHZlYzQgXzU2MyA9IHZlYzQobWwgKyB2ZWMzKC0wLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSksIGNvbXBhcmUpOwogICAgcmVzdWx0ICs9IHRleHR1cmUoc2hhZG93TWFwQ3ViZSwgdmVjNChfNTYzLnh5eiwgXzU2My53KSk7CiAgICByZXR1cm4gcmVzdWx0IC8gOS4wOwp9CgpoaWdocCB2ZWMzIHNhbXBsZUxpZ2h0KGhpZ2hwIHZlYzMgcCwgaGlnaHAgdmVjMyBuLCBoaWdocCB2ZWMzIHYsIGhpZ2hwIGZsb2F0IGRvdE5WLCBoaWdocCB2ZWMzIGxwLCBoaWdocCB2ZWMzIGxpZ2h0Q29sLCBoaWdocCB2ZWMzIGFsYmVkbywgaGlnaHAgZmxvYXQgcm91Z2gsIGhpZ2hwIGZsb2F0IHNwZWMsIGhpZ2hwIHZlYzMgZjAsIGludCBpbmRleCwgaGlnaHAgZmxvYXQgYmlhcywgYm9vbCByZWNlaXZlU2hhZG93KQp7CiAgICBoaWdocCB2ZWMzIGxkID0gbHAgLSBwOwogICAgaGlnaHAgdmVjMyBsID0gbm9ybWFsaXplKGxkKTsKICAgIGhpZ2hwIHZlYzMgaCA9IG5vcm1hbGl6ZSh2ICsgbCk7CiAgICBoaWdocCBmbG9hdCBkb3ROSCA9IG1heCgwLjAsIGRvdChuLCBoKSk7CiAgICBoaWdocCBmbG9hdCBkb3RWSCA9IG1heCgwLjAsIGRvdCh2LCBoKSk7CiAgICBoaWdocCBmbG9hdCBkb3ROTCA9IG1heCgwLjAsIGRvdChuLCBsKSk7CiAgICBoaWdocCB2ZWMzIGRpcmVjdCA9IGxhbWJlcnREaWZmdXNlQlJERihhbGJlZG8sIGRvdE5MKSArIChzcGVjdWxhckJSREYoZjAsIHJvdWdoLCBkb3ROTCwgZG90TkgsIGRvdE5WLCBkb3RWSCkgKiBzcGVjKTsKICAgIGRpcmVjdCAqPSBhdHRlbnVhdGUoZGlzdGFuY2UocCwgbHApKTsKICAgIGRpcmVjdCAqPSBsaWdodENvbDsKICAgIGlmIChyZWNlaXZlU2hhZG93KQogICAgewogICAgICAgIGhpZ2hwIHZlYzMgcGFyYW0gPSAtbDsKICAgICAgICBoaWdocCBmbG9hdCBfNjI0ID0gUENGQ3ViZShzaGFkb3dNYXBQb2ludFswXSwgbGQsIHBhcmFtLCBiaWFzLCBsaWdodFByb2osIG4pOwogICAgICAgIGRpcmVjdCAqPSBfNjI0OwogICAgfQogICAgcmV0dXJuIGRpcmVjdDsKfQoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjNCBnMCA9IHRleHR1cmVMb2QoZ2J1ZmZlcjAsIHRleENvb3JkLCAwLjApOwogICAgaGlnaHAgdmVjMyBuOwogICAgbi56ID0gKDEuMCAtIGFicyhnMC54KSkgLSBhYnMoZzAueSk7CiAgICBoaWdocCB2ZWMyIF82NTQ7CiAgICBpZiAobi56ID49IDAuMCkKICAgIHsKICAgICAgICBfNjU0ID0gZzAueHk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzY1NCA9IG9jdGFoZWRyb25XcmFwKGcwLnh5KTsKICAgIH0KICAgIG4gPSB2ZWMzKF82NTQueCwgXzY1NC55LCBuLnopOwogICAgbiA9IG5vcm1hbGl6ZShuKTsKICAgIGhpZ2hwIGZsb2F0IHJvdWdobmVzcyA9IGcwLno7CiAgICBoaWdocCBmbG9hdCBwYXJhbTsKICAgIHVpbnQgcGFyYW1fMTsKICAgIHVucGFja0Zsb2F0SW50MTYoZzAudywgcGFyYW0sIHBhcmFtXzEpOwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSBwYXJhbTsKICAgIHVpbnQgbWF0aWQgPSBwYXJhbV8xOwogICAgaGlnaHAgdmVjNCBnMSA9IHRleHR1cmVMb2QoZ2J1ZmZlcjEsIHRleENvb3JkLCAwLjApOwogICAgaGlnaHAgdmVjMiBvY2NzcGVjID0gdW5wYWNrRmxvYXQyKGcxLncpOwogICAgaGlnaHAgdmVjMyBhbGJlZG8gPSBzdXJmYWNlQWxiZWRvKGcxLnh5eiwgbWV0YWxsaWMpOwogICAgaGlnaHAgdmVjMyBmMCA9IHN1cmZhY2VGMChnMS54eXosIG1ldGFsbGljKTsKICAgIGhpZ2hwIGZsb2F0IGRlcHRoID0gKHRleHR1cmVMb2QoZ2J1ZmZlckQsIHRleENvb3JkLCAwLjApLnggKiAyLjApIC0gMS4wOwogICAgaGlnaHAgdmVjMyBwID0gZ2V0UG9zKGV5ZSwgZXllTG9vaywgbm9ybWFsaXplKHZpZXdSYXkpLCBkZXB0aCwgY2FtZXJhUHJvaik7CiAgICBoaWdocCB2ZWMzIHYgPSBub3JtYWxpemUoZXllIC0gcCk7CiAgICBoaWdocCBmbG9hdCBkb3ROViA9IG1heChkb3QobiwgdiksIDAuMCk7CiAgICBoaWdocCB2ZWMyIGVudkJSREYgPSB0ZXhlbEZldGNoKHNlbnZtYXBCcmRmLCBpdmVjMih2ZWMyKGRvdE5WLCAxLjAgLSByb3VnaG5lc3MpICogMjU2LjApLCAwKS54eTsKICAgIGhpZ2hwIHZlYzMgZW52bCA9IHNoSXJyYWRpYW5jZShuLCBzaGlycik7CiAgICBoaWdocCB2ZWMzIHJlZmxlY3Rpb25Xb3JsZCA9IHJlZmxlY3QoLXYsIG4pOwogICAgaGlnaHAgZmxvYXQgbG9kID0gZ2V0TWlwRnJvbVJvdWdobmVzcyhyb3VnaG5lc3MsIGZsb2F0KGVudm1hcE51bU1pcG1hcHMpKTsKICAgIGhpZ2hwIHZlYzMgcHJlZmlsdGVyZWRDb2xvciA9IHRleHR1cmVMb2Qoc2Vudm1hcFJhZGlhbmNlLCBlbnZNYXBFcXVpcmVjdChyZWZsZWN0aW9uV29ybGQpLCBsb2QpLnh5ejsKICAgIGVudmwgKj0gYWxiZWRvOwogICAgZW52bCAqPSAodmVjMygxLjApIC0gKChmMCAqIGVudkJSREYueCkgKyB2ZWMzKGVudkJSREYueSkpKTsKICAgIGVudmwgKz0gKHByZWZpbHRlcmVkQ29sb3IgKiAoKGYwICogZW52QlJERi54KSArIHZlYzMoZW52QlJERi55KSkpOwogICAgZW52bCAqPSAoZW52bWFwU3RyZW5ndGggKiBvY2NzcGVjLngpOwogICAgZnJhZ0NvbG9yID0gdmVjNChlbnZsLngsIGVudmwueSwgZW52bC56LCBmcmFnQ29sb3Iudyk7CiAgICBoaWdocCB2ZWMzIF84MTggPSBmcmFnQ29sb3IueHl6ICogdGV4dHVyZUxvZChzc2FvdGV4LCB0ZXhDb29yZCwgMC4wKS54OwogICAgZnJhZ0NvbG9yID0gdmVjNChfODE4LngsIF84MTgueSwgXzgxOC56LCBmcmFnQ29sb3Iudyk7CiAgICBpbnQgcGFyYW1fMiA9IDA7CiAgICBoaWdocCBmbG9hdCBwYXJhbV8zID0gcG9pbnRCaWFzOwogICAgYm9vbCBwYXJhbV80ID0gdHJ1ZTsKICAgIGhpZ2hwIHZlYzMgXzg0MyA9IGZyYWdDb2xvci54eXogKyBzYW1wbGVMaWdodChwLCBuLCB2LCBkb3ROViwgcG9pbnRQb3MsIHBvaW50Q29sLCBhbGJlZG8sIHJvdWdobmVzcywgb2Njc3BlYy55LCBmMCwgcGFyYW1fMiwgcGFyYW1fMywgcGFyYW1fNCk7CiAgICBmcmFnQ29sb3IgPSB2ZWM0KF84NDMueCwgXzg0My55LCBfODQzLnosIGZyYWdDb2xvci53KTsKICAgIGZyYWdDb2xvci53ID0gMS4wOwp9Cgo";
+kha_Shaders.deferred_light_fragData0 = "s18295:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCB2ZWM0IGNhc0RhdGFbMjBdOwp1bmlmb3JtIGhpZ2hwIHNhbXBsZXJDdWJlU2hhZG93IHNoYWRvd01hcFBvaW50WzFdOwp1bmlmb3JtIGhpZ2hwIHZlYzIgbGlnaHRQcm9qOwp1bmlmb3JtIGhpZ2hwIHNhbXBsZXIyRCBnYnVmZmVyMDsKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgZ2J1ZmZlcjE7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIGdidWZmZXJEOwp1bmlmb3JtIGhpZ2hwIHZlYzMgZXllOwp1bmlmb3JtIGhpZ2hwIHZlYzMgZXllTG9vazsKdW5pZm9ybSBoaWdocCB2ZWMyIGNhbWVyYVByb2o7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIHNlbnZtYXBCcmRmOwp1bmlmb3JtIGhpZ2hwIHZlYzQgc2hpcnJbN107CnVuaWZvcm0gaW50IGVudm1hcE51bU1pcG1hcHM7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIHNlbnZtYXBSYWRpYW5jZTsKdW5pZm9ybSBoaWdocCBmbG9hdCBlbnZtYXBTdHJlbmd0aDsKdW5pZm9ybSBoaWdocCB2ZWMzIHN1bkRpcjsKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkRTaGFkb3cgc2hhZG93TWFwOwp1bmlmb3JtIGhpZ2hwIGZsb2F0IHNoYWRvd3NCaWFzOwp1bmlmb3JtIGhpZ2hwIHZlYzMgc3VuQ29sOwp1bmlmb3JtIGhpZ2hwIHZlYzMgcG9pbnRQb3M7CnVuaWZvcm0gaGlnaHAgdmVjMyBwb2ludENvbDsKdW5pZm9ybSBoaWdocCBmbG9hdCBwb2ludEJpYXM7CgppbiBoaWdocCB2ZWMyIHRleENvb3JkOwppbiBoaWdocCB2ZWMzIHZpZXdSYXk7Cm91dCBoaWdocCB2ZWM0IGZyYWdDb2xvcjsKCmhpZ2hwIHZlYzIgb2N0YWhlZHJvbldyYXAoaGlnaHAgdmVjMiB2KQp7CiAgICByZXR1cm4gKHZlYzIoMS4wKSAtIGFicyh2Lnl4KSkgKiB2ZWMyKCh2LnggPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSwgKHYueSA%PSAwLjApID8gMS4wIDogKC0xLjApKTsKfQoKdm9pZCB1bnBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IHZhbCwgb3V0IGhpZ2hwIGZsb2F0IGYsIG91dCB1aW50IGkpCnsKICAgIHVpbnQgYml0c1ZhbHVlID0gdWludCh2YWwpOwogICAgaSA9IGJpdHNWYWx1ZSA%PiAxMnU7CiAgICBmID0gZmxvYXQoYml0c1ZhbHVlICYgNDI5NDkwNTg1NXUpIC8gNDA5NS4wOwp9CgpoaWdocCB2ZWMyIHVucGFja0Zsb2F0MihoaWdocCBmbG9hdCBmKQp7CiAgICByZXR1cm4gdmVjMihmbG9vcihmKSAvIDI1NS4wLCBmcmFjdChmKSk7Cn0KCmhpZ2hwIHZlYzMgc3VyZmFjZUFsYmVkbyhoaWdocCB2ZWMzIGJhc2VDb2xvciwgaGlnaHAgZmxvYXQgbWV0YWxuZXNzKQp7CiAgICByZXR1cm4gbWl4KGJhc2VDb2xvciwgdmVjMygwLjApLCB2ZWMzKG1ldGFsbmVzcykpOwp9CgpoaWdocCB2ZWMzIHN1cmZhY2VGMChoaWdocCB2ZWMzIGJhc2VDb2xvciwgaGlnaHAgZmxvYXQgbWV0YWxuZXNzKQp7CiAgICByZXR1cm4gbWl4KHZlYzMoMC4wMzk5OTk5OTkxMDU5MzAzMjgzNjkxNDA2MjUpLCBiYXNlQ29sb3IsIHZlYzMobWV0YWxuZXNzKSk7Cn0KCmhpZ2hwIHZlYzMgZ2V0UG9zKGhpZ2hwIHZlYzMgZXllXzEsIGhpZ2hwIHZlYzMgZXllTG9va18xLCBoaWdocCB2ZWMzIHZpZXdSYXlfMSwgaGlnaHAgZmxvYXQgZGVwdGgsIGhpZ2hwIHZlYzIgY2FtZXJhUHJval8xKQp7CiAgICBoaWdocCBmbG9hdCBsaW5lYXJEZXB0aCA9IGNhbWVyYVByb2pfMS55IC8gKCgoZGVwdGggKiAwLjUpICsgMC41KSAtIGNhbWVyYVByb2pfMS54KTsKICAgIGhpZ2hwIGZsb2F0IHZpZXdaRGlzdCA9IGRvdChleWVMb29rXzEsIHZpZXdSYXlfMSk7CiAgICBoaWdocCB2ZWMzIHdwb3NpdGlvbiA9IGV5ZV8xICsgKHZpZXdSYXlfMSAqIChsaW5lYXJEZXB0aCAvIHZpZXdaRGlzdCkpOwogICAgcmV0dXJuIHdwb3NpdGlvbjsKfQoKaGlnaHAgdmVjMyBzaElycmFkaWFuY2UoaGlnaHAgdmVjMyBub3IsIGhpZ2hwIHZlYzQgc2hpcnJfMVs3XSkKewogICAgaGlnaHAgdmVjMyBjbDAwID0gdmVjMyhzaGlycl8xWzBdLngsIHNoaXJyXzFbMF0ueSwgc2hpcnJfMVswXS56KTsKICAgIGhpZ2hwIHZlYzMgY2wxbTEgPSB2ZWMzKHNoaXJyXzFbMF0udywgc2hpcnJfMVsxXS54LCBzaGlycl8xWzFdLnkpOwogICAgaGlnaHAgdmVjMyBjbDEwID0gdmVjMyhzaGlycl8xWzFdLnosIHNoaXJyXzFbMV0udywgc2hpcnJfMVsyXS54KTsKICAgIGhpZ2hwIHZlYzMgY2wxMSA9IHZlYzMoc2hpcnJfMVsyXS55LCBzaGlycl8xWzJdLnosIHNoaXJyXzFbMl0udyk7CiAgICBoaWdocCB2ZWMzIGNsMm0yID0gdmVjMyhzaGlycl8xWzNdLngsIHNoaXJyXzFbM10ueSwgc2hpcnJfMVszXS56KTsKICAgIGhpZ2hwIHZlYzMgY2wybTEgPSB2ZWMzKHNoaXJyXzFbM10udywgc2hpcnJfMVs0XS54LCBzaGlycl8xWzRdLnkpOwogICAgaGlnaHAgdmVjMyBjbDIwID0gdmVjMyhzaGlycl8xWzRdLnosIHNoaXJyXzFbNF0udywgc2hpcnJfMVs1XS54KTsKICAgIGhpZ2hwIHZlYzMgY2wyMSA9IHZlYzMoc2hpcnJfMVs1XS55LCBzaGlycl8xWzVdLnosIHNoaXJyXzFbNV0udyk7CiAgICBoaWdocCB2ZWMzIGNsMjIgPSB2ZWMzKHNoaXJyXzFbNl0ueCwgc2hpcnJfMVs2XS55LCBzaGlycl8xWzZdLnopOwogICAgcmV0dXJuICgoKCgoKCgoKChjbDIyICogMC40MjkwNDI5OTQ5NzYwNDM3MDExNzE4NzUpICogKChub3IueSAqIG5vci55KSAtICgoLW5vci56KSAqICgtbm9yLnopKSkpICsgKCgoY2wyMCAqIDAuNzQzMTI1MDIxNDU3NjcyMTE5MTQwNjI1KSAqIG5vci54KSAqIG5vci54KSkgKyAoY2wwMCAqIDAuODg2MjI3MDExNjgwNjAzMDI3MzQzNzUpKSAtIChjbDIwICogMC4yNDc3MDc5OTI3OTIxMjk1MTY2MDE1NjI1KSkgKyAoKChjbDJtMiAqIDAuODU4MDg1OTg5OTUyMDg3NDAyMzQzNzUpICogbm9yLnkpICogKC1ub3IueikpKSArICgoKGNsMjEgKiAwLjg1ODA4NTk4OTk1MjA4NzQwMjM0Mzc1KSAqIG5vci55KSAqIG5vci54KSkgKyAoKChjbDJtMSAqIDAuODU4MDg1OTg5OTUyMDg3NDAyMzQzNzUpICogKC1ub3IueikpICogbm9yLngpKSArICgoY2wxMSAqIDEuMDIzMzI3OTQ2NjYyOTAyODMyMDMxMjUpICogbm9yLnkpKSArICgoY2wxbTEgKiAxLjAyMzMyNzk0NjY2MjkwMjgzMjAzMTI1KSAqICgtbm9yLnopKSkgKyAoKGNsMTAgKiAxLjAyMzMyNzk0NjY2MjkwMjgzMjAzMTI1KSAqIG5vci54KTsKfQoKaGlnaHAgZmxvYXQgZ2V0TWlwRnJvbVJvdWdobmVzcyhoaWdocCBmbG9hdCByb3VnaG5lc3MsIGhpZ2hwIGZsb2F0IG51bU1pcG1hcHMpCnsKICAgIHJldHVybiByb3VnaG5lc3MgKiBudW1NaXBtYXBzOwp9CgpoaWdocCB2ZWMyIGVudk1hcEVxdWlyZWN0KGhpZ2hwIHZlYzMgbm9ybWFsKQp7CiAgICBoaWdocCBmbG9hdCBwaGkgPSBhY29zKG5vcm1hbC56KTsKICAgIGhpZ2hwIGZsb2F0IHRoZXRhID0gYXRhbigtbm9ybWFsLnksIG5vcm1hbC54KSArIDMuMTQxNTkyNzQxMDEyNTczMjQyMTg3NTsKICAgIHJldHVybiB2ZWMyKHRoZXRhIC8gNi4yODMxODU0ODIwMjUxNDY0ODQzNzUsIHBoaSAvIDMuMTQxNTkyNzQxMDEyNTczMjQyMTg3NSk7Cn0KCmhpZ2hwIHZlYzMgbGFtYmVydERpZmZ1c2VCUkRGKGhpZ2hwIHZlYzMgYWxiZWRvLCBoaWdocCBmbG9hdCBubCkKewogICAgcmV0dXJuIGFsYmVkbyAqIG5sOwp9CgpoaWdocCBmbG9hdCBkX2dneChoaWdocCBmbG9hdCBuaCwgaGlnaHAgZmxvYXQgYSkKewogICAgaGlnaHAgZmxvYXQgYTIgPSBhICogYTsKICAgIGhpZ2hwIGZsb2F0IGRlbm9tID0gKChuaCAqIG5oKSAqIChhMiAtIDEuMCkpICsgMS4wOwogICAgZGVub20gPSBtYXgoZGVub20gKiBkZW5vbSwgNi4xMDM1MTU2MjVlLTA1KTsKICAgIHJldHVybiAoYTIgKiAwLjMxODMwOTg3MzM0MjUxNDAzODA4NTkzNzUpIC8gZGVub207Cn0KCmhpZ2hwIGZsb2F0IGcyX2FwcHJveChoaWdocCBmbG9hdCBOZG90TCwgaGlnaHAgZmxvYXQgTmRvdFYsIGhpZ2hwIGZsb2F0IGFscGhhKQp7CiAgICBoaWdocCB2ZWMyIGhlbHBlciA9ICh2ZWMyKE5kb3RMLCBOZG90VikgKiAyLjApICogKHZlYzIoMS4wKSAvICgodmVjMihOZG90TCwgTmRvdFYpICogKDIuMCAtIGFscGhhKSkgKyB2ZWMyKGFscGhhKSkpOwogICAgcmV0dXJuIG1heChoZWxwZXIueCAqIGhlbHBlci55LCAwLjApOwp9CgpoaWdocCB2ZWMzIGZfc2NobGljayhoaWdocCB2ZWMzIGYwLCBoaWdocCBmbG9hdCB2aCkKewogICAgcmV0dXJuIGYwICsgKCh2ZWMzKDEuMCkgLSBmMCkgKiBleHAyKCgoKC01LjU1NDcyOTkzODUwNzA4MDA3ODEyNSkgKiB2aCkgLSA2Ljk4MzE2MDAxODkyMDg5ODQzNzUpICogdmgpKTsKfQoKaGlnaHAgdmVjMyBzcGVjdWxhckJSREYoaGlnaHAgdmVjMyBmMCwgaGlnaHAgZmxvYXQgcm91Z2huZXNzLCBoaWdocCBmbG9hdCBubCwgaGlnaHAgZmxvYXQgbmgsIGhpZ2hwIGZsb2F0IG52LCBoaWdocCBmbG9hdCB2aCkKewogICAgaGlnaHAgZmxvYXQgYSA9IHJvdWdobmVzcyAqIHJvdWdobmVzczsKICAgIHJldHVybiAoZl9zY2hsaWNrKGYwLCB2aCkgKiAoZF9nZ3gobmgsIGEpICogZzJfYXBwcm94KG5sLCBudiwgYSkpKSAvIHZlYzMobWF4KDQuMCAqIG52LCA5Ljk5OTk5OTc0NzM3ODc1MTYzNTU1MTQ1MjYzNjcxODhlLTA2KSk7Cn0KCmhpZ2hwIG1hdDQgZ2V0Q2FzY2FkZU1hdChoaWdocCBmbG9hdCBkLCBpbm91dCBpbnQgY2FzaSwgaW5vdXQgaW50IGNhc0luZGV4KQp7CiAgICBoaWdocCB2ZWM0IGNvbXAgPSB2ZWM0KGZsb2F0KGQgPiBjYXNEYXRhWzE2XS54KSwgZmxvYXQoZCA%IGNhc0RhdGFbMTZdLnkpLCBmbG9hdChkID4gY2FzRGF0YVsxNl0ueiksIGZsb2F0KGQgPiBjYXNEYXRhWzE2XS53KSk7CiAgICBjYXNpID0gaW50KG1pbihkb3QodmVjNCgxLjApLCBjb21wKSwgNC4wKSk7CiAgICBjYXNJbmRleCA9IGNhc2kgKiA0OwogICAgcmV0dXJuIG1hdDQodmVjNChjYXNEYXRhW2Nhc0luZGV4XSksIHZlYzQoY2FzRGF0YVtjYXNJbmRleCArIDFdKSwgdmVjNChjYXNEYXRhW2Nhc0luZGV4ICsgMl0pLCB2ZWM0KGNhc0RhdGFbY2FzSW5kZXggKyAzXSkpOwp9CgpoaWdocCBmbG9hdCBQQ0YoaGlnaHAgc2FtcGxlcjJEU2hhZG93IHNoYWRvd01hcF8xLCBoaWdocCB2ZWMyIHV2LCBoaWdocCBmbG9hdCBjb21wYXJlLCBoaWdocCB2ZWMyIHNtU2l6ZSkKewogICAgaGlnaHAgdmVjMyBfNDUxID0gdmVjMyh1diArICh2ZWMyKC0xLjApIC8gc21TaXplKSwgY29tcGFyZSk7CiAgICBoaWdocCBmbG9hdCByZXN1bHQgPSB0ZXh0dXJlKHNoYWRvd01hcF8xLCB2ZWMzKF80NTEueHksIF80NTEueikpOwogICAgaGlnaHAgdmVjMyBfNDYwID0gdmVjMyh1diArICh2ZWMyKC0xLjAsIDAuMCkgLyBzbVNpemUpLCBjb21wYXJlKTsKICAgIHJlc3VsdCArPSB0ZXh0dXJlKHNoYWRvd01hcF8xLCB2ZWMzKF80NjAueHksIF80NjAueikpOwogICAgaGlnaHAgdmVjMyBfNDcxID0gdmVjMyh1diArICh2ZWMyKC0xLjAsIDEuMCkgLyBzbVNpemUpLCBjb21wYXJlKTsKICAgIHJlc3VsdCArPSB0ZXh0dXJlKHNoYWRvd01hcF8xLCB2ZWMzKF80NzEueHksIF80NzEueikpOwogICAgaGlnaHAgdmVjMyBfNDgyID0gdmVjMyh1diArICh2ZWMyKDAuMCwgLTEuMCkgLyBzbVNpemUpLCBjb21wYXJlKTsKICAgIHJlc3VsdCArPSB0ZXh0dXJlKHNoYWRvd01hcF8xLCB2ZWMzKF80ODIueHksIF80ODIueikpOwogICAgaGlnaHAgdmVjMyBfNDkwID0gdmVjMyh1diwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBfMSwgdmVjMyhfNDkwLnh5LCBfNDkwLnopKTsKICAgIGhpZ2hwIHZlYzMgXzUwMSA9IHZlYzModXYgKyAodmVjMigwLjAsIDEuMCkgLyBzbVNpemUpLCBjb21wYXJlKTsKICAgIHJlc3VsdCArPSB0ZXh0dXJlKHNoYWRvd01hcF8xLCB2ZWMzKF81MDEueHksIF81MDEueikpOwogICAgaGlnaHAgdmVjMyBfNTEyID0gdmVjMyh1diArICh2ZWMyKDEuMCwgLTEuMCkgLyBzbVNpemUpLCBjb21wYXJlKTsKICAgIHJlc3VsdCArPSB0ZXh0dXJlKHNoYWRvd01hcF8xLCB2ZWMzKF81MTIueHksIF81MTIueikpOwogICAgaGlnaHAgdmVjMyBfNTIzID0gdmVjMyh1diArICh2ZWMyKDEuMCwgMC4wKSAvIHNtU2l6ZSksIGNvbXBhcmUpOwogICAgcmVzdWx0ICs9IHRleHR1cmUoc2hhZG93TWFwXzEsIHZlYzMoXzUyMy54eSwgXzUyMy56KSk7CiAgICBoaWdocCB2ZWMzIF81MzQgPSB2ZWMzKHV2ICsgKHZlYzIoMS4wKSAvIHNtU2l6ZSksIGNvbXBhcmUpOwogICAgcmVzdWx0ICs9IHRleHR1cmUoc2hhZG93TWFwXzEsIHZlYzMoXzUzNC54eSwgXzUzNC56KSk7CiAgICByZXR1cm4gcmVzdWx0IC8gOS4wOwp9CgpoaWdocCBmbG9hdCBzaGFkb3dUZXN0Q2FzY2FkZShoaWdocCBzYW1wbGVyMkRTaGFkb3cgc2hhZG93TWFwXzEsIGhpZ2hwIHZlYzMgZXllXzEsIGhpZ2hwIHZlYzMgcCwgaGlnaHAgZmxvYXQgc2hhZG93c0JpYXNfMSkKewogICAgaGlnaHAgZmxvYXQgZCA9IGRpc3RhbmNlKGV5ZV8xLCBwKTsKICAgIGludCBwYXJhbTsKICAgIGludCBwYXJhbV8xOwogICAgaGlnaHAgbWF0NCBfNzc2ID0gZ2V0Q2FzY2FkZU1hdChkLCBwYXJhbSwgcGFyYW1fMSk7CiAgICBpbnQgY2FzaSA9IHBhcmFtOwogICAgaW50IGNhc0luZGV4ID0gcGFyYW1fMTsKICAgIGhpZ2hwIG1hdDQgTFdWUCA9IF83NzY7CiAgICBoaWdocCB2ZWM0IGxQb3MgPSBMV1ZQICogdmVjNChwLCAxLjApOwogICAgaGlnaHAgdmVjMyBfNzkxID0gbFBvcy54eXogLyB2ZWMzKGxQb3Mudyk7CiAgICBsUG9zID0gdmVjNChfNzkxLngsIF83OTEueSwgXzc5MS56LCBsUG9zLncpOwogICAgaGlnaHAgZmxvYXQgdmlzaWJpbGl0eSA9IDEuMDsKICAgIGlmIChsUG9zLncgPiAwLjApCiAgICB7CiAgICAgICAgdmlzaWJpbGl0eSA9IFBDRihzaGFkb3dNYXBfMSwgbFBvcy54eSwgbFBvcy56IC0gc2hhZG93c0JpYXNfMSwgdmVjMig0MDk2LjAsIDEwMjQuMCkpOwogICAgfQogICAgaGlnaHAgZmxvYXQgbmV4dFNwbGl0ID0gY2FzRGF0YVsxNl1bY2FzaV07CiAgICBoaWdocCBmbG9hdCBfODE2OwogICAgaWYgKGNhc2kgPT0gMCkKICAgIHsKICAgICAgICBfODE2ID0gbmV4dFNwbGl0OwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIF84MTYgPSBuZXh0U3BsaXQgLSBjYXNEYXRhWzE2XVtjYXNpIC0gMV07CiAgICB9CiAgICBoaWdocCBmbG9hdCBzcGxpdFNpemUgPSBfODE2OwogICAgaGlnaHAgZmxvYXQgc3BsaXREaXN0ID0gKG5leHRTcGxpdCAtIGQpIC8gc3BsaXRTaXplOwogICAgaWYgKChzcGxpdERpc3QgPD0gMC4xNTAwMDAwMDU5NjA0NjQ0Nzc1MzkwNjI1KSAmJiAoY2FzaSAhPSAzKSkKICAgIHsKICAgICAgICBpbnQgY2FzSW5kZXgyID0gY2FzSW5kZXggKyA0OwogICAgICAgIGhpZ2hwIG1hdDQgTFdWUDIgPSBtYXQ0KHZlYzQoY2FzRGF0YVtjYXNJbmRleDJdKSwgdmVjNChjYXNEYXRhW2Nhc0luZGV4MiArIDFdKSwgdmVjNChjYXNEYXRhW2Nhc0luZGV4MiArIDJdKSwgdmVjNChjYXNEYXRhW2Nhc0luZGV4MiArIDNdKSk7CiAgICAgICAgaGlnaHAgdmVjNCBsUG9zMiA9IExXVlAyICogdmVjNChwLCAxLjApOwogICAgICAgIGhpZ2hwIHZlYzMgXzg5NCA9IGxQb3MyLnh5eiAvIHZlYzMobFBvczIudyk7CiAgICAgICAgbFBvczIgPSB2ZWM0KF84OTQueCwgXzg5NC55LCBfODk0LnosIGxQb3MyLncpOwogICAgICAgIGhpZ2hwIGZsb2F0IHZpc2liaWxpdHkyID0gMS4wOwogICAgICAgIGlmIChsUG9zMi53ID4gMC4wKQogICAgICAgIHsKICAgICAgICAgICAgdmlzaWJpbGl0eTIgPSBQQ0Yoc2hhZG93TWFwXzEsIGxQb3MyLnh5LCBsUG9zMi56IC0gc2hhZG93c0JpYXNfMSwgdmVjMig0MDk2LjAsIDEwMjQuMCkpOwogICAgICAgIH0KICAgICAgICBoaWdocCBmbG9hdCBsZXJwQW10ID0gc21vb3Roc3RlcCgwLjAsIDAuMTUwMDAwMDA1OTYwNDY0NDc3NTM5MDYyNSwgc3BsaXREaXN0KTsKICAgICAgICByZXR1cm4gbWl4KHZpc2liaWxpdHkyLCB2aXNpYmlsaXR5LCBsZXJwQW10KTsKICAgIH0KICAgIHJldHVybiB2aXNpYmlsaXR5Owp9CgpoaWdocCBmbG9hdCBhdHRlbnVhdGUoaGlnaHAgZmxvYXQgZGlzdCkKewogICAgcmV0dXJuIDEuMCAvIChkaXN0ICogZGlzdCk7Cn0KCmhpZ2hwIGZsb2F0IGxwVG9EZXB0aChpbm91dCBoaWdocCB2ZWMzIGxwLCBoaWdocCB2ZWMyIGxpZ2h0UHJval8xKQp7CiAgICBscCA9IGFicyhscCk7CiAgICBoaWdocCBmbG9hdCB6Y29tcCA9IG1heChscC54LCBtYXgobHAueSwgbHAueikpOwogICAgemNvbXAgPSBsaWdodFByb2pfMS54IC0gKGxpZ2h0UHJval8xLnkgLyB6Y29tcCk7CiAgICByZXR1cm4gKHpjb21wICogMC41KSArIDAuNTsKfQoKaGlnaHAgZmxvYXQgUENGQ3ViZShoaWdocCBzYW1wbGVyQ3ViZVNoYWRvdyBzaGFkb3dNYXBDdWJlLCBoaWdocCB2ZWMzIGxwLCBpbm91dCBoaWdocCB2ZWMzIG1sLCBoaWdocCBmbG9hdCBiaWFzLCBoaWdocCB2ZWMyIGxpZ2h0UHJval8xLCBoaWdocCB2ZWMzIG4pCnsKICAgIGhpZ2hwIHZlYzMgcGFyYW0gPSBscDsKICAgIGhpZ2hwIGZsb2F0IF81NjcgPSBscFRvRGVwdGgocGFyYW0sIGxpZ2h0UHJval8xKTsKICAgIGhpZ2hwIGZsb2F0IGNvbXBhcmUgPSBfNTY3IC0gKGJpYXMgKiAxLjUpOwogICAgbWwgKz0gKChuICogYmlhcykgKiAyMC4wKTsKICAgIGhpZ2hwIHZlYzQgXzU4MyA9IHZlYzQobWwsIGNvbXBhcmUpOwogICAgaGlnaHAgZmxvYXQgcmVzdWx0ID0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF81ODMueHl6LCBfNTgzLncpKTsKICAgIGhpZ2hwIHZlYzQgXzU5NSA9IHZlYzQobWwgKyB2ZWMzKDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF81OTUueHl6LCBfNTk1LncpKTsKICAgIGhpZ2hwIHZlYzQgXzYwOSA9IHZlYzQobWwgKyB2ZWMzKC0wLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgMC4wMDEwMDAwMDAwNDc0OTc0NTEzMDUzODk0MDQyOTY4NzUsIDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF82MDkueHl6LCBfNjA5LncpKTsKICAgIGhpZ2hwIHZlYzQgXzYyMiA9IHZlYzQobWwgKyB2ZWMzKDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAtMC4wMDEwMDAwMDAwNDc0OTc0NTEzMDUzODk0MDQyOTY4NzUsIDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF82MjIueHl6LCBfNjIyLncpKTsKICAgIGhpZ2hwIHZlYzQgXzYzNSA9IHZlYzQobWwgKyB2ZWMzKDAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF82MzUueHl6LCBfNjM1LncpKTsKICAgIGhpZ2hwIHZlYzQgXzY0OCA9IHZlYzQobWwgKyB2ZWMzKC0wLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSksIGNvbXBhcmUpOwogICAgcmVzdWx0ICs9IHRleHR1cmUoc2hhZG93TWFwQ3ViZSwgdmVjNChfNjQ4Lnh5eiwgXzY0OC53KSk7CiAgICBoaWdocCB2ZWM0IF82NjEgPSB2ZWM0KG1sICsgdmVjMygwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAtMC4wMDEwMDAwMDAwNDc0OTc0NTEzMDUzODk0MDQyOTY4NzUpLCBjb21wYXJlKTsKICAgIHJlc3VsdCArPSB0ZXh0dXJlKHNoYWRvd01hcEN1YmUsIHZlYzQoXzY2MS54eXosIF82NjEudykpOwogICAgaGlnaHAgdmVjNCBfNjc0ID0gdmVjNChtbCArIHZlYzMoLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1LCAwLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSwgLTAuMDAxMDAwMDAwMDQ3NDk3NDUxMzA1Mzg5NDA0Mjk2ODc1KSwgY29tcGFyZSk7CiAgICByZXN1bHQgKz0gdGV4dHVyZShzaGFkb3dNYXBDdWJlLCB2ZWM0KF82NzQueHl6LCBfNjc0LncpKTsKICAgIGhpZ2hwIHZlYzQgXzY4NyA9IHZlYzQobWwgKyB2ZWMzKC0wLjAwMTAwMDAwMDA0NzQ5NzQ1MTMwNTM4OTQwNDI5Njg3NSksIGNvbXBhcmUpOwogICAgcmVzdWx0ICs9IHRleHR1cmUoc2hhZG93TWFwQ3ViZSwgdmVjNChfNjg3Lnh5eiwgXzY4Ny53KSk7CiAgICByZXR1cm4gcmVzdWx0IC8gOS4wOwp9CgpoaWdocCB2ZWMzIHNhbXBsZUxpZ2h0KGhpZ2hwIHZlYzMgcCwgaGlnaHAgdmVjMyBuLCBoaWdocCB2ZWMzIHYsIGhpZ2hwIGZsb2F0IGRvdE5WLCBoaWdocCB2ZWMzIGxwLCBoaWdocCB2ZWMzIGxpZ2h0Q29sLCBoaWdocCB2ZWMzIGFsYmVkbywgaGlnaHAgZmxvYXQgcm91Z2gsIGhpZ2hwIGZsb2F0IHNwZWMsIGhpZ2hwIHZlYzMgZjAsIGludCBpbmRleCwgaGlnaHAgZmxvYXQgYmlhcywgYm9vbCByZWNlaXZlU2hhZG93KQp7CiAgICBoaWdocCB2ZWMzIGxkID0gbHAgLSBwOwogICAgaGlnaHAgdmVjMyBsID0gbm9ybWFsaXplKGxkKTsKICAgIGhpZ2hwIHZlYzMgaCA9IG5vcm1hbGl6ZSh2ICsgbCk7CiAgICBoaWdocCBmbG9hdCBkb3ROSCA9IG1heCgwLjAsIGRvdChuLCBoKSk7CiAgICBoaWdocCBmbG9hdCBkb3RWSCA9IG1heCgwLjAsIGRvdCh2LCBoKSk7CiAgICBoaWdocCBmbG9hdCBkb3ROTCA9IG1heCgwLjAsIGRvdChuLCBsKSk7CiAgICBoaWdocCB2ZWMzIGRpcmVjdCA9IGxhbWJlcnREaWZmdXNlQlJERihhbGJlZG8sIGRvdE5MKSArIChzcGVjdWxhckJSREYoZjAsIHJvdWdoLCBkb3ROTCwgZG90TkgsIGRvdE5WLCBkb3RWSCkgKiBzcGVjKTsKICAgIGRpcmVjdCAqPSBhdHRlbnVhdGUoZGlzdGFuY2UocCwgbHApKTsKICAgIGRpcmVjdCAqPSBsaWdodENvbDsKICAgIGlmIChyZWNlaXZlU2hhZG93KQogICAgewogICAgICAgIGhpZ2hwIHZlYzMgcGFyYW0gPSAtbDsKICAgICAgICBoaWdocCBmbG9hdCBfOTcxID0gUENGQ3ViZShzaGFkb3dNYXBQb2ludFswXSwgbGQsIHBhcmFtLCBiaWFzLCBsaWdodFByb2osIG4pOwogICAgICAgIGRpcmVjdCAqPSBfOTcxOwogICAgfQogICAgcmV0dXJuIGRpcmVjdDsKfQoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgdmVjNCBnMCA9IHRleHR1cmVMb2QoZ2J1ZmZlcjAsIHRleENvb3JkLCAwLjApOwogICAgaGlnaHAgdmVjMyBuOwogICAgbi56ID0gKDEuMCAtIGFicyhnMC54KSkgLSBhYnMoZzAueSk7CiAgICBoaWdocCB2ZWMyIF8xMDAwOwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzEwMDAgPSBnMC54eTsKICAgIH0KICAgIGVsc2UKICAgIHsKICAgICAgICBfMTAwMCA9IG9jdGFoZWRyb25XcmFwKGcwLnh5KTsKICAgIH0KICAgIG4gPSB2ZWMzKF8xMDAwLngsIF8xMDAwLnksIG4ueik7CiAgICBuID0gbm9ybWFsaXplKG4pOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gZzAuejsKICAgIGhpZ2hwIGZsb2F0IHBhcmFtOwogICAgdWludCBwYXJhbV8xOwogICAgdW5wYWNrRmxvYXRJbnQxNihnMC53LCBwYXJhbSwgcGFyYW1fMSk7CiAgICBoaWdocCBmbG9hdCBtZXRhbGxpYyA9IHBhcmFtOwogICAgdWludCBtYXRpZCA9IHBhcmFtXzE7CiAgICBoaWdocCB2ZWM0IGcxID0gdGV4dHVyZUxvZChnYnVmZmVyMSwgdGV4Q29vcmQsIDAuMCk7CiAgICBoaWdocCB2ZWMyIG9jY3NwZWMgPSB1bnBhY2tGbG9hdDIoZzEudyk7CiAgICBoaWdocCB2ZWMzIGFsYmVkbyA9IHN1cmZhY2VBbGJlZG8oZzEueHl6LCBtZXRhbGxpYyk7CiAgICBoaWdocCB2ZWMzIGYwID0gc3VyZmFjZUYwKGcxLnh5eiwgbWV0YWxsaWMpOwogICAgaGlnaHAgZmxvYXQgZGVwdGggPSAodGV4dHVyZUxvZChnYnVmZmVyRCwgdGV4Q29vcmQsIDAuMCkueCAqIDIuMCkgLSAxLjA7CiAgICBoaWdocCB2ZWMzIHAgPSBnZXRQb3MoZXllLCBleWVMb29rLCBub3JtYWxpemUodmlld1JheSksIGRlcHRoLCBjYW1lcmFQcm9qKTsKICAgIGhpZ2hwIHZlYzMgdiA9IG5vcm1hbGl6ZShleWUgLSBwKTsKICAgIGhpZ2hwIGZsb2F0IGRvdE5WID0gbWF4KGRvdChuLCB2KSwgMC4wKTsKICAgIGhpZ2hwIHZlYzIgZW52QlJERiA9IHRleGVsRmV0Y2goc2Vudm1hcEJyZGYsIGl2ZWMyKHZlYzIoZG90TlYsIDEuMCAtIHJvdWdobmVzcykgKiAyNTYuMCksIDApLnh5OwogICAgaGlnaHAgdmVjMyBlbnZsID0gc2hJcnJhZGlhbmNlKG4sIHNoaXJyKTsKICAgIGhpZ2hwIHZlYzMgcmVmbGVjdGlvbldvcmxkID0gcmVmbGVjdCgtdiwgbik7CiAgICBoaWdocCBmbG9hdCBsb2QgPSBnZXRNaXBGcm9tUm91Z2huZXNzKHJvdWdobmVzcywgZmxvYXQoZW52bWFwTnVtTWlwbWFwcykpOwogICAgaGlnaHAgdmVjMyBwcmVmaWx0ZXJlZENvbG9yID0gdGV4dHVyZUxvZChzZW52bWFwUmFkaWFuY2UsIGVudk1hcEVxdWlyZWN0KHJlZmxlY3Rpb25Xb3JsZCksIGxvZCkueHl6OwogICAgZW52bCAqPSBhbGJlZG87CiAgICBlbnZsICo9ICh2ZWMzKDEuMCkgLSAoKGYwICogZW52QlJERi54KSArIHZlYzMoZW52QlJERi55KSkpOwogICAgZW52bCArPSAocHJlZmlsdGVyZWRDb2xvciAqICgoZjAgKiBlbnZCUkRGLngpICsgdmVjMyhlbnZCUkRGLnkpKSk7CiAgICBlbnZsICo9IChlbnZtYXBTdHJlbmd0aCAqIG9jY3NwZWMueCk7CiAgICBmcmFnQ29sb3IgPSB2ZWM0KGVudmwueCwgZW52bC55LCBlbnZsLnosIGZyYWdDb2xvci53KTsKICAgIGhpZ2hwIHZlYzMgc2ggPSBub3JtYWxpemUodiArIHN1bkRpcik7CiAgICBoaWdocCBmbG9hdCBzZG90TkggPSBtYXgoMC4wLCBkb3Qobiwgc2gpKTsKICAgIGhpZ2hwIGZsb2F0IHNkb3RWSCA9IG1heCgwLjAsIGRvdCh2LCBzaCkpOwogICAgaGlnaHAgZmxvYXQgc2RvdE5MID0gbWF4KDAuMCwgZG90KG4sIHN1bkRpcikpOwogICAgaGlnaHAgZmxvYXQgc3Zpc2liaWxpdHkgPSAxLjA7CiAgICBoaWdocCB2ZWMzIHNkaXJlY3QgPSBsYW1iZXJ0RGlmZnVzZUJSREYoYWxiZWRvLCBzZG90TkwpICsgKHNwZWN1bGFyQlJERihmMCwgcm91Z2huZXNzLCBzZG90TkwsIHNkb3ROSCwgZG90TlYsIHNkb3RWSCkgKiBvY2NzcGVjLnkpOwogICAgc3Zpc2liaWxpdHkgPSBzaGFkb3dUZXN0Q2FzY2FkZShzaGFkb3dNYXAsIGV5ZSwgcCArICgobiAqIHNoYWRvd3NCaWFzKSAqIDEwLjApLCBzaGFkb3dzQmlhcyk7CiAgICBoaWdocCB2ZWMzIF8xMjEzID0gZnJhZ0NvbG9yLnh5eiArICgoc2RpcmVjdCAqIHN2aXNpYmlsaXR5KSAqIHN1bkNvbCk7CiAgICBmcmFnQ29sb3IgPSB2ZWM0KF8xMjEzLngsIF8xMjEzLnksIF8xMjEzLnosIGZyYWdDb2xvci53KTsKICAgIGludCBwYXJhbV8yID0gMDsKICAgIGhpZ2hwIGZsb2F0IHBhcmFtXzMgPSBwb2ludEJpYXM7CiAgICBib29sIHBhcmFtXzQgPSB0cnVlOwogICAgaGlnaHAgdmVjMyBfMTIzOCA9IGZyYWdDb2xvci54eXogKyBzYW1wbGVMaWdodChwLCBuLCB2LCBkb3ROViwgcG9pbnRQb3MsIHBvaW50Q29sLCBhbGJlZG8sIHJvdWdobmVzcywgb2Njc3BlYy55LCBmMCwgcGFyYW1fMiwgcGFyYW1fMywgcGFyYW1fNCk7CiAgICBmcmFnQ29sb3IgPSB2ZWM0KF8xMjM4LngsIF8xMjM4LnksIF8xMjM4LnosIGZyYWdDb2xvci53KTsKICAgIGZyYWdDb2xvci53ID0gMS4wOwp9Cgo";
+kha_Shaders.hidden_material_mesh_fragData0 = "s1587:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC44MDAwMDAwMTE5MjA5Mjg5NTUwNzgxMjUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC4wOwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjA7CiAgICBoaWdocCBmbG9hdCBvY2NsdXNpb24gPSAxLjA7CiAgICBoaWdocCBmbG9hdCBzcGVjdWxhciA9IDEuMDsKICAgIGhpZ2hwIHZlYzMgZW1pc3Npb25Db2wgPSB2ZWMzKDAuMCk7CiAgICBuIC89IHZlYzMoKGFicyhuLngpICsgYWJzKG4ueSkpICsgYWJzKG4ueikpOwogICAgaGlnaHAgdmVjMiBfMTAxOwogICAgaWYgKG4ueiA%PSAwLjApCiAgICB7CiAgICAgICAgXzEwMSA9IG4ueHk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzEwMSA9IG9jdGFoZWRyb25XcmFwKG4ueHkpOwogICAgfQogICAgbiA9IHZlYzMoXzEwMS54LCBfMTAxLnksIG4ueik7CiAgICBmcmFnQ29sb3JbMF0gPSB2ZWM0KG4ueHksIHJvdWdobmVzcywgcGFja0Zsb2F0SW50MTYobWV0YWxsaWMsIDB1KSk7CiAgICBmcmFnQ29sb3JbMV0gPSB2ZWM0KGJhc2Vjb2wsIHBhY2tGbG9hdDIob2NjbHVzaW9uLCBzcGVjdWxhcikpOwp9Cgo";
 kha_Shaders.painter_colored_fragData0 = "s198:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdmFyeWluZyBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9GcmFnRGF0YVswXSA9IGZyYWdtZW50Q29sb3I7Cn0KCg";
 kha_Shaders.painter_colored_fragData1 = "s223:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKb3V0IGhpZ2hwIHZlYzQgRnJhZ0NvbG9yOwppbiBoaWdocCB2ZWM0IGZyYWdtZW50Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBGcmFnQ29sb3IgPSBmcmFnbWVudENvbG9yOwp9Cgo";
 kha_Shaders.painter_colored_vertData0 = "s331:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgcHJvamVjdGlvbk1hdHJpeDsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleFBvc2l0aW9uOwp2YXJ5aW5nIHZlYzQgZnJhZ21lbnRDb2xvcjsKYXR0cmlidXRlIHZlYzQgdmVydGV4Q29sb3I7Cgp2b2lkIG1haW4oKQp7CiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb25NYXRyaXggKiB2ZWM0KHZlcnRleFBvc2l0aW9uLCAxLjApOwogICAgZnJhZ21lbnRDb2xvciA9IHZlcnRleENvbG9yOwp9Cgo";
@@ -59295,8 +62713,6 @@ kha_Shaders.smaa_neighborhood_blend_fragData0 = "s2686:I3ZlcnNpb24gMTAwCiNleHRlb
 kha_Shaders.smaa_neighborhood_blend_fragData1 = "s2608:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgYmxlbmRUZXg7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIGNvbG9yVGV4Owp1bmlmb3JtIGhpZ2hwIHZlYzIgc2NyZWVuU2l6ZUludjsKCm91dCBoaWdocCB2ZWM0IGZyYWdDb2xvcjsKaW4gaGlnaHAgdmVjMiB0ZXhDb29yZDsKaW4gaGlnaHAgdmVjNCBvZmZzZXQ7CgpoaWdocCB2ZWM0IHRleHR1cmVMb2RBKGhpZ2hwIHNhbXBsZXIyRCB0ZXgsIGhpZ2hwIHZlYzIgY29vcmRzLCBoaWdocCBmbG9hdCBsb2QpCnsKICAgIHJldHVybiB0ZXh0dXJlTG9kKHRleCwgY29vcmRzLCBsb2QpOwp9CgpoaWdocCB2ZWM0IFNNQUFOZWlnaGJvcmhvb2RCbGVuZGluZ1BTKGhpZ2hwIHZlYzIgdGV4Y29vcmQsIGhpZ2hwIHZlYzQgb2Zmc2V0XzEpCnsKICAgIGhpZ2hwIHZlYzQgYTsKICAgIGEueCA9IHRleHR1cmVMb2QoYmxlbmRUZXgsIG9mZnNldF8xLnh5LCAwLjApLnc7CiAgICBhLnkgPSB0ZXh0dXJlTG9kKGJsZW5kVGV4LCBvZmZzZXRfMS56dywgMC4wKS55OwogICAgaGlnaHAgdmVjMiBfNTQgPSB0ZXh0dXJlTG9kKGJsZW5kVGV4LCB0ZXhjb29yZCwgMC4wKS54ejsKICAgIGEgPSB2ZWM0KGEueCwgYS55LCBfNTQueSwgXzU0LngpOwogICAgaWYgKGRvdChhLCB2ZWM0KDEuMCkpIDwgOS45OTk5OTk3NDczNzg3NTE2MzU1NTE0NTI2MzY3MTg4ZS0wNikKICAgIHsKICAgICAgICBoaWdocCB2ZWM0IGNvbG9yID0gdGV4dHVyZUxvZChjb2xvclRleCwgdGV4Y29vcmQsIDAuMCk7CiAgICAgICAgcmV0dXJuIGNvbG9yOwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIGJvb2wgaCA9IG1heChhLngsIGEueikgPiBtYXgoYS55LCBhLncpOwogICAgICAgIGhpZ2hwIHZlYzQgYmxlbmRpbmdPZmZzZXQgPSB2ZWM0KDAuMCwgYS55LCAwLjAsIGEudyk7CiAgICAgICAgaGlnaHAgdmVjMiBibGVuZGluZ1dlaWdodCA9IGEueXc7CiAgICAgICAgaWYgKGgpCiAgICAgICAgewogICAgICAgICAgICBibGVuZGluZ09mZnNldC54ID0gYS54OwogICAgICAgICAgICBibGVuZGluZ09mZnNldC55ID0gMC4wOwogICAgICAgICAgICBibGVuZGluZ09mZnNldC56ID0gYS56OwogICAgICAgICAgICBibGVuZGluZ09mZnNldC53ID0gMC4wOwogICAgICAgICAgICBibGVuZGluZ1dlaWdodC54ID0gYS54OwogICAgICAgICAgICBibGVuZGluZ1dlaWdodC55ID0gYS56OwogICAgICAgIH0KICAgICAgICBibGVuZGluZ1dlaWdodCAvPSB2ZWMyKGRvdChibGVuZGluZ1dlaWdodCwgdmVjMigxLjApKSk7CiAgICAgICAgaGlnaHAgdmVjMiB0YyA9IHRleGNvb3JkOwogICAgICAgIGhpZ2hwIHZlYzQgYmxlbmRpbmdDb29yZCA9IChibGVuZGluZ09mZnNldCAqIHZlYzQoc2NyZWVuU2l6ZUludiwgLXNjcmVlblNpemVJbnYpKSArIHRjLnh5eHk7CiAgICAgICAgaGlnaHAgdmVjMiBwYXJhbSA9IGJsZW5kaW5nQ29vcmQueHk7CiAgICAgICAgaGlnaHAgZmxvYXQgcGFyYW1fMSA9IDAuMDsKICAgICAgICBoaWdocCB2ZWM0IGNvbG9yXzEgPSB0ZXh0dXJlTG9kQShjb2xvclRleCwgcGFyYW0sIHBhcmFtXzEpICogYmxlbmRpbmdXZWlnaHQueDsKICAgICAgICBoaWdocCB2ZWMyIHBhcmFtXzIgPSBibGVuZGluZ0Nvb3JkLnp3OwogICAgICAgIGhpZ2hwIGZsb2F0IHBhcmFtXzMgPSAwLjA7CiAgICAgICAgY29sb3JfMSArPSAodGV4dHVyZUxvZEEoY29sb3JUZXgsIHBhcmFtXzIsIHBhcmFtXzMpICogYmxlbmRpbmdXZWlnaHQueSk7CiAgICAgICAgcmV0dXJuIGNvbG9yXzE7CiAgICB9Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzIgcGFyYW0gPSB0ZXhDb29yZDsKICAgIGhpZ2hwIHZlYzQgcGFyYW1fMSA9IG9mZnNldDsKICAgIGZyYWdDb2xvciA9IFNNQUFOZWlnaGJvcmhvb2RCbGVuZGluZ1BTKHBhcmFtLCBwYXJhbV8xKTsKfQoK";
 kha_Shaders.smaa_neighborhood_blend_vertData0 = "s384:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIHZlYzIgc2NyZWVuU2l6ZUludjsKCnZhcnlpbmcgdmVjMiB0ZXhDb29yZDsKYXR0cmlidXRlIHZlYzIgcG9zOwp2YXJ5aW5nIHZlYzQgb2Zmc2V0OwoKdm9pZCBtYWluKCkKewogICAgdGV4Q29vcmQgPSAocG9zICogdmVjMigwLjUpKSArIHZlYzIoMC41KTsKICAgIG9mZnNldCA9IChzY3JlZW5TaXplSW52Lnh5eHkgKiB2ZWM0KDEuMCwgMC4wLCAwLjAsIDEuMCkpICsgdGV4Q29vcmQueHl4eTsKICAgIGdsX1Bvc2l0aW9uID0gdmVjNChwb3MsIDAuMCwgMS4wKTsKfQoK";
 kha_Shaders.smaa_neighborhood_blend_vertData1 = "s368:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIHZlYzIgc2NyZWVuU2l6ZUludjsKCm91dCB2ZWMyIHRleENvb3JkOwppbiB2ZWMyIHBvczsKb3V0IHZlYzQgb2Zmc2V0OwoKdm9pZCBtYWluKCkKewogICAgdGV4Q29vcmQgPSAocG9zICogdmVjMigwLjUpKSArIHZlYzIoMC41KTsKICAgIG9mZnNldCA9IChzY3JlZW5TaXplSW52Lnh5eHkgKiB2ZWM0KDEuMCwgMC4wLCAwLjAsIDEuMCkpICsgdGV4Q29vcmQueHl4eTsKICAgIGdsX1Bvc2l0aW9uID0gdmVjNChwb3MsIDAuMCwgMS4wKTsKfQoK";
-kha_Shaders.ssao_pass_fragData0 = "s3643:I3ZlcnNpb24gMTAwCiNleHRlbnNpb24gR0xfRVhUX3NoYWRlcl90ZXh0dXJlX2xvZCA6IHJlcXVpcmUKcHJlY2lzaW9uIG1lZGl1bXAgZmxvYXQ7CnByZWNpc2lvbiBoaWdocCBpbnQ7Cgp1bmlmb3JtIGhpZ2hwIHNhbXBsZXIyRCBnYnVmZmVyRDsKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgZ2J1ZmZlcjA7CnVuaWZvcm0gaGlnaHAgdmVjMyBleWVMb29rOwp1bmlmb3JtIGhpZ2hwIHZlYzIgY2FtZXJhUHJvajsKdW5pZm9ybSBoaWdocCB2ZWMyIHNjcmVlblNpemU7CnVuaWZvcm0gaGlnaHAgdmVjMyBleWU7CnVuaWZvcm0gaGlnaHAgbWF0NCBpbnZWUDsKCnZhcnlpbmcgaGlnaHAgdmVjMiB0ZXhDb29yZDsKdmFyeWluZyBoaWdocCB2ZWMzIHZpZXdSYXk7CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIHZlYzMgZ2V0UG9zTm9FeWUoaGlnaHAgdmVjMyBleWVMb29rXzEsIGhpZ2hwIHZlYzMgdmlld1JheV8xLCBoaWdocCBmbG9hdCBkZXB0aCwgaGlnaHAgdmVjMiBjYW1lcmFQcm9qXzEpCnsKICAgIGhpZ2hwIGZsb2F0IGxpbmVhckRlcHRoID0gY2FtZXJhUHJval8xLnkgLyAoKChkZXB0aCAqIDAuNSkgKyAwLjUpIC0gY2FtZXJhUHJval8xLngpOwogICAgaGlnaHAgZmxvYXQgdmlld1pEaXN0ID0gZG90KGV5ZUxvb2tfMSwgdmlld1JheV8xKTsKICAgIGhpZ2hwIHZlYzMgd3Bvc2l0aW9uID0gdmlld1JheV8xICogKGxpbmVhckRlcHRoIC8gdmlld1pEaXN0KTsKICAgIHJldHVybiB3cG9zaXRpb247Cn0KCmhpZ2hwIHZlYzMgZ2V0UG9zMk5vRXllKGhpZ2hwIHZlYzMgZXllXzEsIGhpZ2hwIG1hdDQgaW52VlBfMSwgaGlnaHAgZmxvYXQgZGVwdGgsIGhpZ2hwIHZlYzIgY29vcmQpCnsKICAgIGhpZ2hwIHZlYzQgcG9zID0gdmVjNCgoY29vcmQgKiAyLjApIC0gdmVjMigxLjApLCBkZXB0aCwgMS4wKTsKICAgIHBvcyA9IGludlZQXzEgKiBwb3M7CiAgICBoaWdocCB2ZWMzIF84NyA9IHBvcy54eXogLyB2ZWMzKHBvcy53KTsKICAgIHBvcyA9IHZlYzQoXzg3LngsIF84Ny55LCBfODcueiwgcG9zLncpOwogICAgcmV0dXJuIHBvcy54eXogLSBleWVfMTsKfQoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgZmxvYXQgZGVwdGggPSAodGV4dHVyZTJETG9kRVhUKGdidWZmZXJELCB0ZXhDb29yZCwgMC4wKS54ICogMi4wKSAtIDEuMDsKICAgIGlmIChkZXB0aCA9PSAxLjApCiAgICB7CiAgICAgICAgZ2xfRnJhZ0RhdGFbMF0gPSAxLjA7CiAgICAgICAgcmV0dXJuOwogICAgfQogICAgaGlnaHAgdmVjMiBlbmMgPSB0ZXh0dXJlMkRMb2RFWFQoZ2J1ZmZlcjAsIHRleENvb3JkLCAwLjApLnh5OwogICAgaGlnaHAgdmVjMyBuOwogICAgbi56ID0gKDEuMCAtIGFicyhlbmMueCkpIC0gYWJzKGVuYy55KTsKICAgIGhpZ2hwIHZlYzIgXzEzNjsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF8xMzYgPSBlbmM7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzEzNiA9IG9jdGFoZWRyb25XcmFwKGVuYyk7CiAgICB9CiAgICBuID0gdmVjMyhfMTM2LngsIF8xMzYueSwgbi56KTsKICAgIG4gPSBub3JtYWxpemUobik7CiAgICBoaWdocCB2ZWMzIHZyYXkgPSBub3JtYWxpemUodmlld1JheSk7CiAgICBoaWdocCB2ZWMzIGN1cnJlbnRQb3MgPSBnZXRQb3NOb0V5ZShleWVMb29rLCB2cmF5LCBkZXB0aCwgY2FtZXJhUHJvaik7CiAgICBoaWdocCBmbG9hdCBjdXJyZW50RGlzdGFuY2UgPSBsZW5ndGgoY3VycmVudFBvcyk7CiAgICBoaWdocCBmbG9hdCBjdXJyZW50RGlzdGFuY2VBID0gKGN1cnJlbnREaXN0YW5jZSAqIDIwLjApICogMS4wOwogICAgaGlnaHAgZmxvYXQgY3VycmVudERpc3RhbmNlQiA9IGN1cnJlbnREaXN0YW5jZSAqIDAuMDAwNTAwMDAwMDIzNzQ4NzI1NjUyNjk0NzAyMTQ4NDM3NTsKICAgIGl2ZWMyIHB4ID0gaXZlYzIodGV4Q29vcmQgKiBzY3JlZW5TaXplKTsKICAgIGhpZ2hwIGZsb2F0IHBoaSA9IGZsb2F0KCgoMyAqIHB4LngpIF4gKHB4LnkgKyAocHgueCAqIHB4LnkpKSkgKiAxMCk7CiAgICBnbF9GcmFnRGF0YVswXSA9IDAuMDsKICAgIGZvciAoaW50IGkgPSAwOyBpIDwgODsgaSsrKQogICAgewogICAgICAgIGhpZ2hwIGZsb2F0IHRoZXRhID0gKDAuNzg1Mzk4MTg1MjUzMTQzMzEwNTQ2ODc1ICogKGZsb2F0KGkpICsgMC41KSkgKyBwaGk7CiAgICAgICAgaGlnaHAgdmVjMiBrID0gdmVjMihjb3ModGhldGEpLCBzaW4odGhldGEpKSAvIHZlYzIoY3VycmVudERpc3RhbmNlQSk7CiAgICAgICAgZGVwdGggPSAodGV4dHVyZTJETG9kRVhUKGdidWZmZXJELCB0ZXhDb29yZCArIGssIDAuMCkueCAqIDIuMCkgLSAxLjA7CiAgICAgICAgaGlnaHAgdmVjMyBwb3MgPSBnZXRQb3MyTm9FeWUoZXllLCBpbnZWUCwgZGVwdGgsIHRleENvb3JkICsgaykgLSBjdXJyZW50UG9zOwogICAgICAgIGdsX0ZyYWdEYXRhWzBdICs9IChtYXgoMC4wLCBkb3QocG9zLCBuKSAtIGN1cnJlbnREaXN0YW5jZUIpIC8gKGRvdChwb3MsIHBvcykgKyAwLjAxNDk5OTk5OTY2NDcyMzg3MzEzODQyNzczNDM3NSkpOwogICAgfQogICAgZ2xfRnJhZ0RhdGFbMF0gKj0gMC4wMzc1MDAwMDE0OTAxMTYxMTkzODQ3NjU2MjU7CiAgICBnbF9GcmFnRGF0YVswXSA9IDEuMCAtIGdsX0ZyYWdEYXRhWzBdOwp9Cgo";
-kha_Shaders.ssao_pass_fragData1 = "s3547:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdW5pZm9ybSBoaWdocCBzYW1wbGVyMkQgZ2J1ZmZlckQ7CnVuaWZvcm0gaGlnaHAgc2FtcGxlcjJEIGdidWZmZXIwOwp1bmlmb3JtIGhpZ2hwIHZlYzMgZXllTG9vazsKdW5pZm9ybSBoaWdocCB2ZWMyIGNhbWVyYVByb2o7CnVuaWZvcm0gaGlnaHAgdmVjMiBzY3JlZW5TaXplOwp1bmlmb3JtIGhpZ2hwIHZlYzMgZXllOwp1bmlmb3JtIGhpZ2hwIG1hdDQgaW52VlA7CgppbiBoaWdocCB2ZWMyIHRleENvb3JkOwpvdXQgaGlnaHAgZmxvYXQgZnJhZ0NvbG9yOwppbiBoaWdocCB2ZWMzIHZpZXdSYXk7CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIHZlYzMgZ2V0UG9zTm9FeWUoaGlnaHAgdmVjMyBleWVMb29rXzEsIGhpZ2hwIHZlYzMgdmlld1JheV8xLCBoaWdocCBmbG9hdCBkZXB0aCwgaGlnaHAgdmVjMiBjYW1lcmFQcm9qXzEpCnsKICAgIGhpZ2hwIGZsb2F0IGxpbmVhckRlcHRoID0gY2FtZXJhUHJval8xLnkgLyAoKChkZXB0aCAqIDAuNSkgKyAwLjUpIC0gY2FtZXJhUHJval8xLngpOwogICAgaGlnaHAgZmxvYXQgdmlld1pEaXN0ID0gZG90KGV5ZUxvb2tfMSwgdmlld1JheV8xKTsKICAgIGhpZ2hwIHZlYzMgd3Bvc2l0aW9uID0gdmlld1JheV8xICogKGxpbmVhckRlcHRoIC8gdmlld1pEaXN0KTsKICAgIHJldHVybiB3cG9zaXRpb247Cn0KCmhpZ2hwIHZlYzMgZ2V0UG9zMk5vRXllKGhpZ2hwIHZlYzMgZXllXzEsIGhpZ2hwIG1hdDQgaW52VlBfMSwgaGlnaHAgZmxvYXQgZGVwdGgsIGhpZ2hwIHZlYzIgY29vcmQpCnsKICAgIGhpZ2hwIHZlYzQgcG9zID0gdmVjNCgoY29vcmQgKiAyLjApIC0gdmVjMigxLjApLCBkZXB0aCwgMS4wKTsKICAgIHBvcyA9IGludlZQXzEgKiBwb3M7CiAgICBoaWdocCB2ZWMzIF84NyA9IHBvcy54eXogLyB2ZWMzKHBvcy53KTsKICAgIHBvcyA9IHZlYzQoXzg3LngsIF84Ny55LCBfODcueiwgcG9zLncpOwogICAgcmV0dXJuIHBvcy54eXogLSBleWVfMTsKfQoKdm9pZCBtYWluKCkKewogICAgaGlnaHAgZmxvYXQgZGVwdGggPSAodGV4dHVyZUxvZChnYnVmZmVyRCwgdGV4Q29vcmQsIDAuMCkueCAqIDIuMCkgLSAxLjA7CiAgICBpZiAoZGVwdGggPT0gMS4wKQogICAgewogICAgICAgIGZyYWdDb2xvciA9IDEuMDsKICAgICAgICByZXR1cm47CiAgICB9CiAgICBoaWdocCB2ZWMyIGVuYyA9IHRleHR1cmVMb2QoZ2J1ZmZlcjAsIHRleENvb3JkLCAwLjApLnh5OwogICAgaGlnaHAgdmVjMyBuOwogICAgbi56ID0gKDEuMCAtIGFicyhlbmMueCkpIC0gYWJzKGVuYy55KTsKICAgIGhpZ2hwIHZlYzIgXzEzNjsKICAgIGlmIChuLnogPj0gMC4wKQogICAgewogICAgICAgIF8xMzYgPSBlbmM7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgICAgXzEzNiA9IG9jdGFoZWRyb25XcmFwKGVuYyk7CiAgICB9CiAgICBuID0gdmVjMyhfMTM2LngsIF8xMzYueSwgbi56KTsKICAgIG4gPSBub3JtYWxpemUobik7CiAgICBoaWdocCB2ZWMzIHZyYXkgPSBub3JtYWxpemUodmlld1JheSk7CiAgICBoaWdocCB2ZWMzIGN1cnJlbnRQb3MgPSBnZXRQb3NOb0V5ZShleWVMb29rLCB2cmF5LCBkZXB0aCwgY2FtZXJhUHJvaik7CiAgICBoaWdocCBmbG9hdCBjdXJyZW50RGlzdGFuY2UgPSBsZW5ndGgoY3VycmVudFBvcyk7CiAgICBoaWdocCBmbG9hdCBjdXJyZW50RGlzdGFuY2VBID0gKGN1cnJlbnREaXN0YW5jZSAqIDIwLjApICogMS4wOwogICAgaGlnaHAgZmxvYXQgY3VycmVudERpc3RhbmNlQiA9IGN1cnJlbnREaXN0YW5jZSAqIDAuMDAwNTAwMDAwMDIzNzQ4NzI1NjUyNjk0NzAyMTQ4NDM3NTsKICAgIGl2ZWMyIHB4ID0gaXZlYzIodGV4Q29vcmQgKiBzY3JlZW5TaXplKTsKICAgIGhpZ2hwIGZsb2F0IHBoaSA9IGZsb2F0KCgoMyAqIHB4LngpIF4gKHB4LnkgKyAocHgueCAqIHB4LnkpKSkgKiAxMCk7CiAgICBmcmFnQ29sb3IgPSAwLjA7CiAgICBmb3IgKGludCBpID0gMDsgaSA8IDg7IGkrKykKICAgIHsKICAgICAgICBoaWdocCBmbG9hdCB0aGV0YSA9ICgwLjc4NTM5ODE4NTI1MzE0MzMxMDU0Njg3NSAqIChmbG9hdChpKSArIDAuNSkpICsgcGhpOwogICAgICAgIGhpZ2hwIHZlYzIgayA9IHZlYzIoY29zKHRoZXRhKSwgc2luKHRoZXRhKSkgLyB2ZWMyKGN1cnJlbnREaXN0YW5jZUEpOwogICAgICAgIGRlcHRoID0gKHRleHR1cmVMb2QoZ2J1ZmZlckQsIHRleENvb3JkICsgaywgMC4wKS54ICogMi4wKSAtIDEuMDsKICAgICAgICBoaWdocCB2ZWMzIHBvcyA9IGdldFBvczJOb0V5ZShleWUsIGludlZQLCBkZXB0aCwgdGV4Q29vcmQgKyBrKSAtIGN1cnJlbnRQb3M7CiAgICAgICAgZnJhZ0NvbG9yICs9IChtYXgoMC4wLCBkb3QocG9zLCBuKSAtIGN1cnJlbnREaXN0YW5jZUIpIC8gKGRvdChwb3MsIHBvcykgKyAwLjAxNDk5OTk5OTY2NDcyMzg3MzEzODQyNzczNDM3NSkpOwogICAgfQogICAgZnJhZ0NvbG9yICo9IDAuMDM3NTAwMDAxNDkwMTE2MTE5Mzg0NzY1NjI1OwogICAgZnJhZ0NvbG9yID0gMS4wIC0gZnJhZ0NvbG9yOwp9Cgo";
 kha_System.renderListeners = [];
 kha_System.foregroundListeners = [];
 kha_System.resumeListeners = [];

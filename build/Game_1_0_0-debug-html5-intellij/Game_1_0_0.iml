@@ -20,6 +20,7 @@
       <sourceFolder url="file://c:\Workspace\VisitingHagiVaga\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\armory\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\iron\Sources" isTestSource="false" />
+      <sourceFolder url="file://C:\Workspace\armsdk\lib\haxebullet\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\lib\zui\Sources" isTestSource="false" />
 
     </content>
@@ -28,6 +29,9 @@
     </content>
     <content url="file://C:/Workspace/armsdk/iron">
       <sourceFolder url="file://C:/Workspace/armsdk/iron" isTestSource="false" />
+    </content>
+    <content url="file://C:/Workspace/armsdk/lib/haxebullet">
+      <sourceFolder url="file://C:/Workspace/armsdk/lib/haxebullet" isTestSource="false" />
     </content>
     <content url="file://C:/Workspace/armsdk/lib/zui">
       <sourceFolder url="file://C:/Workspace/armsdk/lib/zui" isTestSource="false" />

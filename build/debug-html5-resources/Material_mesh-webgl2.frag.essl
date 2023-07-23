@@ -25,23 +25,27 @@ highp float packFloat2(highp float f1, highp float f2)
 void main()
 {
     highp vec3 n = normalize(wnormal);
-    highp vec3 basecol = vec3(0.800000011920928955078125);
+    highp vec3 basecol = vec3(0.776076793670654296875, 0.80000007152557373046875, 0.80000007152557373046875);
     highp float roughness = 0.5;
     highp float metallic = 0.0;
     highp float occlusion = 1.0;
     highp float specular = 0.5;
     highp vec3 emissionCol = vec3(0.0);
+    if (!gl_FrontFacing)
+    {
+        n *= (-1.0);
+    }
     n /= vec3((abs(n.x) + abs(n.y)) + abs(n.z));
-    highp vec2 _102;
+    highp vec2 _111;
     if (n.z >= 0.0)
     {
-        _102 = n.xy;
+        _111 = n.xy;
     }
     else
     {
-        _102 = octahedronWrap(n.xy);
+        _111 = octahedronWrap(n.xy);
     }
-    n = vec3(_102.x, _102.y, n.z);
+    n = vec3(_111.x, _111.y, n.z);
     fragColor[0] = vec4(n.xy, roughness, packFloatInt16(metallic, 0u));
     fragColor[1] = vec4(basecol, packFloat2(occlusion, specular));
 }
