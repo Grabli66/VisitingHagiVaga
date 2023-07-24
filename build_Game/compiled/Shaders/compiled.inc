@@ -3,8 +3,6 @@
 #define _Irr
 #define _Rad
 #define _Deferred
-#define _ShadowMap
-#define _CSM
 #define _Sun
 #define _SinglePoint
 #define _Brdf
@@ -19,7 +17,7 @@
 #define _FlipY
 const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
-const vec2 shadowmapSize = vec2(1024, 1024);
+const vec2 shadowmapSize = vec2(0, 0);
 const float shadowmapCubePcfSize = 0.001;
 const int shadowmapCascades = 4;
 const int skinMaxBones = 8;

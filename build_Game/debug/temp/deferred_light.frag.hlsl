@@ -1,31 +1,23 @@
-uniform float4 casData[20];
-TextureCube<float4> shadowMapPoint[1] : register(t0);
-SamplerComparisonState _shadowMapPoint_sampler[1] : register(s0);
-uniform float2 lightProj;
-Texture2D<float4> gbuffer0 : register(t1);
-SamplerState _gbuffer0_sampler : register(s1);
-Texture2D<float4> gbuffer1 : register(t2);
-SamplerState _gbuffer1_sampler : register(s2);
-Texture2D<float4> gbufferD : register(t3);
-SamplerState _gbufferD_sampler : register(s3);
+Texture2D<float4> gbuffer0 : register(t0);
+SamplerState _gbuffer0_sampler : register(s0);
+Texture2D<float4> gbuffer1 : register(t1);
+SamplerState _gbuffer1_sampler : register(s1);
+Texture2D<float4> gbufferD : register(t2);
+SamplerState _gbufferD_sampler : register(s2);
 uniform float3 eye;
 uniform float3 eyeLook;
 uniform float2 cameraProj;
-Texture2D<float4> senvmapBrdf : register(t4);
-SamplerState _senvmapBrdf_sampler : register(s4);
+Texture2D<float4> senvmapBrdf : register(t3);
+SamplerState _senvmapBrdf_sampler : register(s3);
 uniform float4 shirr[7];
 uniform int envmapNumMipmaps;
-Texture2D<float4> senvmapRadiance : register(t5);
-SamplerState _senvmapRadiance_sampler : register(s5);
+Texture2D<float4> senvmapRadiance : register(t4);
+SamplerState _senvmapRadiance_sampler : register(s4);
 uniform float envmapStrength;
 uniform float3 sunDir;
-Texture2D<float4> shadowMap : register(t6);
-SamplerComparisonState _shadowMap_sampler : register(s6);
-uniform float shadowsBias;
 uniform float3 sunCol;
 uniform float3 pointPos;
 uniform float3 pointCol;
-uniform float pointBias;
 
 static float2 texCoord;
 static float3 viewRay;
@@ -133,126 +125,12 @@ float3 specularBRDF(float3 f0, float roughness, float nl, float nh, float nv, fl
     return (f_schlick(f0, vh) * (d_ggx(nh, a) * g2_approx(nl, nv, a))) / max(4.0f * nv, 9.9999997473787516355514526367188e-06f).xxx;
 }
 
-float4x4 getCascadeMat(float d, inout int casi, inout int casIndex)
-{
-    float4 comp = float4(float(d > casData[16].x), float(d > casData[16].y), float(d > casData[16].z), float(d > casData[16].w));
-    casi = int(min(dot(1.0f.xxxx, comp), 4.0f));
-    casIndex = casi * 4;
-    return float4x4(float4(casData[casIndex]), float4(casData[casIndex + 1]), float4(casData[casIndex + 2]), float4(casData[casIndex + 3]));
-}
-
-float PCF(Texture2D<float4> shadowMap_1, SamplerComparisonState _shadowMap_1_sampler, float2 uv, float compare, float2 smSize)
-{
-    float3 _451 = float3(uv + ((-1.0f).xx / smSize), compare);
-    float result = shadowMap_1.SampleCmp(_shadowMap_1_sampler, _451.xy, _451.z);
-    float3 _460 = float3(uv + (float2(-1.0f, 0.0f) / smSize), compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _460.xy, _460.z);
-    float3 _471 = float3(uv + (float2(-1.0f, 1.0f) / smSize), compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _471.xy, _471.z);
-    float3 _482 = float3(uv + (float2(0.0f, -1.0f) / smSize), compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _482.xy, _482.z);
-    float3 _490 = float3(uv, compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _490.xy, _490.z);
-    float3 _501 = float3(uv + (float2(0.0f, 1.0f) / smSize), compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _501.xy, _501.z);
-    float3 _512 = float3(uv + (float2(1.0f, -1.0f) / smSize), compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _512.xy, _512.z);
-    float3 _523 = float3(uv + (float2(1.0f, 0.0f) / smSize), compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _523.xy, _523.z);
-    float3 _534 = float3(uv + (1.0f.xx / smSize), compare);
-    result += shadowMap_1.SampleCmp(_shadowMap_1_sampler, _534.xy, _534.z);
-    return result / 9.0f;
-}
-
-float shadowTestCascade(Texture2D<float4> shadowMap_1, SamplerComparisonState _shadowMap_1_sampler, float3 eye_1, float3 p, float shadowsBias_1)
-{
-    float d = distance(eye_1, p);
-    int param;
-    int param_1;
-    float4x4 _780 = getCascadeMat(d, param, param_1);
-    int casi = param;
-    int casIndex = param_1;
-    float4x4 LWVP = _780;
-    float4 lPos = mul(float4(p, 1.0f), LWVP);
-    float3 _795 = lPos.xyz / lPos.w.xxx;
-    lPos = float4(_795.x, _795.y, _795.z, lPos.w);
-    float visibility = 1.0f;
-    if (lPos.w > 0.0f)
-    {
-        visibility = PCF(shadowMap_1, _shadowMap_1_sampler, lPos.xy, lPos.z - shadowsBias_1, float2(4096.0f, 1024.0f));
-    }
-    float nextSplit = casData[16][casi];
-    float _820;
-    if (casi == 0)
-    {
-        _820 = nextSplit;
-    }
-    else
-    {
-        _820 = nextSplit - casData[16][casi - 1];
-    }
-    float splitSize = _820;
-    float splitDist = (nextSplit - d) / splitSize;
-    if ((splitDist <= 0.1500000059604644775390625f) && (casi != 3))
-    {
-        int casIndex2 = casIndex + 4;
-        float4x4 LWVP2 = float4x4(float4(casData[casIndex2]), float4(casData[casIndex2 + 1]), float4(casData[casIndex2 + 2]), float4(casData[casIndex2 + 3]));
-        float4 lPos2 = mul(float4(p, 1.0f), LWVP2);
-        float3 _898 = lPos2.xyz / lPos2.w.xxx;
-        lPos2 = float4(_898.x, _898.y, _898.z, lPos2.w);
-        float visibility2 = 1.0f;
-        if (lPos2.w > 0.0f)
-        {
-            visibility2 = PCF(shadowMap_1, _shadowMap_1_sampler, lPos2.xy, lPos2.z - shadowsBias_1, float2(4096.0f, 1024.0f));
-        }
-        float lerpAmt = smoothstep(0.0f, 0.1500000059604644775390625f, splitDist);
-        return lerp(visibility2, visibility, lerpAmt);
-    }
-    return visibility;
-}
-
 float attenuate(float dist)
 {
     return 1.0f / (dist * dist);
 }
 
-float lpToDepth(inout float3 lp, float2 lightProj_1)
-{
-    lp = abs(lp);
-    float zcomp = max(lp.x, max(lp.y, lp.z));
-    zcomp = lightProj_1.x - (lightProj_1.y / zcomp);
-    return (zcomp * 0.5f) + 0.5f;
-}
-
-float PCFCube(TextureCube<float4> shadowMapCube, SamplerComparisonState _shadowMapCube_sampler, float3 lp, inout float3 ml, float bias, float2 lightProj_1, float3 n)
-{
-    float3 param = lp;
-    float _567 = lpToDepth(param, lightProj_1);
-    float compare = _567 - (bias * 1.5f);
-    ml += ((n * bias) * 20.0f);
-    ml.y = -ml.y;
-    float4 _587 = float4(ml, compare);
-    float result = shadowMapCube.SampleCmp(_shadowMapCube_sampler, _587.xyz, _587.w);
-    float4 _599 = float4(ml + 0.001000000047497451305389404296875f.xxx, compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _599.xyz, _599.w);
-    float4 _613 = float4(ml + float3(-0.001000000047497451305389404296875f, 0.001000000047497451305389404296875f, 0.001000000047497451305389404296875f), compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _613.xyz, _613.w);
-    float4 _626 = float4(ml + float3(0.001000000047497451305389404296875f, -0.001000000047497451305389404296875f, 0.001000000047497451305389404296875f), compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _626.xyz, _626.w);
-    float4 _639 = float4(ml + float3(0.001000000047497451305389404296875f, 0.001000000047497451305389404296875f, -0.001000000047497451305389404296875f), compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _639.xyz, _639.w);
-    float4 _652 = float4(ml + float3(-0.001000000047497451305389404296875f, -0.001000000047497451305389404296875f, 0.001000000047497451305389404296875f), compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _652.xyz, _652.w);
-    float4 _665 = float4(ml + float3(0.001000000047497451305389404296875f, -0.001000000047497451305389404296875f, -0.001000000047497451305389404296875f), compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _665.xyz, _665.w);
-    float4 _678 = float4(ml + float3(-0.001000000047497451305389404296875f, 0.001000000047497451305389404296875f, -0.001000000047497451305389404296875f), compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _678.xyz, _678.w);
-    float4 _691 = float4(ml + (-0.001000000047497451305389404296875f).xxx, compare);
-    result += shadowMapCube.SampleCmp(_shadowMapCube_sampler, _691.xyz, _691.w);
-    return result / 9.0f;
-}
-
-float3 sampleLight(float3 p, float3 n, float3 v, float dotNV, float3 lp, float3 lightCol, float3 albedo, float rough, float spec, float3 f0, int index, float bias, bool receiveShadow)
+float3 sampleLight(float3 p, float3 n, float3 v, float dotNV, float3 lp, float3 lightCol, float3 albedo, float rough, float spec, float3 f0)
 {
     float3 ld = lp - p;
     float3 l = normalize(ld);
@@ -263,12 +141,6 @@ float3 sampleLight(float3 p, float3 n, float3 v, float dotNV, float3 lp, float3 
     float3 direct = lambertDiffuseBRDF(albedo, dotNL) + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec);
     direct *= attenuate(distance(p, lp));
     direct *= lightCol;
-    if (receiveShadow)
-    {
-        float3 param = -l;
-        float _975 = PCFCube(shadowMapPoint[0], _shadowMapPoint_sampler[0], ld, param, bias, lightProj, n);
-        direct *= _975;
-    }
     return direct;
 }
 
@@ -277,16 +149,16 @@ void frag_main()
     float4 g0 = gbuffer0.SampleLevel(_gbuffer0_sampler, texCoord, 0.0f);
     float3 n;
     n.z = (1.0f - abs(g0.x)) - abs(g0.y);
-    float2 _1004;
+    float2 _461;
     if (n.z >= 0.0f)
     {
-        _1004 = g0.xy;
+        _461 = g0.xy;
     }
     else
     {
-        _1004 = octahedronWrap(g0.xy);
+        _461 = octahedronWrap(g0.xy);
     }
-    n = float3(_1004.x, _1004.y, n.z);
+    n = float3(_461.x, _461.y, n.z);
     n = normalize(n);
     float roughness = g0.z;
     float param;
@@ -318,14 +190,10 @@ void frag_main()
     float sdotNL = max(0.0f, dot(n, sunDir));
     float svisibility = 1.0f;
     float3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y);
-    svisibility = shadowTestCascade(shadowMap, _shadowMap_sampler, eye, p + ((n * shadowsBias) * 10.0f), shadowsBias);
-    float3 _1217 = fragColor.xyz + ((sdirect * svisibility) * sunCol);
-    fragColor = float4(_1217.x, _1217.y, _1217.z, fragColor.w);
-    int param_2 = 0;
-    float param_3 = pointBias;
-    bool param_4 = true;
-    float3 _1242 = fragColor.xyz + sampleLight(p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, param_2, param_3, param_4);
-    fragColor = float4(_1242.x, _1242.y, _1242.z, fragColor.w);
+    float3 _664 = fragColor.xyz + ((sdirect * svisibility) * sunCol);
+    fragColor = float4(_664.x, _664.y, _664.z, fragColor.w);
+    float3 _683 = fragColor.xyz + sampleLight(p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0);
+    fragColor = float4(_683.x, _683.y, _683.z, fragColor.w);
     fragColor.w = 1.0f;
 }
 

@@ -5,9 +5,7 @@ class Main {
     public static inline var projectVersion = '1.0.0';
     public static inline var projectPackage = 'arm';
     public static function main() {
-        iron.object.BoneAnimation.skinMaxBones = 8;
-            iron.object.LightObject.cascadeCount = 4;
-            iron.object.LightObject.cascadeSplitFactor = 0.800000011920929;armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;
+        iron.object.BoneAnimation.skinMaxBones = 8;armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;
         armory.system.Starter.main(
             'Scene',
             0,
