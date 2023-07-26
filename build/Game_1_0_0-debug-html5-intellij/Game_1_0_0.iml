@@ -17,10 +17,11 @@
     <content url="file://$MODULE_DIR$/../..">
       <sourceFolder url="file://C:\Workspace\armsdk\Kha\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\Kha\Backends\HTML5" isTestSource="false" />
-      <sourceFolder url="file://c:\Workspace\VisitingHagiVaga\Sources" isTestSource="false" />
+      <sourceFolder url="file://C:\Workspace\VisitingHagiVaga\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\armory\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\iron\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\lib\haxebullet\Sources" isTestSource="false" />
+      <sourceFolder url="file://C:\Workspace\armsdk\lib\haxerecast\Sources" isTestSource="false" />
       <sourceFolder url="file://C:\Workspace\armsdk\lib\zui\Sources" isTestSource="false" />
 
     </content>
@@ -32,6 +33,9 @@
     </content>
     <content url="file://C:/Workspace/armsdk/lib/haxebullet">
       <sourceFolder url="file://C:/Workspace/armsdk/lib/haxebullet" isTestSource="false" />
+    </content>
+    <content url="file://C:/Workspace/armsdk/lib/haxerecast">
+      <sourceFolder url="file://C:/Workspace/armsdk/lib/haxerecast" isTestSource="false" />
     </content>
     <content url="file://C:/Workspace/armsdk/lib/zui">
       <sourceFolder url="file://C:/Workspace/armsdk/lib/zui" isTestSource="false" />

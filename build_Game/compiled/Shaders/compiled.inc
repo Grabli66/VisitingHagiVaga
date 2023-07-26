@@ -20,6 +20,6 @@ const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(0, 0);
 const float shadowmapCubePcfSize = 0.001;
 const int shadowmapCascades = 4;
-const int skinMaxBones = 8;
+const int skinMaxBones = 65;
 
 #endif // _COMPILED_GLSL_
