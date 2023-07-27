@@ -1444,6 +1444,108 @@ Object.assign(arm_FirstPersonController.prototype, {
 	,zVec: null
 	,dir: null
 });
+var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
+	,Walking: {_hx_name:"Walking",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
+	,Attacking: {_hx_name:"Attacking",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
+};
+arm_HuggyState.__constructs__ = [arm_HuggyState.Walking,arm_HuggyState.Attacking];
+class arm_HuggyLogic extends iron_Trait {
+	constructor() {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.state = arm_HuggyState.Walking;
+		this.speed = 1.0;
+		this.navTimerDuration = 0.0;
+		super._hx_constructor();
+		let _gthis = this;
+		this.notifyOnInit(function() {
+			_gthis.navTimerDuration = arm_HuggyLogic.navTimerInterval;
+			let armature = _gthis.object.getChild("Huggy");
+			_gthis.animimations = _gthis.findAnimation(armature);
+			_gthis.animimations.onComplete = $bind(_gthis,_gthis.onAnimationComplete);
+			_gthis.startWalking();
+		});
+		this.notifyOnUpdate(function() {
+			_gthis.updateNavigation();
+		});
+	}
+	findAnimation(o) {
+		if(o.animation != null) {
+			return o.animation;
+		}
+		let _g = 0;
+		let _g1 = o.children;
+		while(_g < _g1.length) {
+			let c = _g1[_g];
+			++_g;
+			let co = this.findAnimation(c);
+			if(co != null) {
+				return co;
+			}
+		}
+		return null;
+	}
+	onAnimationComplete() {
+		if(this.state == arm_HuggyState.Attacking) {
+			this.startWalking();
+		}
+	}
+	startAttack() {
+		this.state = arm_HuggyState.Attacking;
+		if(this.animimations.action != "Attack_Huggy") {
+			this.animimations.play("Attack_Huggy");
+		}
+	}
+	startWalking() {
+		this.state = arm_HuggyState.Walking;
+		if(this.animimations.action != "Move_Huggy") {
+			this.animimations.play("Move_Huggy");
+		}
+	}
+	updateNavigation() {
+		this.navTimerDuration -= iron_system_Time.get_delta();
+		let _gthis = this;
+		if(this.navTimerDuration <= 0.0) {
+			this.navTimerDuration = arm_HuggyLogic.navTimerInterval;
+			let _this = this.object.transform.world;
+			let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
+			let _this1 = this.playerObject.transform.world;
+			let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
+			let vx = from.x - to.x;
+			let vy = from.y - to.y;
+			let vz = from.z - to.z;
+			let distance = Math.sqrt(vx * vx + vy * vy + vz * vz);
+			if(distance <= 1.5) {
+				let agent = this.object.getTrait(armory_trait_NavAgent);
+				agent.stop();
+				this.startAttack();
+			} else {
+				armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from,to,function(path) {
+					let agent = _gthis.object.getTrait(armory_trait_NavAgent);
+					agent.speed = _gthis.speed;
+					agent.turnDuration = 0.4;
+					agent.heightOffset = 0;
+					agent.setPath(path);
+				});
+			}
+		}
+	}
+}
+$hxClasses["arm.HuggyLogic"] = arm_HuggyLogic;
+arm_HuggyLogic.__name__ = true;
+arm_HuggyLogic.__super__ = iron_Trait;
+Object.assign(arm_HuggyLogic.prototype, {
+	__class__: arm_HuggyLogic
+	,navTimerDuration: null
+	,playerObject: null
+	,speed: null
+	,state: null
+	,animimations: null
+});
 class armory_logicnode_LogicTree extends iron_Trait {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
@@ -1516,183 +1618,6 @@ Object.assign(armory_logicnode_LogicTree.prototype, {
 	,loopBreak: null
 	,loopContinue: null
 	,paused: null
-});
-class arm_node_FollowNode extends armory_logicnode_LogicTree {
-	constructor() {
-		super();
-		this.functionNodes = new haxe_ds_StringMap();
-		this.functionOutputNodes = new haxe_ds_StringMap();
-		this.notifyOnAdd($bind(this,this.add));
-	}
-	add() {
-		let _GotoLocation = new armory_logicnode_GoToLocationNode(this);
-		_GotoLocation.inputs.length = 9;
-		_GotoLocation.outputs.length = 3;
-		let _g = 0;
-		let _g1 = _GotoLocation.outputs.length;
-		while(_g < _g1) {
-			let i = _g++;
-			_GotoLocation.outputs[i] = [];
-		}
-		let _IsNotNull = new armory_logicnode_IsNotNoneNode(this);
-		_IsNotNull.inputs.length = 2;
-		_IsNotNull.outputs.length = 1;
-		let _g2 = 0;
-		let _g3 = _IsNotNull.outputs.length;
-		while(_g2 < _g3) {
-			let i = _g2++;
-			_IsNotNull.outputs[i] = [];
-		}
-		let _OnTimer = new armory_logicnode_OnTimerNode(this);
-		_OnTimer.inputs.length = 2;
-		_OnTimer.outputs.length = 1;
-		let _g4 = 0;
-		let _g5 = _OnTimer.outputs.length;
-		while(_g4 < _g5) {
-			let i = _g4++;
-			_OnTimer.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.5),_OnTimer,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,true),_OnTimer,0,1);
-		armory_logicnode_LogicNode.addLink(_OnTimer,_IsNotNull,0,0);
-		let _GetObjectLocation = new armory_logicnode_GetLocationNode(this);
-		_GetObjectLocation.inputs.length = 2;
-		_GetObjectLocation.outputs.length = 1;
-		let _g6 = 0;
-		let _g7 = _GetObjectLocation.outputs.length;
-		while(_g6 < _g7) {
-			let i = _g6++;
-			_GetObjectLocation.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Игрок"),_GetObjectLocation,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_GetObjectLocation,0,1);
-		armory_logicnode_LogicNode.addLink(_GetObjectLocation,_IsNotNull,0,1);
-		armory_logicnode_LogicNode.addLink(_IsNotNull,_GotoLocation,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,""),_GotoLocation,0,1);
-		armory_logicnode_LogicNode.addLink(_GetObjectLocation,_GotoLocation,0,2);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,1.0),_GotoLocation,0,3);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.4000000059604645),_GotoLocation,0,4);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.0),_GotoLocation,0,5);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_GotoLocation,0,6);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,-5.0),_GotoLocation,0,7);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,1),_GotoLocation,0,8);
-		armory_logicnode_LogicNode.addLink(_GotoLocation,new armory_logicnode_NullNode(this),0,0);
-		armory_logicnode_LogicNode.addLink(_GotoLocation,new armory_logicnode_NullNode(this),1,0);
-		armory_logicnode_LogicNode.addLink(_GotoLocation,new armory_logicnode_NullNode(this),2,0);
-		let _StopAgent = new armory_logicnode_StopAgentNode(this);
-		_StopAgent.inputs.length = 2;
-		_StopAgent.outputs.length = 1;
-		let _g8 = 0;
-		let _g9 = _StopAgent.outputs.length;
-		while(_g8 < _g9) {
-			let i = _g8++;
-			_StopAgent.outputs[i] = [];
-		}
-		let _Gate = new armory_logicnode_GateNode(this);
-		_Gate.property0 = "Less Equal";
-		_Gate.property1 = 9.999999747378752e-05;
-		_Gate.inputs.length = 3;
-		_Gate.outputs.length = 2;
-		let _g10 = 0;
-		let _g11 = _Gate.outputs.length;
-		while(_g10 < _g11) {
-			let i = _g10++;
-			_Gate.outputs[i] = [];
-		}
-		let _OnUpdate = new armory_logicnode_OnUpdateNode(this);
-		_OnUpdate.property0 = "Update";
-		_OnUpdate.inputs.length = 0;
-		_OnUpdate.outputs.length = 1;
-		let _g12 = 0;
-		let _g13 = _OnUpdate.outputs.length;
-		while(_g12 < _g13) {
-			let i = _g12++;
-			_OnUpdate.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(_OnUpdate,_Gate,0,0);
-		let _GetDistance = new armory_logicnode_GetDistanceNode(this);
-		_GetDistance.inputs.length = 2;
-		_GetDistance.outputs.length = 1;
-		let _g14 = 0;
-		let _g15 = _GetDistance.outputs.length;
-		while(_g14 < _g15) {
-			let i = _g14++;
-			_GetDistance.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Игрок"),_GetDistance,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Монстр"),_GetDistance,0,1);
-		armory_logicnode_LogicNode.addLink(_GetDistance,_Gate,0,1);
-		let _Float = new armory_logicnode_FloatNode(this);
-		_Float.inputs.length = 1;
-		_Float.outputs.length = 1;
-		let _g16 = 0;
-		let _g17 = _Float.outputs.length;
-		while(_g16 < _g17) {
-			let i = _g16++;
-			_Float.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,1.5),_Float,0,0);
-		armory_logicnode_LogicNode.addLink(_Float,_Gate,0,2);
-		armory_logicnode_LogicNode.addLink(_Gate,new armory_logicnode_NullNode(this),1,0);
-		armory_logicnode_LogicNode.addLink(_Gate,_StopAgent,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Монстр"),_StopAgent,0,1);
-		armory_logicnode_LogicNode.addLink(_StopAgent,new armory_logicnode_NullNode(this),0,0);
-	}
-}
-$hxClasses["arm.node.FollowNode"] = arm_node_FollowNode;
-arm_node_FollowNode.__name__ = true;
-arm_node_FollowNode.__super__ = armory_logicnode_LogicTree;
-Object.assign(arm_node_FollowNode.prototype, {
-	__class__: arm_node_FollowNode
-	,functionNodes: null
-	,functionOutputNodes: null
-});
-class arm_node_MonsterAnimation extends armory_logicnode_LogicTree {
-	constructor() {
-		super();
-		this.functionNodes = new haxe_ds_StringMap();
-		this.functionOutputNodes = new haxe_ds_StringMap();
-		this.notifyOnAdd($bind(this,this.add));
-	}
-	add() {
-		let _PlayActionFrom = new armory_logicnode_PlayActionFromNode(this);
-		_PlayActionFrom.inputs.length = 9;
-		_PlayActionFrom.outputs.length = 2;
-		let _g = 0;
-		let _g1 = _PlayActionFrom.outputs.length;
-		while(_g < _g1) {
-			let i = _g++;
-			_PlayActionFrom.outputs[i] = [];
-		}
-		let _OnInit = new armory_logicnode_OnInitNode(this);
-		_OnInit.inputs.length = 0;
-		_OnInit.outputs.length = 1;
-		let _g2 = 0;
-		let _g3 = _OnInit.outputs.length;
-		while(_g2 < _g3) {
-			let i = _g2++;
-			_OnInit.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(_OnInit,_PlayActionFrom,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Huggy"),_PlayActionFrom,0,1);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"Move_Huggy"),_PlayActionFrom,0,2);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,0),_PlayActionFrom,0,3);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,80),_PlayActionFrom,0,4);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.25),_PlayActionFrom,0,5);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.5),_PlayActionFrom,0,6);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,true),_PlayActionFrom,0,7);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_PlayActionFrom,0,8);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),0,0);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),1,0);
-	}
-}
-$hxClasses["arm.node.MonsterAnimation"] = arm_node_MonsterAnimation;
-arm_node_MonsterAnimation.__name__ = true;
-arm_node_MonsterAnimation.__super__ = armory_logicnode_LogicTree;
-Object.assign(arm_node_MonsterAnimation.prototype, {
-	__class__: arm_node_MonsterAnimation
-	,functionNodes: null
-	,functionOutputNodes: null
 });
 class arm_node_PlayerAnim extends armory_logicnode_LogicTree {
 	constructor() {
@@ -1936,372 +1861,6 @@ Object.assign(armory_logicnode_FunctionOutputNode.prototype, {
 	__class__: armory_logicnode_FunctionOutputNode
 	,result: null
 });
-class armory_logicnode_GateNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let v1 = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[2];
-		let v2 = _this1.fromNode.get(_this1.fromIndex);
-		let cond = false;
-		switch(this.property0) {
-		case "Almost Equal":
-			if(((v1) instanceof iron_math_Vec4)) {
-				let _this = v1;
-				let v = v2;
-				let prec = this.property1;
-				cond = Math.abs(_this.x - v.x) < prec && Math.abs(_this.y - v.y) < prec && Math.abs(_this.z - v.z) < prec;
-			} else {
-				cond = Math.abs(v1 - v2) < this.property1;
-			}
-			break;
-		case "And":
-			cond = true;
-			let _g = 1;
-			let _g1 = this.inputs.length;
-			while(_g < _g1) {
-				let i = _g++;
-				let _this = this.inputs[i];
-				if(!_this.fromNode.get(_this.fromIndex)) {
-					cond = false;
-					break;
-				}
-			}
-			break;
-		case "Between":
-			let _this2 = this.inputs[3];
-			let v3 = _this2.fromNode.get(_this2.fromIndex);
-			cond = ((v1) instanceof iron_math_Vec4) ? v2.x <= v1.x && v2.y <= v1.y && v2.z <= v1.z && v1.x <= v3.x && v1.y <= v3.y && v1.z <= v3.z : v2 <= v1 && v1 <= v3;
-			break;
-		case "Equal":
-			if(((v1) instanceof iron_math_Vec4)) {
-				let _this = v1;
-				let v = v2;
-				cond = _this.x == v.x && _this.y == v.y && _this.z == v.z;
-			} else {
-				cond = v1 == v2;
-			}
-			break;
-		case "Greater":
-			cond = v1 > v2;
-			break;
-		case "Greater Equal":
-			cond = v1 >= v2;
-			break;
-		case "Less":
-			cond = v1 < v2;
-			break;
-		case "Less Equal":
-			cond = v1 <= v2;
-			break;
-		case "Not Equal":
-			if(((v1) instanceof iron_math_Vec4)) {
-				let _this = v1;
-				let v = v2;
-				cond = !(_this.x == v.x && _this.y == v.y && _this.z == v.z);
-			} else {
-				cond = v1 != v2;
-			}
-			break;
-		case "Or":
-			let _g2 = 1;
-			let _g3 = this.inputs.length;
-			while(_g2 < _g3) {
-				let i = _g2++;
-				let _this = this.inputs[i];
-				if(_this.fromNode.get(_this.fromIndex)) {
-					cond = true;
-					break;
-				}
-			}
-			break;
-		}
-		if(cond) {
-			this.runOutput(0);
-		} else {
-			this.runOutput(1);
-		}
-	}
-}
-$hxClasses["armory.logicnode.GateNode"] = armory_logicnode_GateNode;
-armory_logicnode_GateNode.__name__ = true;
-armory_logicnode_GateNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_GateNode.prototype, {
-	__class__: armory_logicnode_GateNode
-	,property0: null
-	,property1: null
-});
-class armory_logicnode_GetDistanceNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	get(from) {
-		let _this = this.inputs[0];
-		let object1 = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[1];
-		let object2 = _this1.fromNode.get(_this1.fromIndex);
-		if(object1 == null || object2 == null) {
-			return 0;
-		}
-		let _this2 = object1.transform.world;
-		let x = _this2.self._30;
-		let y = _this2.self._31;
-		let z = _this2.self._32;
-		let w = _this2.self._33;
-		if(w == null) {
-			w = 1.0;
-		}
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		let v1_x = x;
-		let v1_y = y;
-		let v1_z = z;
-		let v1_w = w;
-		let _this3 = object2.transform.world;
-		let x1 = _this3.self._30;
-		let y1 = _this3.self._31;
-		let z1 = _this3.self._32;
-		let w1 = _this3.self._33;
-		if(w1 == null) {
-			w1 = 1.0;
-		}
-		if(z1 == null) {
-			z1 = 0.0;
-		}
-		if(y1 == null) {
-			y1 = 0.0;
-		}
-		if(x1 == null) {
-			x1 = 0.0;
-		}
-		let v2_x = x1;
-		let v2_y = y1;
-		let v2_z = z1;
-		let v2_w = w1;
-		let vx = v1_x - v2_x;
-		let vy = v1_y - v2_y;
-		let vz = v1_z - v2_z;
-		return Math.sqrt(vx * vx + vy * vy + vz * vz);
-	}
-}
-$hxClasses["armory.logicnode.GetDistanceNode"] = armory_logicnode_GetDistanceNode;
-armory_logicnode_GetDistanceNode.__name__ = true;
-armory_logicnode_GetDistanceNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_GetDistanceNode.prototype, {
-	__class__: armory_logicnode_GetDistanceNode
-});
-class armory_logicnode_GetLocationNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	get(from) {
-		let _this = this.inputs[0];
-		let object = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[1];
-		let relative = _this1.fromNode.get(_this1.fromIndex);
-		if(object == null) {
-			return null;
-		}
-		let _this2 = object.transform.world;
-		let loc = new iron_math_Vec4(_this2.self._30,_this2.self._31,_this2.self._32,_this2.self._33);
-		if(relative && object.parent != null) {
-			let _this = object.parent.transform.world;
-			let x = _this.self._30;
-			let y = _this.self._31;
-			let z = _this.self._32;
-			let w = _this.self._33;
-			if(w == null) {
-				w = 1.0;
-			}
-			if(z == null) {
-				z = 0.0;
-			}
-			if(y == null) {
-				y = 0.0;
-			}
-			if(x == null) {
-				x = 0.0;
-			}
-			let v_x = x;
-			let v_y = y;
-			let v_z = z;
-			let v_w = w;
-			loc.x -= v_x;
-			loc.y -= v_y;
-			loc.z -= v_z;
-			let _this1 = object.parent.transform.world;
-			let x1 = _this1.self._00;
-			let y1 = _this1.self._01;
-			let z1 = _this1.self._02;
-			if(z1 == null) {
-				z1 = 0.0;
-			}
-			if(y1 == null) {
-				y1 = 0.0;
-			}
-			if(x1 == null) {
-				x1 = 0.0;
-			}
-			let v_x1 = x1;
-			let v_y1 = y1;
-			let v_z1 = z1;
-			let v_w1 = 1.0;
-			let dotX = loc.x * v_x1 + loc.y * v_y1 + loc.z * v_z1;
-			let _this2 = object.parent.transform.world;
-			let x2 = _this2.self._10;
-			let y2 = _this2.self._11;
-			let z2 = _this2.self._12;
-			if(z2 == null) {
-				z2 = 0.0;
-			}
-			if(y2 == null) {
-				y2 = 0.0;
-			}
-			if(x2 == null) {
-				x2 = 0.0;
-			}
-			let v_x2 = x2;
-			let v_y2 = y2;
-			let v_z2 = z2;
-			let v_w2 = 1.0;
-			let dotY = loc.x * v_x2 + loc.y * v_y2 + loc.z * v_z2;
-			let _this3 = object.parent.transform.world;
-			let x3 = _this3.self._20;
-			let y3 = _this3.self._21;
-			let z3 = _this3.self._22;
-			if(z3 == null) {
-				z3 = 0.0;
-			}
-			if(y3 == null) {
-				y3 = 0.0;
-			}
-			if(x3 == null) {
-				x3 = 0.0;
-			}
-			let v_x3 = x3;
-			let v_y3 = y3;
-			let v_z3 = z3;
-			let v_w3 = 1.0;
-			let dotZ = loc.x * v_x3 + loc.y * v_y3 + loc.z * v_z3;
-			loc.x = dotX;
-			loc.y = dotY;
-			loc.z = dotZ;
-			loc.w = 1.0;
-		}
-		return loc;
-	}
-}
-$hxClasses["armory.logicnode.GetLocationNode"] = armory_logicnode_GetLocationNode;
-armory_logicnode_GetLocationNode.__name__ = true;
-armory_logicnode_GetLocationNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_GetLocationNode.prototype, {
-	__class__: armory_logicnode_GetLocationNode
-});
-class armory_logicnode_GoToLocationNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		this.object = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[2];
-		this.location = _this1.fromNode.get(_this1.fromIndex);
-		let _this2 = this.inputs[3];
-		this.speed = _this2.fromNode.get(_this2.fromIndex);
-		let _this3 = this.inputs[4];
-		this.turnDuration = _this3.fromNode.get(_this3.fromIndex);
-		let _this4 = this.inputs[5];
-		this.heightOffset = _this4.fromNode.get(_this4.fromIndex);
-		let _this5 = this.inputs[6];
-		this.useRaycast = _this5.fromNode.get(_this5.fromIndex);
-		let _this6 = this.inputs[7];
-		this.rayCastDepth = _this6.fromNode.get(_this6.fromIndex);
-		let _this7 = this.inputs[8];
-		this.rayCastMask = _this7.fromNode.get(_this7.fromIndex);
-		if(this.object == null) {
-			armory_system_Assert.throwAssertionError("object != null","The object input not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 35, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(this.location == null) {
-			armory_system_Assert.throwAssertionError("location != null","The location to navigate to must not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 36, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(this.speed == null) {
-			armory_system_Assert.throwAssertionError("speed != null","Speed of Nav Agent should not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 37, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(!(this.speed >= 0)) {
-			let optMsg = "\n\tMessage: " + "Speed of Nav Agent should be positive";
-			haxe_Log.trace("Failed assertion:" + optMsg + "\n\tExpression: (" + "speed >= 0" + ")",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 38, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(this.turnDuration == null) {
-			armory_system_Assert.throwAssertionError("turnDuration != null","Turn Duration of Nav Agent should not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 39, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(!(this.turnDuration >= 0)) {
-			let optMsg = "\n\tMessage: " + "Turn Duration of Nav Agent should be positive";
-			haxe_Log.trace("Failed assertion:" + optMsg + "\n\tExpression: (" + "turnDuration >= 0" + ")",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 40, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		let _this8 = this.object.transform.world;
-		let from1 = new iron_math_Vec4(_this8.self._30,_this8.self._31,_this8.self._32,_this8.self._33);
-		let to = this.location;
-		if(armory_trait_navigation_Navigation.active.navMeshes.length <= 0) {
-			armory_system_Assert.throwAssertionError("Navigation.active.navMeshes.length > 0","No Navigation Mesh Present",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 46, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		let _gthis = this;
-		armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from1,to,function(path) {
-			let agent = _gthis.object.getTrait(armory_trait_NavAgent);
-			if(agent == null) {
-				armory_system_Assert.throwAssertionError("agent != null","Object does not have a NavAgent trait",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 49, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-			}
-			agent.speed = _gthis.speed;
-			agent.turnDuration = _gthis.turnDuration;
-			agent.heightOffset = _gthis.heightOffset;
-			agent.tickPos = $bind(_gthis,_gthis.tickPos);
-			agent.tickRot = $bind(_gthis,_gthis.tickRot);
-			agent.setPath(path);
-		});
-		this.runOutput(0);
-	}
-	tickPos() {
-		if(this.useRaycast) {
-			this.setAgentHeight();
-		}
-		this.runOutput(1);
-	}
-	tickRot() {
-		this.runOutput(2);
-	}
-	setAgentHeight() {
-		let _this = this.object.transform.world;
-		let fromLoc = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
-		let toLoc = new iron_math_Vec4(fromLoc.x,fromLoc.y,fromLoc.z,fromLoc.w);
-		toLoc.z += this.rayCastDepth;
-		let hit = armory_trait_physics_bullet_PhysicsWorld.active.rayCast(fromLoc,toLoc,this.rayCastMask);
-		if(hit != null) {
-			this.object.transform.loc.z = hit.pos.z + this.heightOffset;
-		}
-	}
-}
-$hxClasses["armory.logicnode.GoToLocationNode"] = armory_logicnode_GoToLocationNode;
-armory_logicnode_GoToLocationNode.__name__ = true;
-armory_logicnode_GoToLocationNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_GoToLocationNode.prototype, {
-	__class__: armory_logicnode_GoToLocationNode
-	,object: null
-	,location: null
-	,speed: null
-	,turnDuration: null
-	,heightOffset: null
-	,useRaycast: null
-	,rayCastDepth: null
-	,rayCastMask: null
-});
 class armory_logicnode_IntegerNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
 		if(value == null) {
@@ -2331,24 +1890,6 @@ armory_logicnode_IntegerNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_IntegerNode.prototype, {
 	__class__: armory_logicnode_IntegerNode
 	,value: null
-});
-class armory_logicnode_IsNotNoneNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let v1 = _this.fromNode.get(_this.fromIndex);
-		if(v1 != null) {
-			this.runOutput(0);
-		}
-	}
-}
-$hxClasses["armory.logicnode.IsNotNoneNode"] = armory_logicnode_IsNotNoneNode;
-armory_logicnode_IsNotNoneNode.__name__ = true;
-armory_logicnode_IsNotNoneNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_IsNotNoneNode.prototype, {
-	__class__: armory_logicnode_IsNotNoneNode
 });
 class armory_logicnode_LogicNodeLink {
 	constructor(fromNode,toNode,fromIndex,toIndex) {
@@ -2452,71 +1993,6 @@ armory_logicnode_OnInitNode.__name__ = true;
 armory_logicnode_OnInitNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_OnInitNode.prototype, {
 	__class__: armory_logicnode_OnInitNode
-});
-class armory_logicnode_OnTimerNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		armory_logicnode_LogicNode._hx_skip_constructor = true;
-		super();
-		armory_logicnode_LogicNode._hx_skip_constructor = false;
-		this._hx_constructor(tree);
-	}
-	_hx_constructor(tree) {
-		this.repeat = false;
-		this.duration = 0.0;
-		super._hx_constructor(tree);
-		tree.notifyOnUpdate($bind(this,this.update));
-	}
-	update() {
-		if(this.duration <= 0.0) {
-			let _this = this.inputs[0];
-			this.duration = _this.fromNode.get(_this.fromIndex);
-			let _this1 = this.inputs[1];
-			this.repeat = _this1.fromNode.get(_this1.fromIndex);
-		}
-		this.duration -= iron_system_Time.get_delta();
-		if(this.duration <= 0.0) {
-			if(!this.repeat) {
-				this.tree.removeUpdate($bind(this,this.update));
-			}
-			this.runOutput(0);
-		}
-	}
-}
-$hxClasses["armory.logicnode.OnTimerNode"] = armory_logicnode_OnTimerNode;
-armory_logicnode_OnTimerNode.__name__ = true;
-armory_logicnode_OnTimerNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_OnTimerNode.prototype, {
-	__class__: armory_logicnode_OnTimerNode
-	,duration: null
-	,repeat: null
-});
-class armory_logicnode_OnUpdateNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-		tree.notifyOnInit($bind(this,this.init));
-	}
-	init() {
-		switch(this.property0) {
-		case "Late Update":
-			this.tree.notifyOnLateUpdate($bind(this,this.update));
-			break;
-		case "Physics Pre-Update":
-			armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.update));
-			break;
-		default:
-			this.tree.notifyOnUpdate($bind(this,this.update));
-		}
-	}
-	update() {
-		this.runOutput(0);
-	}
-}
-$hxClasses["armory.logicnode.OnUpdateNode"] = armory_logicnode_OnUpdateNode;
-armory_logicnode_OnUpdateNode.__name__ = true;
-armory_logicnode_OnUpdateNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_OnUpdateNode.prototype, {
-	__class__: armory_logicnode_OnUpdateNode
-	,property0: null
 });
 class armory_logicnode_PlayActionFromNode extends armory_logicnode_LogicNode {
 	constructor(tree) {
@@ -2714,27 +2190,6 @@ Object.assign(armory_logicnode_PlayActionFromNode.prototype, {
 	,loop: null
 	,reverse: null
 	,actionR: null
-});
-class armory_logicnode_StopAgentNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let object = _this.fromNode.get(_this.fromIndex);
-		if(object == null) {
-			return;
-		}
-		let agent = object.getTrait(armory_trait_NavAgent);
-		agent.stop();
-		this.runOutput(0);
-	}
-}
-$hxClasses["armory.logicnode.StopAgentNode"] = armory_logicnode_StopAgentNode;
-armory_logicnode_StopAgentNode.__name__ = true;
-armory_logicnode_StopAgentNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_StopAgentNode.prototype, {
-	__class__: armory_logicnode_StopAgentNode
 });
 class armory_logicnode_StringNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
@@ -59435,6 +58890,8 @@ armory_trait_internal_CameraController.keyStrafeUp = "e";
 armory_trait_internal_CameraController.keyStrafeDown = "q";
 arm_FirstPersonController.__meta__ = { fields : { speed : { prop : null}}};
 arm_FirstPersonController.rotationSpeed = 2.0;
+arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}}};
+arm_HuggyLogic.navTimerInterval = 0.5;
 armory_data_Config.configLoaded = false;
 armory_logicnode_LogicNode._hx_skip_constructor = false;
 armory_renderpath_Downsampler.currentMipLevel = 0;
