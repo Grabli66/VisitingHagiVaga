@@ -21,7 +21,7 @@ package arm.node;
 		_OnInit.preallocInputs(0);
 		_OnInit.preallocOutputs(1);
 		armory.logicnode.LogicNode.addLink(_OnInit, _PlayActionFrom, 0, 0);
-		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Huggy"), _PlayActionFrom, 0, 1);
+		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Хагги"), _PlayActionFrom, 0, 1);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.StringNode(this, "Move_Huggy"), _PlayActionFrom, 0, 2);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.IntegerNode(this, 0), _PlayActionFrom, 0, 3);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.IntegerNode(this, 80), _PlayActionFrom, 0, 4);

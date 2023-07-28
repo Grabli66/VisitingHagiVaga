@@ -29,11 +29,18 @@ class HuggyLogic extends iron.Trait {
 	@prop
 	var speed:Float = 1.0;
 
+	// Дистанция до атаки
+	@prop
+	var attackDistance = 2.0;
+
 	// Состояние
 	var state = HuggyState.Walking;
 
 	// Анимации
 	var animimations:BoneAnimation;
+
+	// Агент навмеша
+	var navAgent:NavAgent;
 
 	// Ищет анимации
 	function findAnimation(o:Object):BoneAnimation {
@@ -56,9 +63,11 @@ class HuggyLogic extends iron.Trait {
 
 	// Начинает атаку
 	function startAttack() {
-		state = Attacking;
+		state = Attacking;		
 		if (animimations.action != "Attack_Huggy") {
+			navAgent.stop();
 			animimations.play("Attack_Huggy");
+			animimations.onComplete = onAnimationComplete;
 		}
 	}
 
@@ -81,15 +90,16 @@ class HuggyLogic extends iron.Trait {
 			var to = playerObject.transform.world.getLoc();
 
 			var distance = Vec4.distance(from, to);
-			if (distance <= 1.5) {
-				// Хаги приблизился к игроку
-				var agent:NavAgent = object.getTrait(armory.trait.NavAgent);
-				agent.stop();
+			if (distance <= attackDistance) {
+				// Хаги приблизился к игроку								
 				startAttack();
 			} else {
+				if (state == Attacking)
+					return;
+
 				// Хаги идёт к игроку
 				Navigation.active.navMeshes[0].findPath(from, to, function(path:Array<iron.math.Vec4>) {
-					var agent:armory.trait.NavAgent = object.getTrait(armory.trait.NavAgent);
+					var agent:NavAgent = object.getTrait(armory.trait.NavAgent);
 					agent.speed = speed;
 					agent.turnDuration = 0.4;
 					agent.heightOffset = 0;
@@ -106,8 +116,8 @@ class HuggyLogic extends iron.Trait {
 		notifyOnInit(function() {
 			navTimerDuration = navTimerInterval;
 			var armature = object.getChild("Huggy");
-			animimations = findAnimation(armature);
-			animimations.onComplete = onAnimationComplete;
+			animimations = findAnimation(armature);	
+			navAgent = object.getTrait(NavAgent);
 			startWalking();
 		});
 

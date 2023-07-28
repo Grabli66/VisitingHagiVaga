@@ -14,9 +14,9 @@ package arm.node;
 	}
 
 	override public function add() {
-		var _StopAgent = new armory.logicnode.StopAgentNode(this);
-		_StopAgent.preallocInputs(2);
-		_StopAgent.preallocOutputs(1);
+		var _PlayActionFrom = new armory.logicnode.PlayActionFromNode(this);
+		_PlayActionFrom.preallocInputs(9);
+		_PlayActionFrom.preallocOutputs(2);
 		var _Gate = new armory.logicnode.GateNode(this);
 		_Gate.property0 = "Less Equal";
 		_Gate.property1 = 9.999999747378752e-05;
@@ -38,14 +38,8 @@ package arm.node;
 		_Float.preallocOutputs(1);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.FloatNode(this, 1.5), _Float, 0, 0);
 		armory.logicnode.LogicNode.addLink(_Float, _Gate, 0, 2);
-		armory.logicnode.LogicNode.addLink(_Gate, _StopAgent, 0, 0);
-		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Монстр"), _StopAgent, 0, 1);
-		armory.logicnode.LogicNode.addLink(_StopAgent, new armory.logicnode.NullNode(this), 0, 0);
-		var _PlayActionFrom = new armory.logicnode.PlayActionFromNode(this);
-		_PlayActionFrom.preallocInputs(9);
-		_PlayActionFrom.preallocOutputs(2);
 		armory.logicnode.LogicNode.addLink(_Gate, _PlayActionFrom, 0, 0);
-		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Huggy"), _PlayActionFrom, 0, 1);
+		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Хагги"), _PlayActionFrom, 0, 1);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.StringNode(this, "Attack_Huggy"), _PlayActionFrom, 0, 2);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.IntegerNode(this, 0), _PlayActionFrom, 0, 3);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.IntegerNode(this, 26), _PlayActionFrom, 0, 4);
@@ -59,7 +53,7 @@ package arm.node;
 		_PlayActionFrom_001.preallocInputs(9);
 		_PlayActionFrom_001.preallocOutputs(2);
 		armory.logicnode.LogicNode.addLink(_Gate, _PlayActionFrom_001, 1, 0);
-		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Huggy"), _PlayActionFrom_001, 0, 1);
+		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Хагги"), _PlayActionFrom_001, 0, 1);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.StringNode(this, "Move_Huggy"), _PlayActionFrom_001, 0, 2);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.IntegerNode(this, 0), _PlayActionFrom_001, 0, 3);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.IntegerNode(this, 80), _PlayActionFrom_001, 0, 4);
@@ -99,5 +93,11 @@ package arm.node;
 		armory.logicnode.LogicNode.addLink(_GotoLocation, new armory.logicnode.NullNode(this), 0, 0);
 		armory.logicnode.LogicNode.addLink(_GotoLocation, new armory.logicnode.NullNode(this), 1, 0);
 		armory.logicnode.LogicNode.addLink(_GotoLocation, new armory.logicnode.NullNode(this), 2, 0);
+		var _StopAgent = new armory.logicnode.StopAgentNode(this);
+		_StopAgent.preallocInputs(2);
+		_StopAgent.preallocOutputs(1);
+		armory.logicnode.LogicNode.addLink(_Gate, _StopAgent, 0, 0);
+		armory.logicnode.LogicNode.addLink(new armory.logicnode.ObjectNode(this, "Монстр"), _StopAgent, 0, 1);
+		armory.logicnode.LogicNode.addLink(_StopAgent, new armory.logicnode.NullNode(this), 0, 0);
 	}
 }

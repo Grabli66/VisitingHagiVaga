@@ -1458,6 +1458,7 @@ class arm_HuggyLogic extends iron_Trait {
 	}
 	_hx_constructor() {
 		this.state = arm_HuggyState.Walking;
+		this.attackDistance = 2.0;
 		this.speed = 1.0;
 		this.navTimerDuration = 0.0;
 		super._hx_constructor();
@@ -1466,7 +1467,7 @@ class arm_HuggyLogic extends iron_Trait {
 			_gthis.navTimerDuration = arm_HuggyLogic.navTimerInterval;
 			let armature = _gthis.object.getChild("Huggy");
 			_gthis.animimations = _gthis.findAnimation(armature);
-			_gthis.animimations.onComplete = $bind(_gthis,_gthis.onAnimationComplete);
+			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
 			_gthis.startWalking();
 		});
 		this.notifyOnUpdate(function() {
@@ -1490,6 +1491,7 @@ class arm_HuggyLogic extends iron_Trait {
 		return null;
 	}
 	onAnimationComplete() {
+		haxe_Log.trace("SHIT",{ fileName : "arm/HuggyLogic.hx", lineNumber : 59, className : "arm.HuggyLogic", methodName : "onAnimationComplete"});
 		if(this.state == arm_HuggyState.Attacking) {
 			this.startWalking();
 		}
@@ -1497,7 +1499,9 @@ class arm_HuggyLogic extends iron_Trait {
 	startAttack() {
 		this.state = arm_HuggyState.Attacking;
 		if(this.animimations.action != "Attack_Huggy") {
+			this.navAgent.stop();
 			this.animimations.play("Attack_Huggy");
+			this.animimations.onComplete = $bind(this,this.onAnimationComplete);
 		}
 	}
 	startWalking() {
@@ -1519,11 +1523,12 @@ class arm_HuggyLogic extends iron_Trait {
 			let vy = from.y - to.y;
 			let vz = from.z - to.z;
 			let distance = Math.sqrt(vx * vx + vy * vy + vz * vz);
-			if(distance <= 1.5) {
-				let agent = this.object.getTrait(armory_trait_NavAgent);
-				agent.stop();
+			if(distance <= this.attackDistance) {
 				this.startAttack();
 			} else {
+				if(this.state == arm_HuggyState.Attacking) {
+					return;
+				}
 				armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from,to,function(path) {
 					let agent = _gthis.object.getTrait(armory_trait_NavAgent);
 					agent.speed = _gthis.speed;
@@ -1543,8 +1548,10 @@ Object.assign(arm_HuggyLogic.prototype, {
 	,navTimerDuration: null
 	,playerObject: null
 	,speed: null
+	,attackDistance: null
 	,state: null
 	,animimations: null
+	,navAgent: null
 });
 class armory_logicnode_LogicTree extends iron_Trait {
 	constructor() {
@@ -58890,7 +58897,7 @@ armory_trait_internal_CameraController.keyStrafeUp = "e";
 armory_trait_internal_CameraController.keyStrafeDown = "q";
 arm_FirstPersonController.__meta__ = { fields : { speed : { prop : null}}};
 arm_FirstPersonController.rotationSpeed = 2.0;
-arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}}};
+arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}}};
 arm_HuggyLogic.navTimerInterval = 0.5;
 armory_data_Config.configLoaded = false;
 armory_logicnode_LogicNode._hx_skip_constructor = false;
