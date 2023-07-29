@@ -290,6 +290,11 @@ class UInt {
 		}
 	}
 }
+var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
+	,Walking: {_hx_name:"Walking",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
+	,Attacking: {_hx_name:"Attacking",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
+};
+arm_HuggyState.__constructs__ = [arm_HuggyState.Walking,arm_HuggyState.Attacking];
 class iron_Trait {
 	constructor() {
 		if(iron_Trait._hx_skip_constructor) {
@@ -388,6 +393,115 @@ Object.assign(iron_Trait.prototype, {
 	,_render: null
 	,_render2D: null
 });
+class arm_HuggyLogic extends iron_Trait {
+	constructor() {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.state = arm_HuggyState.Walking;
+		this.attackDistance = 2.0;
+		this.speed = 1.0;
+		this.navTimerDuration = 0.0;
+		super._hx_constructor();
+		let _gthis = this;
+		this.notifyOnInit(function() {
+			_gthis.navTimerDuration = arm_HuggyLogic.navTimerInterval;
+			let armature = _gthis.object.getChild("Huggy");
+			_gthis.animimations = _gthis.findAnimation(armature);
+			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
+			_gthis.startWalking();
+		});
+		this.notifyOnUpdate(function() {
+			_gthis.updateNavigation();
+		});
+	}
+	findAnimation(o) {
+		if(o.animation != null) {
+			return o.animation;
+		}
+		let _g = 0;
+		let _g1 = o.children;
+		while(_g < _g1.length) {
+			let c = _g1[_g];
+			++_g;
+			let co = this.findAnimation(c);
+			if(co != null) {
+				return co;
+			}
+		}
+		return null;
+	}
+	startAttack() {
+		this.state = arm_HuggyState.Attacking;
+		let _gthis = this;
+		if(this.animimations.action != "Attack_Huggy") {
+			this.navAgent.stop();
+			this.animimations.play("Attack_Huggy",function() {
+				_gthis.startWalking();
+			});
+		}
+	}
+	startWalking() {
+		this.state = arm_HuggyState.Walking;
+		if(this.animimations.action != "Move_Huggy") {
+			this.animimations.play("Move_Huggy");
+		}
+	}
+	updateNavigation() {
+		this.navTimerDuration -= iron_system_Time.get_delta();
+		let _gthis = this;
+		if(this.navTimerDuration <= 0.0) {
+			this.navTimerDuration = arm_HuggyLogic.navTimerInterval;
+			let _this = this.object.transform.world;
+			let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
+			let _this1 = this.playerObject.transform.world;
+			let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
+			let vx = from.x - to.x;
+			let vy = from.y - to.y;
+			let vz = from.z - to.z;
+			let distance = Math.sqrt(vx * vx + vy * vy + vz * vz);
+			if(distance <= this.attackDistance) {
+				this.startAttack();
+			} else {
+				if(this.state == arm_HuggyState.Attacking) {
+					return;
+				}
+				armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from,to,function(path) {
+					let agent = _gthis.object.getTrait(armory_trait_NavAgent);
+					agent.speed = _gthis.speed;
+					agent.turnDuration = 0.4;
+					agent.heightOffset = 0;
+					agent.setPath(path);
+				});
+			}
+		}
+	}
+}
+$hxClasses["arm.HuggyLogic"] = arm_HuggyLogic;
+arm_HuggyLogic.__name__ = true;
+arm_HuggyLogic.__super__ = iron_Trait;
+Object.assign(arm_HuggyLogic.prototype, {
+	__class__: arm_HuggyLogic
+	,navTimerDuration: null
+	,playerObject: null
+	,speed: null
+	,attackDistance: null
+	,state: null
+	,animimations: null
+	,navAgent: null
+});
+var arm_PlayerState = $hxEnums["arm.PlayerState"] = { __ename__:true,__constructs__:null
+	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.PlayerState",toString:$estr}
+	,Idle: {_hx_name:"Idle",_hx_index:1,__enum__:"arm.PlayerState",toString:$estr}
+	,Walk: {_hx_name:"Walk",_hx_index:2,__enum__:"arm.PlayerState",toString:$estr}
+	,Shoot: {_hx_name:"Shoot",_hx_index:3,__enum__:"arm.PlayerState",toString:$estr}
+	,Reload: {_hx_name:"Reload",_hx_index:4,__enum__:"arm.PlayerState",toString:$estr}
+	,Dead: {_hx_name:"Dead",_hx_index:5,__enum__:"arm.PlayerState",toString:$estr}
+};
+arm_PlayerState.__constructs__ = [arm_PlayerState.None,arm_PlayerState.Idle,arm_PlayerState.Walk,arm_PlayerState.Shoot,arm_PlayerState.Reload,arm_PlayerState.Dead];
 class armory_trait_internal_CameraController extends iron_Trait {
 	constructor() {
 		if(iron_Trait._hx_skip_constructor) {
@@ -436,7 +550,7 @@ Object.assign(armory_trait_internal_CameraController.prototype, {
 	,moveRight: null
 	,jump: null
 });
-class arm_FirstPersonController extends armory_trait_internal_CameraController {
+class arm_PlayerLogic extends armory_trait_internal_CameraController {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
 		super();
@@ -447,10 +561,9 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 		this.dir = new iron_math_Vec4();
 		this.zVec = new iron_math_Vec4(0.0,0.0,1.0);
 		this.xVec = new iron_math_Vec4(1.0,0.0,0.0);
-		this.speed = 4;
-		this.angle = 0.0;
-		this.mat = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
-		this.q = new iron_math_Quat();
+		this.speed = 3;
+		this.state = arm_PlayerState.None;
+		this.rotationSpeed = 2.0;
 		super._hx_constructor();
 		iron_Scene.active.notifyOnInit($bind(this,this.init));
 	}
@@ -470,11 +583,30 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 		}
 		return null;
 	}
+	startIdle() {
+		if(this.state == arm_PlayerState.Idle) {
+			return;
+		}
+		this.state = arm_PlayerState.Idle;
+		this.animations.play("Idle_Policeman");
+	}
+	startWalk() {
+		if(this.state == arm_PlayerState.Walk) {
+			return;
+		}
+		this.state = arm_PlayerState.Walk;
+		this.animations.play("Walk_Policeman");
+	}
 	init() {
 		this.head = this.object.getChildOfType(iron_object_CameraObject);
 		armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.preUpdate));
 		this.notifyOnUpdate($bind(this,this.update));
 		this.notifyOnRemove($bind(this,this.removed));
+		this.aimNode = this.object.getChild("Aim");
+		this.initAimLoc = this.aimNode.transform.loc;
+		this.armature = this.object.getChild("Policeman");
+		this.animations = this.findAnimation(this.armature);
+		this.startIdle();
 	}
 	preUpdate() {
 		if(iron_system_Input.occupied || !this.body.ready) {
@@ -488,14 +620,19 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 			mouse.unlock();
 		}
 		if(mouse.moved) {
-			let d = mouse.movementY / 250;
-			if(this.angle + d < 1.25 && this.angle + d > -1.25) {
-				this.angle += d;
+			let d = -mouse.movementY / 450;
+			this.aimNode.transform.translate(0,0,d);
+			let thr = 0.01;
+			if(this.aimNode.transform.loc.z <= this.initAimLoc.z - thr) {
+				this.aimNode.transform.loc.z = this.initAimLoc.z - thr;
+			}
+			if(this.aimNode.transform.loc.z >= this.initAimLoc.z + thr) {
+				this.aimNode.transform.loc.z = this.initAimLoc.z + thr;
 			}
 		}
 		if(mouse.locked || mouse.down()) {
-			this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * 2.0);
-			this.transform.rotate(this.zVec,-mouse.movementX / 250 * 2.0);
+			this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * this.rotationSpeed);
+			this.transform.rotate(this.zVec,-mouse.movementX / 250 * this.rotationSpeed);
 			this.body.syncTransform();
 		}
 	}
@@ -627,931 +764,30 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 			dirN.z *= f;
 			this.body.activate();
 			this.body.setLinearVelocity(dirN.x,dirN.y,btvec.z - 1.0);
+			this.startWalk();
+		} else {
+			this.startIdle();
 		}
 		this.body.setAngularFactor(0,0,0);
 		this.camera.buildMatrix();
 	}
-	updateBones() {
-		let bone1 = this.anim.getBone("mixamorig:LeftForeArm");
-		let bone2 = this.anim.getBone("mixamorig:RightForeArm");
-		let m1 = this.anim.getBoneMat(bone1);
-		let m2 = this.anim.getBoneMat(bone2);
-		let m1b = this.anim.getBoneMatBlend(bone1);
-		let m2b = this.anim.getBoneMatBlend(bone2);
-		let a1 = this.anim.getAbsMat(bone1.parent);
-		let a2 = this.anim.getAbsMat(bone2.parent);
-		let tx = m1.self._30;
-		let ty = m1.self._31;
-		let tz = m1.self._32;
-		m1.self._30 = 0;
-		m1.self._31 = 0;
-		m1.self._32 = 0;
-		let _this = this.mat;
-		let a00 = a1.self._00;
-		let a01 = a1.self._01;
-		let a02 = a1.self._02;
-		let a03 = a1.self._03;
-		let a10 = a1.self._10;
-		let a11 = a1.self._11;
-		let a12 = a1.self._12;
-		let a13 = a1.self._13;
-		let a20 = a1.self._20;
-		let a21 = a1.self._21;
-		let a22 = a1.self._22;
-		let a23 = a1.self._23;
-		let a30 = a1.self._30;
-		let a31 = a1.self._31;
-		let a32 = a1.self._32;
-		let a33 = a1.self._33;
-		let b00 = a00 * a11 - a01 * a10;
-		let b01 = a00 * a12 - a02 * a10;
-		let b02 = a00 * a13 - a03 * a10;
-		let b03 = a01 * a12 - a02 * a11;
-		let b04 = a01 * a13 - a03 * a11;
-		let b05 = a02 * a13 - a03 * a12;
-		let b06 = a20 * a31 - a21 * a30;
-		let b07 = a20 * a32 - a22 * a30;
-		let b08 = a20 * a33 - a23 * a30;
-		let b09 = a21 * a32 - a22 * a31;
-		let b10 = a21 * a33 - a23 * a31;
-		let b11 = a22 * a33 - a23 * a32;
-		let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-		if(det == 0.0) {
-			_this.self._00 = 1.0;
-			_this.self._01 = 0.0;
-			_this.self._02 = 0.0;
-			_this.self._03 = 0.0;
-			_this.self._10 = 0.0;
-			_this.self._11 = 1.0;
-			_this.self._12 = 0.0;
-			_this.self._13 = 0.0;
-			_this.self._20 = 0.0;
-			_this.self._21 = 0.0;
-			_this.self._22 = 1.0;
-			_this.self._23 = 0.0;
-			_this.self._30 = 0.0;
-			_this.self._31 = 0.0;
-			_this.self._32 = 0.0;
-			_this.self._33 = 1.0;
-		} else {
-			det = 1.0 / det;
-			_this.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-			_this.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-			_this.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-			_this.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-			_this.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-			_this.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-			_this.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-			_this.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-			_this.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-			_this.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-			_this.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-			_this.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-			_this.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-			_this.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-			_this.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-			_this.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-		}
-		let _this1 = this.q;
-		let _this2 = this.mat;
-		let x = _this2.self._00;
-		let y = _this2.self._01;
-		let z = _this2.self._02;
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		let axis_x = x;
-		let axis_y = y;
-		let axis_z = z;
-		let axis_w = 1.0;
-		let angle = -this.angle;
-		let s = Math.sin(angle * 0.5);
-		_this1.x = axis_x * s;
-		_this1.y = axis_y * s;
-		_this1.z = axis_z * s;
-		_this1.w = Math.cos(angle * 0.5);
-		let l = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z + _this1.w * _this1.w);
-		if(l == 0.0) {
-			_this1.x = 0;
-			_this1.y = 0;
-			_this1.z = 0;
-			_this1.w = 0;
-		} else {
-			l = 1.0 / l;
-			_this1.x *= l;
-			_this1.y *= l;
-			_this1.z *= l;
-			_this1.w *= l;
-		}
-		let q = this.q;
-		let _this3 = iron_math_Mat4.helpMat;
-		let x1 = q.x;
-		let y1 = q.y;
-		let z1 = q.z;
-		let w = q.w;
-		let x2 = x1 + x1;
-		let y2 = y1 + y1;
-		let z2 = z1 + z1;
-		let xx = x1 * x2;
-		let xy = x1 * y2;
-		let xz = x1 * z2;
-		let yy = y1 * y2;
-		let yz = y1 * z2;
-		let zz = z1 * z2;
-		let wx = w * x2;
-		let wy = w * y2;
-		let wz = w * z2;
-		_this3.self._00 = 1.0 - (yy + zz);
-		_this3.self._10 = xy - wz;
-		_this3.self._20 = xz + wy;
-		_this3.self._01 = xy + wz;
-		_this3.self._11 = 1.0 - (xx + zz);
-		_this3.self._21 = yz - wx;
-		_this3.self._02 = xz - wy;
-		_this3.self._12 = yz + wx;
-		_this3.self._22 = 1.0 - (xx + yy);
-		_this3.self._03 = 0.0;
-		_this3.self._13 = 0.0;
-		_this3.self._23 = 0.0;
-		_this3.self._30 = 0.0;
-		_this3.self._31 = 0.0;
-		_this3.self._32 = 0.0;
-		_this3.self._33 = 1.0;
-		let m = iron_math_Mat4.helpMat;
-		let a001 = m1.self._00;
-		let a011 = m1.self._01;
-		let a021 = m1.self._02;
-		let a031 = m1.self._03;
-		let a101 = m1.self._10;
-		let a111 = m1.self._11;
-		let a121 = m1.self._12;
-		let a131 = m1.self._13;
-		let a201 = m1.self._20;
-		let a211 = m1.self._21;
-		let a221 = m1.self._22;
-		let a231 = m1.self._23;
-		let a301 = m1.self._30;
-		let a311 = m1.self._31;
-		let a321 = m1.self._32;
-		let a331 = m1.self._33;
-		let b0 = m.self._00;
-		let b1 = m.self._10;
-		let b2 = m.self._20;
-		let b3 = m.self._30;
-		m1.self._00 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._10 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._20 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._30 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		b0 = m.self._01;
-		b1 = m.self._11;
-		b2 = m.self._21;
-		b3 = m.self._31;
-		m1.self._01 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._11 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._21 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._31 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		b0 = m.self._02;
-		b1 = m.self._12;
-		b2 = m.self._22;
-		b3 = m.self._32;
-		m1.self._02 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._12 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._22 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._32 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		b0 = m.self._03;
-		b1 = m.self._13;
-		b2 = m.self._23;
-		b3 = m.self._33;
-		m1.self._03 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._13 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._23 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._33 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		m1.self._30 = tx;
-		m1.self._31 = ty;
-		m1.self._32 = tz;
-		let tx1 = m2.self._30;
-		let ty1 = m2.self._31;
-		let tz1 = m2.self._32;
-		m2.self._30 = 0;
-		m2.self._31 = 0;
-		m2.self._32 = 0;
-		let _this4 = this.mat;
-		let a002 = a2.self._00;
-		let a012 = a2.self._01;
-		let a022 = a2.self._02;
-		let a032 = a2.self._03;
-		let a102 = a2.self._10;
-		let a112 = a2.self._11;
-		let a122 = a2.self._12;
-		let a132 = a2.self._13;
-		let a202 = a2.self._20;
-		let a212 = a2.self._21;
-		let a222 = a2.self._22;
-		let a232 = a2.self._23;
-		let a302 = a2.self._30;
-		let a312 = a2.self._31;
-		let a322 = a2.self._32;
-		let a332 = a2.self._33;
-		let b001 = a002 * a112 - a012 * a102;
-		let b011 = a002 * a122 - a022 * a102;
-		let b021 = a002 * a132 - a032 * a102;
-		let b031 = a012 * a122 - a022 * a112;
-		let b041 = a012 * a132 - a032 * a112;
-		let b051 = a022 * a132 - a032 * a122;
-		let b061 = a202 * a312 - a212 * a302;
-		let b071 = a202 * a322 - a222 * a302;
-		let b081 = a202 * a332 - a232 * a302;
-		let b091 = a212 * a322 - a222 * a312;
-		let b101 = a212 * a332 - a232 * a312;
-		let b111 = a222 * a332 - a232 * a322;
-		let det1 = b001 * b111 - b011 * b101 + b021 * b091 + b031 * b081 - b041 * b071 + b051 * b061;
-		if(det1 == 0.0) {
-			_this4.self._00 = 1.0;
-			_this4.self._01 = 0.0;
-			_this4.self._02 = 0.0;
-			_this4.self._03 = 0.0;
-			_this4.self._10 = 0.0;
-			_this4.self._11 = 1.0;
-			_this4.self._12 = 0.0;
-			_this4.self._13 = 0.0;
-			_this4.self._20 = 0.0;
-			_this4.self._21 = 0.0;
-			_this4.self._22 = 1.0;
-			_this4.self._23 = 0.0;
-			_this4.self._30 = 0.0;
-			_this4.self._31 = 0.0;
-			_this4.self._32 = 0.0;
-			_this4.self._33 = 1.0;
-		} else {
-			det1 = 1.0 / det1;
-			_this4.self._00 = (a112 * b111 - a122 * b101 + a132 * b091) * det1;
-			_this4.self._01 = (a022 * b101 - a012 * b111 - a032 * b091) * det1;
-			_this4.self._02 = (a312 * b051 - a322 * b041 + a332 * b031) * det1;
-			_this4.self._03 = (a222 * b041 - a212 * b051 - a232 * b031) * det1;
-			_this4.self._10 = (a122 * b081 - a102 * b111 - a132 * b071) * det1;
-			_this4.self._11 = (a002 * b111 - a022 * b081 + a032 * b071) * det1;
-			_this4.self._12 = (a322 * b021 - a302 * b051 - a332 * b011) * det1;
-			_this4.self._13 = (a202 * b051 - a222 * b021 + a232 * b011) * det1;
-			_this4.self._20 = (a102 * b101 - a112 * b081 + a132 * b061) * det1;
-			_this4.self._21 = (a012 * b081 - a002 * b101 - a032 * b061) * det1;
-			_this4.self._22 = (a302 * b041 - a312 * b021 + a332 * b001) * det1;
-			_this4.self._23 = (a212 * b021 - a202 * b041 - a232 * b001) * det1;
-			_this4.self._30 = (a112 * b071 - a102 * b091 - a122 * b061) * det1;
-			_this4.self._31 = (a002 * b091 - a012 * b071 + a022 * b061) * det1;
-			_this4.self._32 = (a312 * b011 - a302 * b031 - a322 * b001) * det1;
-			_this4.self._33 = (a202 * b031 - a212 * b011 + a222 * b001) * det1;
-		}
-		let _this5 = this.mat;
-		let x3 = _this5.self._00;
-		let y3 = _this5.self._01;
-		let z3 = _this5.self._02;
-		if(z3 == null) {
-			z3 = 0.0;
-		}
-		if(y3 == null) {
-			y3 = 0.0;
-		}
-		if(x3 == null) {
-			x3 = 0.0;
-		}
-		let v_x = x3;
-		let v_y = y3;
-		let v_z = z3;
-		let v_w = 1.0;
-		v_x *= -1;
-		v_y *= -1;
-		v_z *= -1;
-		let _this6 = this.q;
-		let s1 = Math.sin(-0.8);
-		_this6.x = v_x * s1;
-		_this6.y = v_y * s1;
-		_this6.z = v_z * s1;
-		_this6.w = Math.cos(-0.8);
-		let l1 = Math.sqrt(_this6.x * _this6.x + _this6.y * _this6.y + _this6.z * _this6.z + _this6.w * _this6.w);
-		if(l1 == 0.0) {
-			_this6.x = 0;
-			_this6.y = 0;
-			_this6.z = 0;
-			_this6.w = 0;
-		} else {
-			l1 = 1.0 / l1;
-			_this6.x *= l1;
-			_this6.y *= l1;
-			_this6.z *= l1;
-			_this6.w *= l1;
-		}
-		let q1 = this.q;
-		let _this7 = iron_math_Mat4.helpMat;
-		let x4 = q1.x;
-		let y4 = q1.y;
-		let z4 = q1.z;
-		let w1 = q1.w;
-		let x21 = x4 + x4;
-		let y21 = y4 + y4;
-		let z21 = z4 + z4;
-		let xx1 = x4 * x21;
-		let xy1 = x4 * y21;
-		let xz1 = x4 * z21;
-		let yy1 = y4 * y21;
-		let yz1 = y4 * z21;
-		let zz1 = z4 * z21;
-		let wx1 = w1 * x21;
-		let wy1 = w1 * y21;
-		let wz1 = w1 * z21;
-		_this7.self._00 = 1.0 - (yy1 + zz1);
-		_this7.self._10 = xy1 - wz1;
-		_this7.self._20 = xz1 + wy1;
-		_this7.self._01 = xy1 + wz1;
-		_this7.self._11 = 1.0 - (xx1 + zz1);
-		_this7.self._21 = yz1 - wx1;
-		_this7.self._02 = xz1 - wy1;
-		_this7.self._12 = yz1 + wx1;
-		_this7.self._22 = 1.0 - (xx1 + yy1);
-		_this7.self._03 = 0.0;
-		_this7.self._13 = 0.0;
-		_this7.self._23 = 0.0;
-		_this7.self._30 = 0.0;
-		_this7.self._31 = 0.0;
-		_this7.self._32 = 0.0;
-		_this7.self._33 = 1.0;
-		let m3 = iron_math_Mat4.helpMat;
-		let a003 = m2.self._00;
-		let a013 = m2.self._01;
-		let a023 = m2.self._02;
-		let a033 = m2.self._03;
-		let a103 = m2.self._10;
-		let a113 = m2.self._11;
-		let a123 = m2.self._12;
-		let a133 = m2.self._13;
-		let a203 = m2.self._20;
-		let a213 = m2.self._21;
-		let a223 = m2.self._22;
-		let a233 = m2.self._23;
-		let a303 = m2.self._30;
-		let a313 = m2.self._31;
-		let a323 = m2.self._32;
-		let a333 = m2.self._33;
-		let b010 = m3.self._00;
-		let b12 = m3.self._10;
-		let b21 = m3.self._20;
-		let b31 = m3.self._30;
-		m2.self._00 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._10 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._20 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._30 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		b010 = m3.self._01;
-		b12 = m3.self._11;
-		b21 = m3.self._21;
-		b31 = m3.self._31;
-		m2.self._01 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._11 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._21 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._31 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		b010 = m3.self._02;
-		b12 = m3.self._12;
-		b21 = m3.self._22;
-		b31 = m3.self._32;
-		m2.self._02 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._12 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._22 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._32 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		b010 = m3.self._03;
-		b12 = m3.self._13;
-		b21 = m3.self._23;
-		b31 = m3.self._33;
-		m2.self._03 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._13 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._23 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._33 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		m2.self._30 = tx1;
-		m2.self._31 = ty1;
-		m2.self._32 = tz1;
-		if(m1b != null && m2b != null) {
-			let tx = m1b.self._30;
-			let ty = m1b.self._31;
-			let tz = m1b.self._32;
-			m1b.self._30 = 0;
-			m1b.self._31 = 0;
-			m1b.self._32 = 0;
-			let _this = this.mat;
-			let a00 = a1.self._00;
-			let a01 = a1.self._01;
-			let a02 = a1.self._02;
-			let a03 = a1.self._03;
-			let a10 = a1.self._10;
-			let a11 = a1.self._11;
-			let a12 = a1.self._12;
-			let a13 = a1.self._13;
-			let a20 = a1.self._20;
-			let a21 = a1.self._21;
-			let a22 = a1.self._22;
-			let a23 = a1.self._23;
-			let a30 = a1.self._30;
-			let a31 = a1.self._31;
-			let a32 = a1.self._32;
-			let a33 = a1.self._33;
-			let b00 = a00 * a11 - a01 * a10;
-			let b01 = a00 * a12 - a02 * a10;
-			let b02 = a00 * a13 - a03 * a10;
-			let b03 = a01 * a12 - a02 * a11;
-			let b04 = a01 * a13 - a03 * a11;
-			let b05 = a02 * a13 - a03 * a12;
-			let b06 = a20 * a31 - a21 * a30;
-			let b07 = a20 * a32 - a22 * a30;
-			let b08 = a20 * a33 - a23 * a30;
-			let b09 = a21 * a32 - a22 * a31;
-			let b10 = a21 * a33 - a23 * a31;
-			let b11 = a22 * a33 - a23 * a32;
-			let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-			if(det == 0.0) {
-				_this.self._00 = 1.0;
-				_this.self._01 = 0.0;
-				_this.self._02 = 0.0;
-				_this.self._03 = 0.0;
-				_this.self._10 = 0.0;
-				_this.self._11 = 1.0;
-				_this.self._12 = 0.0;
-				_this.self._13 = 0.0;
-				_this.self._20 = 0.0;
-				_this.self._21 = 0.0;
-				_this.self._22 = 1.0;
-				_this.self._23 = 0.0;
-				_this.self._30 = 0.0;
-				_this.self._31 = 0.0;
-				_this.self._32 = 0.0;
-				_this.self._33 = 1.0;
-			} else {
-				det = 1.0 / det;
-				_this.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-				_this.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-				_this.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-				_this.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-				_this.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-				_this.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-				_this.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-				_this.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-				_this.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-				_this.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-				_this.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-				_this.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-				_this.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-				_this.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-				_this.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-				_this.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-			}
-			let _this1 = this.q;
-			let _this2 = this.mat;
-			let x = _this2.self._00;
-			let y = _this2.self._01;
-			let z = _this2.self._02;
-			if(z == null) {
-				z = 0.0;
-			}
-			if(y == null) {
-				y = 0.0;
-			}
-			if(x == null) {
-				x = 0.0;
-			}
-			let axis_x = x;
-			let axis_y = y;
-			let axis_z = z;
-			let axis_w = 1.0;
-			let angle = -this.angle;
-			let s = Math.sin(angle * 0.5);
-			_this1.x = axis_x * s;
-			_this1.y = axis_y * s;
-			_this1.z = axis_z * s;
-			_this1.w = Math.cos(angle * 0.5);
-			let l = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z + _this1.w * _this1.w);
-			if(l == 0.0) {
-				_this1.x = 0;
-				_this1.y = 0;
-				_this1.z = 0;
-				_this1.w = 0;
-			} else {
-				l = 1.0 / l;
-				_this1.x *= l;
-				_this1.y *= l;
-				_this1.z *= l;
-				_this1.w *= l;
-			}
-			let q = this.q;
-			let _this3 = iron_math_Mat4.helpMat;
-			let x1 = q.x;
-			let y1 = q.y;
-			let z1 = q.z;
-			let w = q.w;
-			let x2 = x1 + x1;
-			let y2 = y1 + y1;
-			let z2 = z1 + z1;
-			let xx = x1 * x2;
-			let xy = x1 * y2;
-			let xz = x1 * z2;
-			let yy = y1 * y2;
-			let yz = y1 * z2;
-			let zz = z1 * z2;
-			let wx = w * x2;
-			let wy = w * y2;
-			let wz = w * z2;
-			_this3.self._00 = 1.0 - (yy + zz);
-			_this3.self._10 = xy - wz;
-			_this3.self._20 = xz + wy;
-			_this3.self._01 = xy + wz;
-			_this3.self._11 = 1.0 - (xx + zz);
-			_this3.self._21 = yz - wx;
-			_this3.self._02 = xz - wy;
-			_this3.self._12 = yz + wx;
-			_this3.self._22 = 1.0 - (xx + yy);
-			_this3.self._03 = 0.0;
-			_this3.self._13 = 0.0;
-			_this3.self._23 = 0.0;
-			_this3.self._30 = 0.0;
-			_this3.self._31 = 0.0;
-			_this3.self._32 = 0.0;
-			_this3.self._33 = 1.0;
-			let m = iron_math_Mat4.helpMat;
-			let a001 = m1b.self._00;
-			let a011 = m1b.self._01;
-			let a021 = m1b.self._02;
-			let a031 = m1b.self._03;
-			let a101 = m1b.self._10;
-			let a111 = m1b.self._11;
-			let a121 = m1b.self._12;
-			let a131 = m1b.self._13;
-			let a201 = m1b.self._20;
-			let a211 = m1b.self._21;
-			let a221 = m1b.self._22;
-			let a231 = m1b.self._23;
-			let a301 = m1b.self._30;
-			let a311 = m1b.self._31;
-			let a321 = m1b.self._32;
-			let a331 = m1b.self._33;
-			let b0 = m.self._00;
-			let b1 = m.self._10;
-			let b2 = m.self._20;
-			let b3 = m.self._30;
-			m1b.self._00 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._10 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._20 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._30 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			b0 = m.self._01;
-			b1 = m.self._11;
-			b2 = m.self._21;
-			b3 = m.self._31;
-			m1b.self._01 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._11 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._21 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._31 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			b0 = m.self._02;
-			b1 = m.self._12;
-			b2 = m.self._22;
-			b3 = m.self._32;
-			m1b.self._02 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._12 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._22 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._32 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			b0 = m.self._03;
-			b1 = m.self._13;
-			b2 = m.self._23;
-			b3 = m.self._33;
-			m1b.self._03 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._13 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._23 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._33 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			m1b.self._30 = tx;
-			m1b.self._31 = ty;
-			m1b.self._32 = tz;
-			let tx1 = m2b.self._30;
-			let ty1 = m2b.self._31;
-			let tz1 = m2b.self._32;
-			m2b.self._30 = 0;
-			m2b.self._31 = 0;
-			m2b.self._32 = 0;
-			let _this4 = this.mat;
-			let a002 = a2.self._00;
-			let a012 = a2.self._01;
-			let a022 = a2.self._02;
-			let a032 = a2.self._03;
-			let a102 = a2.self._10;
-			let a112 = a2.self._11;
-			let a122 = a2.self._12;
-			let a132 = a2.self._13;
-			let a202 = a2.self._20;
-			let a212 = a2.self._21;
-			let a222 = a2.self._22;
-			let a232 = a2.self._23;
-			let a302 = a2.self._30;
-			let a312 = a2.self._31;
-			let a322 = a2.self._32;
-			let a332 = a2.self._33;
-			let b001 = a002 * a112 - a012 * a102;
-			let b011 = a002 * a122 - a022 * a102;
-			let b021 = a002 * a132 - a032 * a102;
-			let b031 = a012 * a122 - a022 * a112;
-			let b041 = a012 * a132 - a032 * a112;
-			let b051 = a022 * a132 - a032 * a122;
-			let b061 = a202 * a312 - a212 * a302;
-			let b071 = a202 * a322 - a222 * a302;
-			let b081 = a202 * a332 - a232 * a302;
-			let b091 = a212 * a322 - a222 * a312;
-			let b101 = a212 * a332 - a232 * a312;
-			let b111 = a222 * a332 - a232 * a322;
-			let det1 = b001 * b111 - b011 * b101 + b021 * b091 + b031 * b081 - b041 * b071 + b051 * b061;
-			if(det1 == 0.0) {
-				_this4.self._00 = 1.0;
-				_this4.self._01 = 0.0;
-				_this4.self._02 = 0.0;
-				_this4.self._03 = 0.0;
-				_this4.self._10 = 0.0;
-				_this4.self._11 = 1.0;
-				_this4.self._12 = 0.0;
-				_this4.self._13 = 0.0;
-				_this4.self._20 = 0.0;
-				_this4.self._21 = 0.0;
-				_this4.self._22 = 1.0;
-				_this4.self._23 = 0.0;
-				_this4.self._30 = 0.0;
-				_this4.self._31 = 0.0;
-				_this4.self._32 = 0.0;
-				_this4.self._33 = 1.0;
-			} else {
-				det1 = 1.0 / det1;
-				_this4.self._00 = (a112 * b111 - a122 * b101 + a132 * b091) * det1;
-				_this4.self._01 = (a022 * b101 - a012 * b111 - a032 * b091) * det1;
-				_this4.self._02 = (a312 * b051 - a322 * b041 + a332 * b031) * det1;
-				_this4.self._03 = (a222 * b041 - a212 * b051 - a232 * b031) * det1;
-				_this4.self._10 = (a122 * b081 - a102 * b111 - a132 * b071) * det1;
-				_this4.self._11 = (a002 * b111 - a022 * b081 + a032 * b071) * det1;
-				_this4.self._12 = (a322 * b021 - a302 * b051 - a332 * b011) * det1;
-				_this4.self._13 = (a202 * b051 - a222 * b021 + a232 * b011) * det1;
-				_this4.self._20 = (a102 * b101 - a112 * b081 + a132 * b061) * det1;
-				_this4.self._21 = (a012 * b081 - a002 * b101 - a032 * b061) * det1;
-				_this4.self._22 = (a302 * b041 - a312 * b021 + a332 * b001) * det1;
-				_this4.self._23 = (a212 * b021 - a202 * b041 - a232 * b001) * det1;
-				_this4.self._30 = (a112 * b071 - a102 * b091 - a122 * b061) * det1;
-				_this4.self._31 = (a002 * b091 - a012 * b071 + a022 * b061) * det1;
-				_this4.self._32 = (a312 * b011 - a302 * b031 - a322 * b001) * det1;
-				_this4.self._33 = (a202 * b031 - a212 * b011 + a222 * b001) * det1;
-			}
-			let _this5 = this.mat;
-			let x3 = _this5.self._00;
-			let y3 = _this5.self._01;
-			let z3 = _this5.self._02;
-			if(z3 == null) {
-				z3 = 0.0;
-			}
-			if(y3 == null) {
-				y3 = 0.0;
-			}
-			if(x3 == null) {
-				x3 = 0.0;
-			}
-			let v_x = x3;
-			let v_y = y3;
-			let v_z = z3;
-			let v_w = 1.0;
-			v_x *= -1;
-			v_y *= -1;
-			v_z *= -1;
-			let _this6 = this.q;
-			let s1 = Math.sin(-0.8);
-			_this6.x = v_x * s1;
-			_this6.y = v_y * s1;
-			_this6.z = v_z * s1;
-			_this6.w = Math.cos(-0.8);
-			let l1 = Math.sqrt(_this6.x * _this6.x + _this6.y * _this6.y + _this6.z * _this6.z + _this6.w * _this6.w);
-			if(l1 == 0.0) {
-				_this6.x = 0;
-				_this6.y = 0;
-				_this6.z = 0;
-				_this6.w = 0;
-			} else {
-				l1 = 1.0 / l1;
-				_this6.x *= l1;
-				_this6.y *= l1;
-				_this6.z *= l1;
-				_this6.w *= l1;
-			}
-			let q1 = this.q;
-			let _this7 = iron_math_Mat4.helpMat;
-			let x4 = q1.x;
-			let y4 = q1.y;
-			let z4 = q1.z;
-			let w1 = q1.w;
-			let x21 = x4 + x4;
-			let y21 = y4 + y4;
-			let z21 = z4 + z4;
-			let xx1 = x4 * x21;
-			let xy1 = x4 * y21;
-			let xz1 = x4 * z21;
-			let yy1 = y4 * y21;
-			let yz1 = y4 * z21;
-			let zz1 = z4 * z21;
-			let wx1 = w1 * x21;
-			let wy1 = w1 * y21;
-			let wz1 = w1 * z21;
-			_this7.self._00 = 1.0 - (yy1 + zz1);
-			_this7.self._10 = xy1 - wz1;
-			_this7.self._20 = xz1 + wy1;
-			_this7.self._01 = xy1 + wz1;
-			_this7.self._11 = 1.0 - (xx1 + zz1);
-			_this7.self._21 = yz1 - wx1;
-			_this7.self._02 = xz1 - wy1;
-			_this7.self._12 = yz1 + wx1;
-			_this7.self._22 = 1.0 - (xx1 + yy1);
-			_this7.self._03 = 0.0;
-			_this7.self._13 = 0.0;
-			_this7.self._23 = 0.0;
-			_this7.self._30 = 0.0;
-			_this7.self._31 = 0.0;
-			_this7.self._32 = 0.0;
-			_this7.self._33 = 1.0;
-			let m1 = iron_math_Mat4.helpMat;
-			let a003 = m2b.self._00;
-			let a013 = m2b.self._01;
-			let a023 = m2b.self._02;
-			let a033 = m2b.self._03;
-			let a103 = m2b.self._10;
-			let a113 = m2b.self._11;
-			let a123 = m2b.self._12;
-			let a133 = m2b.self._13;
-			let a203 = m2b.self._20;
-			let a213 = m2b.self._21;
-			let a223 = m2b.self._22;
-			let a233 = m2b.self._23;
-			let a303 = m2b.self._30;
-			let a313 = m2b.self._31;
-			let a323 = m2b.self._32;
-			let a333 = m2b.self._33;
-			let b010 = m1.self._00;
-			let b12 = m1.self._10;
-			let b21 = m1.self._20;
-			let b31 = m1.self._30;
-			m2b.self._00 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._10 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._20 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._30 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			b010 = m1.self._01;
-			b12 = m1.self._11;
-			b21 = m1.self._21;
-			b31 = m1.self._31;
-			m2b.self._01 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._11 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._21 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._31 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			b010 = m1.self._02;
-			b12 = m1.self._12;
-			b21 = m1.self._22;
-			b31 = m1.self._32;
-			m2b.self._02 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._12 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._22 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._32 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			b010 = m1.self._03;
-			b12 = m1.self._13;
-			b21 = m1.self._23;
-			b31 = m1.self._33;
-			m2b.self._03 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._13 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._23 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._33 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			m2b.self._30 = tx1;
-			m2b.self._31 = ty1;
-			m2b.self._32 = tz1;
-		}
-	}
 }
-$hxClasses["arm.FirstPersonController"] = arm_FirstPersonController;
-arm_FirstPersonController.__name__ = true;
-arm_FirstPersonController.__super__ = armory_trait_internal_CameraController;
-Object.assign(arm_FirstPersonController.prototype, {
-	__class__: arm_FirstPersonController
+$hxClasses["arm.PlayerLogic"] = arm_PlayerLogic;
+arm_PlayerLogic.__name__ = true;
+arm_PlayerLogic.__super__ = armory_trait_internal_CameraController;
+Object.assign(arm_PlayerLogic.prototype, {
+	__class__: arm_PlayerLogic
 	,head: null
+	,rotationSpeed: null
 	,armature: null
-	,anim: null
-	,q: null
-	,mat: null
-	,angle: null
+	,animations: null
+	,aimNode: null
+	,initAimLoc: null
+	,state: null
 	,speed: null
 	,xVec: null
 	,zVec: null
 	,dir: null
-});
-var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
-	,Walking: {_hx_name:"Walking",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
-	,Attacking: {_hx_name:"Attacking",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
-};
-arm_HuggyState.__constructs__ = [arm_HuggyState.Walking,arm_HuggyState.Attacking];
-class arm_HuggyLogic extends iron_Trait {
-	constructor() {
-		iron_Trait._hx_skip_constructor = true;
-		super();
-		iron_Trait._hx_skip_constructor = false;
-		this._hx_constructor();
-	}
-	_hx_constructor() {
-		this.state = arm_HuggyState.Walking;
-		this.attackDistance = 2.0;
-		this.speed = 1.0;
-		this.navTimerDuration = 0.0;
-		super._hx_constructor();
-		let _gthis = this;
-		this.notifyOnInit(function() {
-			_gthis.navTimerDuration = arm_HuggyLogic.navTimerInterval;
-			let armature = _gthis.object.getChild("Huggy");
-			_gthis.animimations = _gthis.findAnimation(armature);
-			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
-			_gthis.startWalking();
-		});
-		this.notifyOnUpdate(function() {
-			_gthis.updateNavigation();
-		});
-	}
-	findAnimation(o) {
-		if(o.animation != null) {
-			return o.animation;
-		}
-		let _g = 0;
-		let _g1 = o.children;
-		while(_g < _g1.length) {
-			let c = _g1[_g];
-			++_g;
-			let co = this.findAnimation(c);
-			if(co != null) {
-				return co;
-			}
-		}
-		return null;
-	}
-	onAnimationComplete() {
-		haxe_Log.trace("SHIT",{ fileName : "arm/HuggyLogic.hx", lineNumber : 59, className : "arm.HuggyLogic", methodName : "onAnimationComplete"});
-		if(this.state == arm_HuggyState.Attacking) {
-			this.startWalking();
-		}
-	}
-	startAttack() {
-		this.state = arm_HuggyState.Attacking;
-		if(this.animimations.action != "Attack_Huggy") {
-			this.navAgent.stop();
-			this.animimations.play("Attack_Huggy");
-			this.animimations.onComplete = $bind(this,this.onAnimationComplete);
-		}
-	}
-	startWalking() {
-		this.state = arm_HuggyState.Walking;
-		if(this.animimations.action != "Move_Huggy") {
-			this.animimations.play("Move_Huggy");
-		}
-	}
-	updateNavigation() {
-		this.navTimerDuration -= iron_system_Time.get_delta();
-		let _gthis = this;
-		if(this.navTimerDuration <= 0.0) {
-			this.navTimerDuration = arm_HuggyLogic.navTimerInterval;
-			let _this = this.object.transform.world;
-			let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
-			let _this1 = this.playerObject.transform.world;
-			let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
-			let vx = from.x - to.x;
-			let vy = from.y - to.y;
-			let vz = from.z - to.z;
-			let distance = Math.sqrt(vx * vx + vy * vy + vz * vz);
-			if(distance <= this.attackDistance) {
-				this.startAttack();
-			} else {
-				if(this.state == arm_HuggyState.Attacking) {
-					return;
-				}
-				armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from,to,function(path) {
-					let agent = _gthis.object.getTrait(armory_trait_NavAgent);
-					agent.speed = _gthis.speed;
-					agent.turnDuration = 0.4;
-					agent.heightOffset = 0;
-					agent.setPath(path);
-				});
-			}
-		}
-	}
-}
-$hxClasses["arm.HuggyLogic"] = arm_HuggyLogic;
-arm_HuggyLogic.__name__ = true;
-arm_HuggyLogic.__super__ = iron_Trait;
-Object.assign(arm_HuggyLogic.prototype, {
-	__class__: arm_HuggyLogic
-	,navTimerDuration: null
-	,playerObject: null
-	,speed: null
-	,attackDistance: null
-	,state: null
-	,animimations: null
-	,navAgent: null
 });
 class armory_logicnode_LogicTree extends iron_Trait {
 	constructor() {
@@ -1626,7 +862,7 @@ Object.assign(armory_logicnode_LogicTree.prototype, {
 	,loopContinue: null
 	,paused: null
 });
-class arm_node_PlayerAnim extends armory_logicnode_LogicTree {
+class arm_node_BoneIK extends armory_logicnode_LogicTree {
 	constructor() {
 		super();
 		this.functionNodes = new haxe_ds_StringMap();
@@ -1634,42 +870,85 @@ class arm_node_PlayerAnim extends armory_logicnode_LogicTree {
 		this.notifyOnAdd($bind(this,this.add));
 	}
 	add() {
-		let _PlayActionFrom = new armory_logicnode_PlayActionFromNode(this);
-		_PlayActionFrom.inputs.length = 9;
-		_PlayActionFrom.outputs.length = 2;
+		let _BoneIK = new armory_logicnode_BoneIKNode(this);
+		_BoneIK.inputs.length = 10;
+		_BoneIK.outputs.length = 1;
 		let _g = 0;
-		let _g1 = _PlayActionFrom.outputs.length;
+		let _g1 = _BoneIK.outputs.length;
 		while(_g < _g1) {
 			let i = _g++;
-			_PlayActionFrom.outputs[i] = [];
+			_BoneIK.outputs[i] = [];
 		}
-		let _OnInit = new armory_logicnode_OnInitNode(this);
-		_OnInit.inputs.length = 0;
-		_OnInit.outputs.length = 1;
+		let _OnUpdate = new armory_logicnode_OnUpdateNode(this);
+		_OnUpdate.property0 = "Late Update";
+		_OnUpdate.inputs.length = 0;
+		_OnUpdate.outputs.length = 1;
 		let _g2 = 0;
-		let _g3 = _OnInit.outputs.length;
+		let _g3 = _OnUpdate.outputs.length;
 		while(_g2 < _g3) {
 			let i = _g2++;
-			_OnInit.outputs[i] = [];
+			_OnUpdate.outputs[i] = [];
 		}
-		armory_logicnode_LogicNode.addLink(_OnInit,_PlayActionFrom,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Policeman"),_PlayActionFrom,0,1);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"Idle_Policeman"),_PlayActionFrom,0,2);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,0),_PlayActionFrom,0,3);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,26),_PlayActionFrom,0,4);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.25),_PlayActionFrom,0,5);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,1.0),_PlayActionFrom,0,6);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,true),_PlayActionFrom,0,7);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_PlayActionFrom,0,8);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),0,0);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),1,0);
+		armory_logicnode_LogicNode.addLink(_OnUpdate,_BoneIK,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,""),_BoneIK,0,1);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"mixamorig:LeftForeArm"),_BoneIK,0,2);
+		let _GetObjectLocation = new armory_logicnode_GetLocationNode(this);
+		_GetObjectLocation.inputs.length = 2;
+		_GetObjectLocation.outputs.length = 1;
+		let _g4 = 0;
+		let _g5 = _GetObjectLocation.outputs.length;
+		while(_g4 < _g5) {
+			let i = _g4++;
+			_GetObjectLocation.outputs[i] = [];
+		}
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"AimLeft"),_GetObjectLocation,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_GetObjectLocation,0,1);
+		armory_logicnode_LogicNode.addLink(_GetObjectLocation,_BoneIK,0,3);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_BoneIK,0,4);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_VectorNode(this,0.0,0.0,0.0),_BoneIK,0,5);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,2),_BoneIK,0,6);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,10),_BoneIK,0,7);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.009999999776482582),_BoneIK,0,8);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.0),_BoneIK,0,9);
+		armory_logicnode_LogicNode.addLink(_BoneIK,new armory_logicnode_NullNode(this),0,0);
+		let _BoneIK_001 = new armory_logicnode_BoneIKNode(this);
+		_BoneIK_001.inputs.length = 10;
+		_BoneIK_001.outputs.length = 1;
+		let _g6 = 0;
+		let _g7 = _BoneIK_001.outputs.length;
+		while(_g6 < _g7) {
+			let i = _g6++;
+			_BoneIK_001.outputs[i] = [];
+		}
+		armory_logicnode_LogicNode.addLink(_OnUpdate,_BoneIK_001,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,""),_BoneIK_001,0,1);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"mixamorig:RightForeArm"),_BoneIK_001,0,2);
+		let _GetObjectLocation_001 = new armory_logicnode_GetLocationNode(this);
+		_GetObjectLocation_001.inputs.length = 2;
+		_GetObjectLocation_001.outputs.length = 1;
+		let _g8 = 0;
+		let _g9 = _GetObjectLocation_001.outputs.length;
+		while(_g8 < _g9) {
+			let i = _g8++;
+			_GetObjectLocation_001.outputs[i] = [];
+		}
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"AimRight"),_GetObjectLocation_001,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_GetObjectLocation_001,0,1);
+		armory_logicnode_LogicNode.addLink(_GetObjectLocation_001,_BoneIK_001,0,3);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_BoneIK_001,0,4);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_VectorNode(this,0.0,0.0,0.0),_BoneIK_001,0,5);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,2),_BoneIK_001,0,6);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,10),_BoneIK_001,0,7);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.009999999776482582),_BoneIK_001,0,8);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.0),_BoneIK_001,0,9);
+		armory_logicnode_LogicNode.addLink(_BoneIK_001,new armory_logicnode_NullNode(this),0,0);
 	}
 }
-$hxClasses["arm.node.PlayerAnim"] = arm_node_PlayerAnim;
-arm_node_PlayerAnim.__name__ = true;
-arm_node_PlayerAnim.__super__ = armory_logicnode_LogicTree;
-Object.assign(arm_node_PlayerAnim.prototype, {
-	__class__: arm_node_PlayerAnim
+$hxClasses["arm.node.BoneIK"] = arm_node_BoneIK;
+arm_node_BoneIK.__name__ = true;
+arm_node_BoneIK.__super__ = armory_logicnode_LogicTree;
+Object.assign(arm_node_BoneIK.prototype, {
+	__class__: arm_node_BoneIK
 	,functionNodes: null
 	,functionOutputNodes: null
 });
@@ -1764,6 +1043,75 @@ Object.assign(armory_logicnode_LogicNode.prototype, {
 	,tree: null
 	,inputs: null
 	,outputs: null
+});
+class armory_logicnode_BoneIKNode extends armory_logicnode_LogicNode {
+	constructor(tree) {
+		armory_logicnode_LogicNode._hx_skip_constructor = true;
+		super();
+		armory_logicnode_LogicNode._hx_skip_constructor = false;
+		this._hx_constructor(tree);
+	}
+	_hx_constructor(tree) {
+		this.notified = false;
+		super._hx_constructor(tree);
+	}
+	run(from) {
+		let _this = this.inputs[1];
+		let object = _this.fromNode.get(_this.fromIndex);
+		let _this1 = this.inputs[2];
+		let boneName = _this1.fromNode.get(_this1.fromIndex);
+		let _this2 = this.inputs[3];
+		this.goal = _this2.fromNode.get(_this2.fromIndex);
+		let _this3 = this.inputs[4];
+		this.poleEnabled = _this3.fromNode.get(_this3.fromIndex);
+		let _this4 = this.inputs[5];
+		this.pole = _this4.fromNode.get(_this4.fromIndex);
+		let _this5 = this.inputs[6];
+		this.chainLength = _this5.fromNode.get(_this5.fromIndex);
+		let _this6 = this.inputs[7];
+		this.maxIterartions = _this6.fromNode.get(_this6.fromIndex);
+		let _this7 = this.inputs[8];
+		this.precision = _this7.fromNode.get(_this7.fromIndex);
+		let _this8 = this.inputs[9];
+		this.rollAngle = _this8.fromNode.get(_this8.fromIndex);
+		if(object == null || this.goal == null) {
+			return;
+		}
+		let anim = object.animation != null ? js_Boot.__cast(object.animation , iron_object_BoneAnimation) : null;
+		if(anim == null) {
+			anim = object.getParentArmature(object.name);
+		}
+		let bone = anim.getBone(boneName);
+		if(!this.poleEnabled) {
+			this.pole = null;
+		}
+		let solveBone = null;
+		let _gthis = this;
+		solveBone = function() {
+			anim.solveIK(bone,_gthis.goal,_gthis.precision,_gthis.maxIterartions,_gthis.chainLength,_gthis.pole,_gthis.rollAngle);
+			anim.removeUpdate(solveBone);
+			_gthis.notified = false;
+		};
+		if(!this.notified) {
+			anim.notifyOnUpdate(solveBone);
+			this.notified = true;
+		}
+		this.runOutput(0);
+	}
+}
+$hxClasses["armory.logicnode.BoneIKNode"] = armory_logicnode_BoneIKNode;
+armory_logicnode_BoneIKNode.__name__ = true;
+armory_logicnode_BoneIKNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_BoneIKNode.prototype, {
+	__class__: armory_logicnode_BoneIKNode
+	,goal: null
+	,pole: null
+	,poleEnabled: null
+	,chainLength: null
+	,maxIterartions: null
+	,precision: null
+	,rollAngle: null
+	,notified: null
 });
 class armory_logicnode_BooleanNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
@@ -1867,6 +1215,113 @@ armory_logicnode_FunctionOutputNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_FunctionOutputNode.prototype, {
 	__class__: armory_logicnode_FunctionOutputNode
 	,result: null
+});
+class armory_logicnode_GetLocationNode extends armory_logicnode_LogicNode {
+	constructor(tree) {
+		super(tree);
+	}
+	get(from) {
+		let _this = this.inputs[0];
+		let object = _this.fromNode.get(_this.fromIndex);
+		let _this1 = this.inputs[1];
+		let relative = _this1.fromNode.get(_this1.fromIndex);
+		if(object == null) {
+			return null;
+		}
+		let _this2 = object.transform.world;
+		let loc = new iron_math_Vec4(_this2.self._30,_this2.self._31,_this2.self._32,_this2.self._33);
+		if(relative && object.parent != null) {
+			let _this = object.parent.transform.world;
+			let x = _this.self._30;
+			let y = _this.self._31;
+			let z = _this.self._32;
+			let w = _this.self._33;
+			if(w == null) {
+				w = 1.0;
+			}
+			if(z == null) {
+				z = 0.0;
+			}
+			if(y == null) {
+				y = 0.0;
+			}
+			if(x == null) {
+				x = 0.0;
+			}
+			let v_x = x;
+			let v_y = y;
+			let v_z = z;
+			let v_w = w;
+			loc.x -= v_x;
+			loc.y -= v_y;
+			loc.z -= v_z;
+			let _this1 = object.parent.transform.world;
+			let x1 = _this1.self._00;
+			let y1 = _this1.self._01;
+			let z1 = _this1.self._02;
+			if(z1 == null) {
+				z1 = 0.0;
+			}
+			if(y1 == null) {
+				y1 = 0.0;
+			}
+			if(x1 == null) {
+				x1 = 0.0;
+			}
+			let v_x1 = x1;
+			let v_y1 = y1;
+			let v_z1 = z1;
+			let v_w1 = 1.0;
+			let dotX = loc.x * v_x1 + loc.y * v_y1 + loc.z * v_z1;
+			let _this2 = object.parent.transform.world;
+			let x2 = _this2.self._10;
+			let y2 = _this2.self._11;
+			let z2 = _this2.self._12;
+			if(z2 == null) {
+				z2 = 0.0;
+			}
+			if(y2 == null) {
+				y2 = 0.0;
+			}
+			if(x2 == null) {
+				x2 = 0.0;
+			}
+			let v_x2 = x2;
+			let v_y2 = y2;
+			let v_z2 = z2;
+			let v_w2 = 1.0;
+			let dotY = loc.x * v_x2 + loc.y * v_y2 + loc.z * v_z2;
+			let _this3 = object.parent.transform.world;
+			let x3 = _this3.self._20;
+			let y3 = _this3.self._21;
+			let z3 = _this3.self._22;
+			if(z3 == null) {
+				z3 = 0.0;
+			}
+			if(y3 == null) {
+				y3 = 0.0;
+			}
+			if(x3 == null) {
+				x3 = 0.0;
+			}
+			let v_x3 = x3;
+			let v_y3 = y3;
+			let v_z3 = z3;
+			let v_w3 = 1.0;
+			let dotZ = loc.x * v_x3 + loc.y * v_y3 + loc.z * v_z3;
+			loc.x = dotX;
+			loc.y = dotY;
+			loc.z = dotZ;
+			loc.w = 1.0;
+		}
+		return loc;
+	}
+}
+$hxClasses["armory.logicnode.GetLocationNode"] = armory_logicnode_GetLocationNode;
+armory_logicnode_GetLocationNode.__name__ = true;
+armory_logicnode_GetLocationNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_GetLocationNode.prototype, {
+	__class__: armory_logicnode_GetLocationNode
 });
 class armory_logicnode_IntegerNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
@@ -1977,226 +1432,33 @@ Object.assign(armory_logicnode_ObjectNode.prototype, {
 	,objectName: null
 	,value: null
 });
-class armory_logicnode_OnInitNode extends armory_logicnode_LogicNode {
+class armory_logicnode_OnUpdateNode extends armory_logicnode_LogicNode {
 	constructor(tree) {
 		super(tree);
 		tree.notifyOnInit($bind(this,this.init));
 	}
 	init() {
-		let noPhysics = armory_trait_physics_bullet_PhysicsWorld.active == null || armory_trait_physics_bullet_PhysicsWorld.active._lateUpdate == null;
-		if(noPhysics) {
-			this.runOutput(0);
-		} else {
-			armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.physics_init));
+		switch(this.property0) {
+		case "Late Update":
+			this.tree.notifyOnLateUpdate($bind(this,this.update));
+			break;
+		case "Physics Pre-Update":
+			armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.update));
+			break;
+		default:
+			this.tree.notifyOnUpdate($bind(this,this.update));
 		}
-	}
-	physics_init() {
-		armory_trait_physics_bullet_PhysicsWorld.active.removePreUpdate($bind(this,this.physics_init));
-		this.runOutput(0);
-	}
-}
-$hxClasses["armory.logicnode.OnInitNode"] = armory_logicnode_OnInitNode;
-armory_logicnode_OnInitNode.__name__ = true;
-armory_logicnode_OnInitNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_OnInitNode.prototype, {
-	__class__: armory_logicnode_OnInitNode
-});
-class armory_logicnode_PlayActionFromNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		armory_logicnode_LogicNode._hx_skip_constructor = true;
-		super();
-		armory_logicnode_LogicNode._hx_skip_constructor = false;
-		this._hx_constructor(tree);
-	}
-	_hx_constructor(tree) {
-		this.endFrame = -1;
-		super._hx_constructor(tree);
-		tree.notifyOnUpdate($bind(this,this.update));
 	}
 	update() {
-		if(this.animation != null) {
-			if(this.animation.currentFrame() == this.endFrame) {
-				if(this.loop) {
-					this.animation.setFrame(this.startFrame);
-				} else if(!this.animation.paused) {
-					this.animation.pause();
-					this.runOutput(1);
-				}
-			}
-		}
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let object = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[2];
-		let action = _this1.fromNode.get(_this1.fromIndex);
-		let _this2 = this.inputs[3];
-		this.startFrame = _this2.fromNode.get(_this2.fromIndex);
-		let _this3 = this.inputs[4];
-		this.endFrame = _this3.fromNode.get(_this3.fromIndex);
-		let _this4 = this.inputs[5];
-		let blendTime = _this4.fromNode.get(_this4.fromIndex);
-		let _this5 = this.inputs[6];
-		let speed = _this5.fromNode.get(_this5.fromIndex);
-		let _this6 = this.inputs[7];
-		this.loop = _this6.fromNode.get(_this6.fromIndex);
-		let _this7 = this.inputs[8];
-		this.reverse = _this7.fromNode.get(_this7.fromIndex);
-		if(object == null) {
-			return;
-		}
-		this.animation = object.animation;
-		if(this.animation == null) {
-			this.animation = object.getParentArmature(object.name);
-		}
-		if(this.reverse) {
-			let isnew = true;
-			this.actionR = action + "Reverse";
-			if(this.animation.isSkinned) {
-				let _g = 0;
-				let _g1 = this.animation.armature.actions;
-				while(_g < _g1.length) {
-					let a = _g1[_g];
-					++_g;
-					if(a.name == this.actionR) {
-						isnew = false;
-					}
-				}
-				if(isnew) {
-					let _g = 0;
-					let _g1 = this.animation.armature.actions;
-					while(_g < _g1.length) {
-						let a = _g1[_g];
-						++_g;
-						if(a.name == action) {
-							this.animation.armature.actions.push({ name : this.actionR, bones : a.bones, mats : null});
-						}
-					}
-					let _g2 = 0;
-					let _g3 = this.animation.armature.actions;
-					while(_g2 < _g3.length) {
-						let a = _g3[_g2];
-						++_g2;
-						if(a.name == this.actionR) {
-							let _g = 0;
-							let _g1 = a.bones;
-							while(_g < _g1.length) {
-								let bone = _g1[_g];
-								++_g;
-								let val = [];
-								let v = bone.anim.tracks[0];
-								let len = v.values.byteLength >> 2;
-								let l = len / 16 | 0;
-								let _g2 = 0;
-								let _g3 = l;
-								while(_g2 < _g3) {
-									let i = _g2++;
-									let _g = 0;
-									while(_g < 16) {
-										let j = _g++;
-										val.push(v.values.getFloat32(((l - i) * 16 + j - 16) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN));
-									}
-								}
-								let _g4 = 0;
-								let _g5 = v.values.byteLength >> 2;
-								while(_g4 < _g5) {
-									let i = _g4++;
-									let v1 = val[i];
-									v.values.setFloat32(i * 4,v1,true);
-								}
-							}
-							let castBoneAnim = js_Boot.__cast(this.animation , iron_object_BoneAnimation);
-							castBoneAnim.data.geom.actions.h[this.actionR] = a.bones;
-							castBoneAnim.data.geom.mats.h[this.actionR] = castBoneAnim.data.geom.mats.h[action];
-							let _g2 = 0;
-							let _g3 = iron_Scene.active.raw.objects;
-							while(_g2 < _g3.length) {
-								let o = _g3[_g2];
-								++_g2;
-								if(o.name == object.name) {
-									o.bone_actions.push("action_" + o.bone_actions[0].split("_")[1] + "_" + this.actionR);
-								}
-							}
-						}
-					}
-				}
-			} else {
-				let oaction = null;
-				let tracks = [];
-				let oactions = (js_Boot.__cast(this.animation , iron_object_ObjectAnimation)).oactions;
-				let _g = 0;
-				while(_g < oactions.length) {
-					let a = oactions[_g];
-					++_g;
-					if(a.objects[0].name == this.actionR) {
-						isnew = false;
-					}
-				}
-				if(isnew) {
-					let _g = 0;
-					while(_g < oactions.length) {
-						let a = oactions[_g];
-						++_g;
-						if(a.objects[0].name == action) {
-							oaction = a.objects[0];
-							let _g = 0;
-							let _g1 = a.objects[0].anim.tracks;
-							while(_g < _g1.length) {
-								let b = _g1[_g];
-								++_g;
-								let val = [];
-								let _g2 = 0;
-								let _g3 = b.values;
-								while(_g2 < _g3.byteLength >> 2) {
-									let c = _g3.getFloat32(_g2 * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-									++_g2;
-									val.push(c);
-								}
-								val.reverse();
-								let vali = kha_arrays_Float32Array._new(val.length);
-								let _g4 = 0;
-								let _g5 = val.length;
-								while(_g4 < _g5) {
-									let i = _g4++;
-									let v = val[i];
-									vali.setFloat32(i * 4,v,true);
-								}
-								tracks.push({ target : b.target, frames : b.frames, values : vali});
-							}
-							oactions.push({ objects : [{ name : this.actionR, anim : { begin : oaction.anim.begin, end : oaction.anim.end, tracks : tracks}, type : "object", data_ref : "", transform : null}]});
-							let _g2 = 0;
-							let _g3 = iron_Scene.active.raw.objects;
-							while(_g2 < _g3.length) {
-								let o = _g3[_g2];
-								++_g2;
-								if(o.name == object.name) {
-									o.object_actions.push("action_" + this.actionR);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		let _gthis = this;
-		this.animation.play(this.reverse ? this.actionR : action,function() {
-			_gthis.runOutput(1);
-		},blendTime,speed,this.loop);
-		this.animation.update(this.startFrame * iron_Scene.active.raw.frame_time);
 		this.runOutput(0);
 	}
 }
-$hxClasses["armory.logicnode.PlayActionFromNode"] = armory_logicnode_PlayActionFromNode;
-armory_logicnode_PlayActionFromNode.__name__ = true;
-armory_logicnode_PlayActionFromNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_PlayActionFromNode.prototype, {
-	__class__: armory_logicnode_PlayActionFromNode
-	,animation: null
-	,startFrame: null
-	,endFrame: null
-	,loop: null
-	,reverse: null
-	,actionR: null
+$hxClasses["armory.logicnode.OnUpdateNode"] = armory_logicnode_OnUpdateNode;
+armory_logicnode_OnUpdateNode.__name__ = true;
+armory_logicnode_OnUpdateNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_OnUpdateNode.prototype, {
+	__class__: armory_logicnode_OnUpdateNode
+	,property0: null
 });
 class armory_logicnode_StringNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
@@ -2226,6 +1488,48 @@ armory_logicnode_StringNode.__name__ = true;
 armory_logicnode_StringNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_StringNode.prototype, {
 	__class__: armory_logicnode_StringNode
+	,value: null
+});
+class armory_logicnode_VectorNode extends armory_logicnode_LogicNode {
+	constructor(tree,x,y,z) {
+		armory_logicnode_LogicNode._hx_skip_constructor = true;
+		super();
+		armory_logicnode_LogicNode._hx_skip_constructor = false;
+		this._hx_constructor(tree,x,y,z);
+	}
+	_hx_constructor(tree,x,y,z) {
+		this.value = new iron_math_Vec4();
+		super._hx_constructor(tree);
+		if(x != null) {
+			armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(tree,x),this,0,0);
+			armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(tree,y),this,0,1);
+			armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(tree,z),this,0,2);
+		}
+	}
+	get(from) {
+		this.value = new iron_math_Vec4();
+		let _this = this.inputs[0];
+		let tmp = _this.fromNode.get(_this.fromIndex);
+		this.value.x = tmp;
+		let _this1 = this.inputs[1];
+		let tmp1 = _this1.fromNode.get(_this1.fromIndex);
+		this.value.y = tmp1;
+		let _this2 = this.inputs[2];
+		let tmp2 = _this2.fromNode.get(_this2.fromIndex);
+		this.value.z = tmp2;
+		return this.value;
+	}
+	set(value) {
+		this.inputs[0].fromNode.set(value.x);
+		this.inputs[1].fromNode.set(value.y);
+		this.inputs[2].fromNode.set(value.z);
+	}
+}
+$hxClasses["armory.logicnode.VectorNode"] = armory_logicnode_VectorNode;
+armory_logicnode_VectorNode.__name__ = true;
+armory_logicnode_VectorNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_VectorNode.prototype, {
+	__class__: armory_logicnode_VectorNode
 	,value: null
 });
 class armory_math_Helper {
@@ -58889,16 +58193,15 @@ Main.projectName = "Game";
 Main.projectVersion = "1.0.0";
 Main.projectPackage = "arm";
 iron_Trait._hx_skip_constructor = false;
+arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}}};
+arm_HuggyLogic.navTimerInterval = 0.5;
 armory_trait_internal_CameraController.keyUp = "w";
 armory_trait_internal_CameraController.keyDown = "s";
 armory_trait_internal_CameraController.keyLeft = "a";
 armory_trait_internal_CameraController.keyRight = "d";
 armory_trait_internal_CameraController.keyStrafeUp = "e";
 armory_trait_internal_CameraController.keyStrafeDown = "q";
-arm_FirstPersonController.__meta__ = { fields : { speed : { prop : null}}};
-arm_FirstPersonController.rotationSpeed = 2.0;
-arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}}};
-arm_HuggyLogic.navTimerInterval = 0.5;
+arm_PlayerLogic.__meta__ = { fields : { rotationSpeed : { prop : null}, speed : { prop : null}}};
 armory_data_Config.configLoaded = false;
 armory_logicnode_LogicNode._hx_skip_constructor = false;
 armory_renderpath_Downsampler.currentMipLevel = 0;

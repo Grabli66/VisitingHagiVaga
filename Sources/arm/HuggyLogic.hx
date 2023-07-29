@@ -54,20 +54,14 @@ class HuggyLogic extends iron.Trait {
 		return null;
 	}
 
-	// Обрабатывает завершение анимации
-	function onAnimationComplete() {
-		if (state == Attacking) {
-			startWalking();
-		}
-	}
-
 	// Начинает атаку
 	function startAttack() {
 		state = Attacking;		
 		if (animimations.action != "Attack_Huggy") {
 			navAgent.stop();
-			animimations.play("Attack_Huggy");
-			animimations.onComplete = onAnimationComplete;
+			animimations.play("Attack_Huggy", () -> {
+				startWalking();
+			});			
 		}
 	}
 
