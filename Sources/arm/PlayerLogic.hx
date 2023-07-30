@@ -1,5 +1,6 @@
 package arm;
 
+import iron.system.Tween;
 import iron.math.Mat4;
 import iron.object.BoneAnimation;
 import iron.math.Vec4;
@@ -20,6 +21,15 @@ enum PlayerState {
 	Dead;
 }
 
+// Данные анимации выстрела
+class ShootAnimData {
+	// Признак что идёт анимация стрельбы
+	public var isFiring:Bool;
+	
+	// Конструктор
+	public function new() {}
+}
+
 // Логика игрока
 class PlayerLogic extends CameraController {
 	// Камера
@@ -29,8 +39,15 @@ class PlayerLogic extends CameraController {
 	@prop
 	var rotationSpeed = 2.0;
 
+	var xVec = Vec4.xAxis();
+	var yVec = Vec4.yAxis();
+	var zVec = Vec4.zAxis();
+
+	// Скелет игрока
 	var armature:Object;
+	// Анимации
 	var animations:BoneAnimation;
+
 	// Прицел для IK
 	var aimNode:Object;
 
@@ -39,6 +56,9 @@ class PlayerLogic extends CameraController {
 
 	// Состояние
 	var state = PlayerState.None;
+
+	// Признак что идёт анимация стрельбы
+	var shootingAnimData = new ShootAnimData();
 
 	// Скорость передвижения
 	@prop
@@ -74,12 +94,46 @@ class PlayerLogic extends CameraController {
 		animations.play('Walk_Policeman');
 	}
 
+	// Производит анимацию стрельбы
+	function startShooting() {
+		if (shootingAnimData.isFiring)
+			return;
+
+		shootingAnimData.isFiring = true;
+
+		Tween.to({
+			target: this,
+			props: {fromValue: 1.0},
+			duration: 0.2,
+			tick: () -> {
+				aimNode.transform.translate(0.0, -0.01, -0.0);
+				aimNode.transform.rotate(yVec, -0.05);
+			},
+			done: () -> {
+				Tween.to({
+					target: this,
+					props: {fromValue: 1.0},
+					duration: 0.2,
+					tick: () -> {
+						aimNode.transform.rotate(yVec, 0.05);
+						aimNode.transform.translate(0.0, 0.01, 0.0);
+					},
+					done: () -> {
+						shootingAnimData.isFiring = false;
+					}
+				});
+			}
+		});
+	}
+
+	// Конструктор
 	public function new() {
 		super();
 
 		iron.Scene.active.notifyOnInit(init);
 	}
 
+	// Инициализирует
 	function init() {
 		head = object.getChildOfType(CameraObject);
 
@@ -94,9 +148,7 @@ class PlayerLogic extends CameraController {
 		startIdle();
 	}
 
-	var xVec = Vec4.xAxis();
-	var zVec = Vec4.zAxis();
-
+	// Обновление физики
 	function preUpdate() {
 		if (Input.occupied || !body.ready)
 			return;
@@ -109,23 +161,27 @@ class PlayerLogic extends CameraController {
 		else if (kb.started("escape") && mouse.locked)
 			mouse.unlock();
 
+		if (!mouse.locked)
+			return;
+
+		// Обрабатывает прицеливание
 		if (mouse.moved) {
-			var d = -mouse.movementY / 450;			
-			aimNode.transform.translate(0, 0, d);			
-						
-			var thr = 0.01;
-			if (aimNode.transform.loc.z <= initAimLoc.z - thr)
-			 	aimNode.transform.loc.z = initAimLoc.z - thr;
-
-			if (aimNode.transform.loc.z >= initAimLoc.z + thr)
-				aimNode.transform.loc.z = initAimLoc.z + thr;
+			var d = -mouse.movementY / 250;
+			aimNode.transform.translate(0, 0, d);
 		}
 
-		if (mouse.locked || mouse.down()) {
-			head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);
-			transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
-			body.syncTransform();
+		// Обрабатывает выстрел
+		if (mouse.started()) {
+			startShooting();
 		}
+
+		// Обновляет анимацию стрельбы
+		// updateShooting();
+
+		// Обрабатывает поворот игрока
+		head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);
+		transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
+		body.syncTransform();
 	}
 
 	function removed() {

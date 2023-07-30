@@ -327,6 +327,11 @@ class UInt {
 		}
 	}
 }
+var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
+	,Walking: {_hx_name:"Walking",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
+	,Attacking: {_hx_name:"Attacking",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
+};
+arm_HuggyState.__constructs__ = [arm_HuggyState.Walking,arm_HuggyState.Attacking];
 class iron_Trait {
 	constructor() {
 		if(iron_Trait._hx_skip_constructor) {
@@ -425,6 +430,132 @@ Object.assign(iron_Trait.prototype, {
 	,_render: null
 	,_render2D: null
 });
+class arm_HuggyLogic extends iron_Trait {
+	constructor() {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.state = arm_HuggyState.Walking;
+		this.attackDistance = 2.0;
+		this.speed = 1.0;
+		this.navTimerDuration = 0.0;
+		super._hx_constructor();
+		let _gthis = this;
+		this.notifyOnInit(function() {
+			_gthis.navTimerDuration = arm_HuggyLogic.navTimerInterval;
+			let armature = _gthis.object.getChild("Huggy");
+			_gthis.animimations = _gthis.findAnimation(armature);
+			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
+			_gthis.startWalking();
+		});
+		this.notifyOnUpdate(function() {
+			_gthis.updateNavigation();
+		});
+	}
+	findAnimation(o) {
+		if(o.animation != null) {
+			return o.animation;
+		}
+		let _g = 0;
+		let _g1 = o.children;
+		while(_g < _g1.length) {
+			let c = _g1[_g];
+			++_g;
+			let co = this.findAnimation(c);
+			if(co != null) {
+				return co;
+			}
+		}
+		return null;
+	}
+	startAttack() {
+		this.state = arm_HuggyState.Attacking;
+		let _gthis = this;
+		if(this.animimations.action != "Attack_Huggy") {
+			this.navAgent.stop();
+			this.animimations.play("Attack_Huggy",function() {
+				_gthis.startWalking();
+			});
+		}
+	}
+	startWalking() {
+		this.state = arm_HuggyState.Walking;
+		if(this.animimations.action != "Move_Huggy") {
+			this.animimations.play("Move_Huggy");
+		}
+	}
+	updateNavigation() {
+		this.navTimerDuration -= iron_system_Time.get_delta();
+		let _gthis = this;
+		if(this.navTimerDuration <= 0.0) {
+			this.navTimerDuration = arm_HuggyLogic.navTimerInterval;
+			let _this = this.object.transform.world;
+			let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
+			let _this1 = this.playerObject.transform.world;
+			let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
+			let vx = from.x - to.x;
+			let vy = from.y - to.y;
+			let vz = from.z - to.z;
+			let distance = Math.sqrt(vx * vx + vy * vy + vz * vz);
+			if(distance <= this.attackDistance) {
+				this.startAttack();
+			} else {
+				if(this.state == arm_HuggyState.Attacking) {
+					return;
+				}
+				armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from,to,function(path) {
+					let agent = _gthis.object.getTrait(armory_trait_NavAgent);
+					agent.speed = _gthis.speed;
+					agent.turnDuration = 0.4;
+					agent.heightOffset = 0;
+					agent.setPath(path);
+				});
+			}
+		}
+	}
+}
+$hxClasses["arm.HuggyLogic"] = arm_HuggyLogic;
+arm_HuggyLogic.__name__ = true;
+arm_HuggyLogic.__super__ = iron_Trait;
+Object.assign(arm_HuggyLogic.prototype, {
+	__class__: arm_HuggyLogic
+	,navTimerDuration: null
+	,playerObject: null
+	,speed: null
+	,attackDistance: null
+	,state: null
+	,animimations: null
+	,navAgent: null
+});
+var arm_PlayerState = $hxEnums["arm.PlayerState"] = { __ename__:true,__constructs__:null
+	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.PlayerState",toString:$estr}
+	,Idle: {_hx_name:"Idle",_hx_index:1,__enum__:"arm.PlayerState",toString:$estr}
+	,Walk: {_hx_name:"Walk",_hx_index:2,__enum__:"arm.PlayerState",toString:$estr}
+	,Shoot: {_hx_name:"Shoot",_hx_index:3,__enum__:"arm.PlayerState",toString:$estr}
+	,Reload: {_hx_name:"Reload",_hx_index:4,__enum__:"arm.PlayerState",toString:$estr}
+	,Dead: {_hx_name:"Dead",_hx_index:5,__enum__:"arm.PlayerState",toString:$estr}
+};
+arm_PlayerState.__constructs__ = [arm_PlayerState.None,arm_PlayerState.Idle,arm_PlayerState.Walk,arm_PlayerState.Shoot,arm_PlayerState.Reload,arm_PlayerState.Dead];
+class arm_ShootAnimData {
+	constructor() {
+		this.totalTranslate = 0.0;
+		this.currentTime = 0.0;
+		this.animTime = 0.1;
+	}
+}
+$hxClasses["arm.ShootAnimData"] = arm_ShootAnimData;
+arm_ShootAnimData.__name__ = true;
+Object.assign(arm_ShootAnimData.prototype, {
+	__class__: arm_ShootAnimData
+	,needShootingAnim: null
+	,animForward: null
+	,animTime: null
+	,currentTime: null
+	,totalTranslate: null
+});
 class armory_trait_internal_CameraController extends iron_Trait {
 	constructor() {
 		if(iron_Trait._hx_skip_constructor) {
@@ -473,7 +604,7 @@ Object.assign(armory_trait_internal_CameraController.prototype, {
 	,moveRight: null
 	,jump: null
 });
-class arm_FirstPersonController extends armory_trait_internal_CameraController {
+class arm_PlayerLogic extends armory_trait_internal_CameraController {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
 		super();
@@ -482,12 +613,12 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 	}
 	_hx_constructor() {
 		this.dir = new iron_math_Vec4();
+		this.speed = 3;
+		this.shootingAnimData = new arm_ShootAnimData();
+		this.state = arm_PlayerState.None;
 		this.zVec = new iron_math_Vec4(0.0,0.0,1.0);
 		this.xVec = new iron_math_Vec4(1.0,0.0,0.0);
-		this.speed = 4;
-		this.angle = 0.0;
-		this.mat = new iron_math_Mat4(1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
-		this.q = new iron_math_Quat();
+		this.rotationSpeed = 2.0;
 		super._hx_constructor();
 		iron_Scene.active.notifyOnInit($bind(this,this.init));
 	}
@@ -507,24 +638,32 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 		}
 		return null;
 	}
+	startIdle() {
+		if(this.state == arm_PlayerState.Idle) {
+			return;
+		}
+		this.state = arm_PlayerState.Idle;
+		this.animations.play("Idle_Policeman");
+	}
+	startWalk() {
+		if(this.state == arm_PlayerState.Walk) {
+			return;
+		}
+		this.state = arm_PlayerState.Walk;
+		this.animations.play("Walk_Policeman");
+	}
+	updateShooting() {
+	}
 	init() {
 		this.head = this.object.getChildOfType(iron_object_CameraObject);
 		armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.preUpdate));
 		this.notifyOnUpdate($bind(this,this.update));
 		this.notifyOnRemove($bind(this,this.removed));
+		this.aimNode = this.object.getChild("Aim");
+		this.initAimLoc = this.aimNode.transform.loc;
 		this.armature = this.object.getChild("Policeman");
-		this.anim = this.findAnimation(this.armature);
-		this.anim.notifyOnUpdate($bind(this,this.updateBones));
-		let _this = this.armature.transform.world;
-		let _this1 = new iron_math_Vec4(_this.self._10,_this.self._11,_this.self._12);
-		let n = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z);
-		if(n > 0.0) {
-			let invN = 1.0 / n;
-			_this1.x *= invN;
-			_this1.y *= invN;
-			_this1.z *= invN;
-		}
-		this.lastLook = _this1;
+		this.animations = this.findAnimation(this.armature);
+		this.startIdle();
 	}
 	preUpdate() {
 		if(iron_system_Input.occupied || !this.body.ready) {
@@ -537,11 +676,19 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 		} else if(kb.started("escape") && mouse.locked) {
 			mouse.unlock();
 		}
-		if(mouse.locked || mouse.down()) {
-			this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * 2.0);
-			this.transform.rotate(this.zVec,-mouse.movementX / 250 * 2.0);
-			this.body.syncTransform();
+		if(!mouse.locked) {
+			return;
 		}
+		if(mouse.moved) {
+			let d = -mouse.movementY / 450;
+			this.aimNode.transform.translate(0,0,d);
+		}
+		if(mouse.started()) {
+			iron_system_Tween.to({ target : this.aimNode, props : { fromValue : 1.0}, duration : 1.0});
+		}
+		this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * this.rotationSpeed);
+		this.transform.rotate(this.zVec,-mouse.movementX / 250 * this.rotationSpeed);
+		this.body.syncTransform();
 	}
 	removed() {
 		armory_trait_physics_bullet_PhysicsWorld.active.removePreUpdate($bind(this,this.preUpdate));
@@ -671,822 +818,30 @@ class arm_FirstPersonController extends armory_trait_internal_CameraController {
 			dirN.z *= f;
 			this.body.activate();
 			this.body.setLinearVelocity(dirN.x,dirN.y,btvec.z - 1.0);
+			this.startWalk();
+		} else {
+			this.startIdle();
 		}
 		this.body.setAngularFactor(0,0,0);
 		this.camera.buildMatrix();
 	}
-	updateBones() {
-		let bone1 = this.anim.getBone("mixamorig:LeftForeArm");
-		let bone2 = this.anim.getBone("mixamorig:RightForeArm");
-		let m1 = this.anim.getBoneMat(bone1);
-		let m2 = this.anim.getBoneMat(bone2);
-		let m1b = this.anim.getBoneMatBlend(bone1);
-		let m2b = this.anim.getBoneMatBlend(bone2);
-		let a1 = this.anim.getAbsMat(bone1.parent);
-		let a2 = this.anim.getAbsMat(bone2.parent);
-		let tx = m1.self._30;
-		let ty = m1.self._31;
-		let tz = m1.self._32;
-		m1.self._30 = 0;
-		m1.self._31 = 0;
-		m1.self._32 = 0;
-		let _this = this.mat;
-		let a00 = a1.self._00;
-		let a01 = a1.self._01;
-		let a02 = a1.self._02;
-		let a03 = a1.self._03;
-		let a10 = a1.self._10;
-		let a11 = a1.self._11;
-		let a12 = a1.self._12;
-		let a13 = a1.self._13;
-		let a20 = a1.self._20;
-		let a21 = a1.self._21;
-		let a22 = a1.self._22;
-		let a23 = a1.self._23;
-		let a30 = a1.self._30;
-		let a31 = a1.self._31;
-		let a32 = a1.self._32;
-		let a33 = a1.self._33;
-		let b00 = a00 * a11 - a01 * a10;
-		let b01 = a00 * a12 - a02 * a10;
-		let b02 = a00 * a13 - a03 * a10;
-		let b03 = a01 * a12 - a02 * a11;
-		let b04 = a01 * a13 - a03 * a11;
-		let b05 = a02 * a13 - a03 * a12;
-		let b06 = a20 * a31 - a21 * a30;
-		let b07 = a20 * a32 - a22 * a30;
-		let b08 = a20 * a33 - a23 * a30;
-		let b09 = a21 * a32 - a22 * a31;
-		let b10 = a21 * a33 - a23 * a31;
-		let b11 = a22 * a33 - a23 * a32;
-		let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-		if(det == 0.0) {
-			_this.self._00 = 1.0;
-			_this.self._01 = 0.0;
-			_this.self._02 = 0.0;
-			_this.self._03 = 0.0;
-			_this.self._10 = 0.0;
-			_this.self._11 = 1.0;
-			_this.self._12 = 0.0;
-			_this.self._13 = 0.0;
-			_this.self._20 = 0.0;
-			_this.self._21 = 0.0;
-			_this.self._22 = 1.0;
-			_this.self._23 = 0.0;
-			_this.self._30 = 0.0;
-			_this.self._31 = 0.0;
-			_this.self._32 = 0.0;
-			_this.self._33 = 1.0;
-		} else {
-			det = 1.0 / det;
-			_this.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-			_this.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-			_this.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-			_this.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-			_this.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-			_this.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-			_this.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-			_this.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-			_this.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-			_this.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-			_this.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-			_this.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-			_this.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-			_this.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-			_this.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-			_this.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-		}
-		let _this1 = this.q;
-		let _this2 = this.mat;
-		let x = _this2.self._00;
-		let y = _this2.self._01;
-		let z = _this2.self._02;
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		let axis_x = x;
-		let axis_y = y;
-		let axis_z = z;
-		let axis_w = 1.0;
-		let angle = -this.angle;
-		let s = Math.sin(angle * 0.5);
-		_this1.x = axis_x * s;
-		_this1.y = axis_y * s;
-		_this1.z = axis_z * s;
-		_this1.w = Math.cos(angle * 0.5);
-		let l = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z + _this1.w * _this1.w);
-		if(l == 0.0) {
-			_this1.x = 0;
-			_this1.y = 0;
-			_this1.z = 0;
-			_this1.w = 0;
-		} else {
-			l = 1.0 / l;
-			_this1.x *= l;
-			_this1.y *= l;
-			_this1.z *= l;
-			_this1.w *= l;
-		}
-		let q = this.q;
-		let _this3 = iron_math_Mat4.helpMat;
-		let x1 = q.x;
-		let y1 = q.y;
-		let z1 = q.z;
-		let w = q.w;
-		let x2 = x1 + x1;
-		let y2 = y1 + y1;
-		let z2 = z1 + z1;
-		let xx = x1 * x2;
-		let xy = x1 * y2;
-		let xz = x1 * z2;
-		let yy = y1 * y2;
-		let yz = y1 * z2;
-		let zz = z1 * z2;
-		let wx = w * x2;
-		let wy = w * y2;
-		let wz = w * z2;
-		_this3.self._00 = 1.0 - (yy + zz);
-		_this3.self._10 = xy - wz;
-		_this3.self._20 = xz + wy;
-		_this3.self._01 = xy + wz;
-		_this3.self._11 = 1.0 - (xx + zz);
-		_this3.self._21 = yz - wx;
-		_this3.self._02 = xz - wy;
-		_this3.self._12 = yz + wx;
-		_this3.self._22 = 1.0 - (xx + yy);
-		_this3.self._03 = 0.0;
-		_this3.self._13 = 0.0;
-		_this3.self._23 = 0.0;
-		_this3.self._30 = 0.0;
-		_this3.self._31 = 0.0;
-		_this3.self._32 = 0.0;
-		_this3.self._33 = 1.0;
-		let m = iron_math_Mat4.helpMat;
-		let a001 = m1.self._00;
-		let a011 = m1.self._01;
-		let a021 = m1.self._02;
-		let a031 = m1.self._03;
-		let a101 = m1.self._10;
-		let a111 = m1.self._11;
-		let a121 = m1.self._12;
-		let a131 = m1.self._13;
-		let a201 = m1.self._20;
-		let a211 = m1.self._21;
-		let a221 = m1.self._22;
-		let a231 = m1.self._23;
-		let a301 = m1.self._30;
-		let a311 = m1.self._31;
-		let a321 = m1.self._32;
-		let a331 = m1.self._33;
-		let b0 = m.self._00;
-		let b1 = m.self._10;
-		let b2 = m.self._20;
-		let b3 = m.self._30;
-		m1.self._00 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._10 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._20 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._30 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		b0 = m.self._01;
-		b1 = m.self._11;
-		b2 = m.self._21;
-		b3 = m.self._31;
-		m1.self._01 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._11 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._21 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._31 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		b0 = m.self._02;
-		b1 = m.self._12;
-		b2 = m.self._22;
-		b3 = m.self._32;
-		m1.self._02 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._12 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._22 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._32 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		b0 = m.self._03;
-		b1 = m.self._13;
-		b2 = m.self._23;
-		b3 = m.self._33;
-		m1.self._03 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-		m1.self._13 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-		m1.self._23 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-		m1.self._33 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-		m1.self._30 = tx;
-		m1.self._31 = ty;
-		m1.self._32 = tz;
-		let tx1 = m2.self._30;
-		let ty1 = m2.self._31;
-		let tz1 = m2.self._32;
-		m2.self._30 = 0;
-		m2.self._31 = 0;
-		m2.self._32 = 0;
-		let _this4 = this.mat;
-		let a002 = a2.self._00;
-		let a012 = a2.self._01;
-		let a022 = a2.self._02;
-		let a032 = a2.self._03;
-		let a102 = a2.self._10;
-		let a112 = a2.self._11;
-		let a122 = a2.self._12;
-		let a132 = a2.self._13;
-		let a202 = a2.self._20;
-		let a212 = a2.self._21;
-		let a222 = a2.self._22;
-		let a232 = a2.self._23;
-		let a302 = a2.self._30;
-		let a312 = a2.self._31;
-		let a322 = a2.self._32;
-		let a332 = a2.self._33;
-		let b001 = a002 * a112 - a012 * a102;
-		let b011 = a002 * a122 - a022 * a102;
-		let b021 = a002 * a132 - a032 * a102;
-		let b031 = a012 * a122 - a022 * a112;
-		let b041 = a012 * a132 - a032 * a112;
-		let b051 = a022 * a132 - a032 * a122;
-		let b061 = a202 * a312 - a212 * a302;
-		let b071 = a202 * a322 - a222 * a302;
-		let b081 = a202 * a332 - a232 * a302;
-		let b091 = a212 * a322 - a222 * a312;
-		let b101 = a212 * a332 - a232 * a312;
-		let b111 = a222 * a332 - a232 * a322;
-		let det1 = b001 * b111 - b011 * b101 + b021 * b091 + b031 * b081 - b041 * b071 + b051 * b061;
-		if(det1 == 0.0) {
-			_this4.self._00 = 1.0;
-			_this4.self._01 = 0.0;
-			_this4.self._02 = 0.0;
-			_this4.self._03 = 0.0;
-			_this4.self._10 = 0.0;
-			_this4.self._11 = 1.0;
-			_this4.self._12 = 0.0;
-			_this4.self._13 = 0.0;
-			_this4.self._20 = 0.0;
-			_this4.self._21 = 0.0;
-			_this4.self._22 = 1.0;
-			_this4.self._23 = 0.0;
-			_this4.self._30 = 0.0;
-			_this4.self._31 = 0.0;
-			_this4.self._32 = 0.0;
-			_this4.self._33 = 1.0;
-		} else {
-			det1 = 1.0 / det1;
-			_this4.self._00 = (a112 * b111 - a122 * b101 + a132 * b091) * det1;
-			_this4.self._01 = (a022 * b101 - a012 * b111 - a032 * b091) * det1;
-			_this4.self._02 = (a312 * b051 - a322 * b041 + a332 * b031) * det1;
-			_this4.self._03 = (a222 * b041 - a212 * b051 - a232 * b031) * det1;
-			_this4.self._10 = (a122 * b081 - a102 * b111 - a132 * b071) * det1;
-			_this4.self._11 = (a002 * b111 - a022 * b081 + a032 * b071) * det1;
-			_this4.self._12 = (a322 * b021 - a302 * b051 - a332 * b011) * det1;
-			_this4.self._13 = (a202 * b051 - a222 * b021 + a232 * b011) * det1;
-			_this4.self._20 = (a102 * b101 - a112 * b081 + a132 * b061) * det1;
-			_this4.self._21 = (a012 * b081 - a002 * b101 - a032 * b061) * det1;
-			_this4.self._22 = (a302 * b041 - a312 * b021 + a332 * b001) * det1;
-			_this4.self._23 = (a212 * b021 - a202 * b041 - a232 * b001) * det1;
-			_this4.self._30 = (a112 * b071 - a102 * b091 - a122 * b061) * det1;
-			_this4.self._31 = (a002 * b091 - a012 * b071 + a022 * b061) * det1;
-			_this4.self._32 = (a312 * b011 - a302 * b031 - a322 * b001) * det1;
-			_this4.self._33 = (a202 * b031 - a212 * b011 + a222 * b001) * det1;
-		}
-		let _this5 = this.mat;
-		let x3 = _this5.self._00;
-		let y3 = _this5.self._01;
-		let z3 = _this5.self._02;
-		if(z3 == null) {
-			z3 = 0.0;
-		}
-		if(y3 == null) {
-			y3 = 0.0;
-		}
-		if(x3 == null) {
-			x3 = 0.0;
-		}
-		let v_x = x3;
-		let v_y = y3;
-		let v_z = z3;
-		let v_w = 1.0;
-		v_x *= -1;
-		v_y *= -1;
-		v_z *= -1;
-		let _this6 = this.q;
-		let s1 = Math.sin(-0.8);
-		_this6.x = v_x * s1;
-		_this6.y = v_y * s1;
-		_this6.z = v_z * s1;
-		_this6.w = Math.cos(-0.8);
-		let l1 = Math.sqrt(_this6.x * _this6.x + _this6.y * _this6.y + _this6.z * _this6.z + _this6.w * _this6.w);
-		if(l1 == 0.0) {
-			_this6.x = 0;
-			_this6.y = 0;
-			_this6.z = 0;
-			_this6.w = 0;
-		} else {
-			l1 = 1.0 / l1;
-			_this6.x *= l1;
-			_this6.y *= l1;
-			_this6.z *= l1;
-			_this6.w *= l1;
-		}
-		let q1 = this.q;
-		let _this7 = iron_math_Mat4.helpMat;
-		let x4 = q1.x;
-		let y4 = q1.y;
-		let z4 = q1.z;
-		let w1 = q1.w;
-		let x21 = x4 + x4;
-		let y21 = y4 + y4;
-		let z21 = z4 + z4;
-		let xx1 = x4 * x21;
-		let xy1 = x4 * y21;
-		let xz1 = x4 * z21;
-		let yy1 = y4 * y21;
-		let yz1 = y4 * z21;
-		let zz1 = z4 * z21;
-		let wx1 = w1 * x21;
-		let wy1 = w1 * y21;
-		let wz1 = w1 * z21;
-		_this7.self._00 = 1.0 - (yy1 + zz1);
-		_this7.self._10 = xy1 - wz1;
-		_this7.self._20 = xz1 + wy1;
-		_this7.self._01 = xy1 + wz1;
-		_this7.self._11 = 1.0 - (xx1 + zz1);
-		_this7.self._21 = yz1 - wx1;
-		_this7.self._02 = xz1 - wy1;
-		_this7.self._12 = yz1 + wx1;
-		_this7.self._22 = 1.0 - (xx1 + yy1);
-		_this7.self._03 = 0.0;
-		_this7.self._13 = 0.0;
-		_this7.self._23 = 0.0;
-		_this7.self._30 = 0.0;
-		_this7.self._31 = 0.0;
-		_this7.self._32 = 0.0;
-		_this7.self._33 = 1.0;
-		let m3 = iron_math_Mat4.helpMat;
-		let a003 = m2.self._00;
-		let a013 = m2.self._01;
-		let a023 = m2.self._02;
-		let a033 = m2.self._03;
-		let a103 = m2.self._10;
-		let a113 = m2.self._11;
-		let a123 = m2.self._12;
-		let a133 = m2.self._13;
-		let a203 = m2.self._20;
-		let a213 = m2.self._21;
-		let a223 = m2.self._22;
-		let a233 = m2.self._23;
-		let a303 = m2.self._30;
-		let a313 = m2.self._31;
-		let a323 = m2.self._32;
-		let a333 = m2.self._33;
-		let b010 = m3.self._00;
-		let b12 = m3.self._10;
-		let b21 = m3.self._20;
-		let b31 = m3.self._30;
-		m2.self._00 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._10 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._20 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._30 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		b010 = m3.self._01;
-		b12 = m3.self._11;
-		b21 = m3.self._21;
-		b31 = m3.self._31;
-		m2.self._01 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._11 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._21 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._31 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		b010 = m3.self._02;
-		b12 = m3.self._12;
-		b21 = m3.self._22;
-		b31 = m3.self._32;
-		m2.self._02 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._12 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._22 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._32 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		b010 = m3.self._03;
-		b12 = m3.self._13;
-		b21 = m3.self._23;
-		b31 = m3.self._33;
-		m2.self._03 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-		m2.self._13 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-		m2.self._23 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-		m2.self._33 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-		m2.self._30 = tx1;
-		m2.self._31 = ty1;
-		m2.self._32 = tz1;
-		if(m1b != null && m2b != null) {
-			let tx = m1b.self._30;
-			let ty = m1b.self._31;
-			let tz = m1b.self._32;
-			m1b.self._30 = 0;
-			m1b.self._31 = 0;
-			m1b.self._32 = 0;
-			let _this = this.mat;
-			let a00 = a1.self._00;
-			let a01 = a1.self._01;
-			let a02 = a1.self._02;
-			let a03 = a1.self._03;
-			let a10 = a1.self._10;
-			let a11 = a1.self._11;
-			let a12 = a1.self._12;
-			let a13 = a1.self._13;
-			let a20 = a1.self._20;
-			let a21 = a1.self._21;
-			let a22 = a1.self._22;
-			let a23 = a1.self._23;
-			let a30 = a1.self._30;
-			let a31 = a1.self._31;
-			let a32 = a1.self._32;
-			let a33 = a1.self._33;
-			let b00 = a00 * a11 - a01 * a10;
-			let b01 = a00 * a12 - a02 * a10;
-			let b02 = a00 * a13 - a03 * a10;
-			let b03 = a01 * a12 - a02 * a11;
-			let b04 = a01 * a13 - a03 * a11;
-			let b05 = a02 * a13 - a03 * a12;
-			let b06 = a20 * a31 - a21 * a30;
-			let b07 = a20 * a32 - a22 * a30;
-			let b08 = a20 * a33 - a23 * a30;
-			let b09 = a21 * a32 - a22 * a31;
-			let b10 = a21 * a33 - a23 * a31;
-			let b11 = a22 * a33 - a23 * a32;
-			let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-			if(det == 0.0) {
-				_this.self._00 = 1.0;
-				_this.self._01 = 0.0;
-				_this.self._02 = 0.0;
-				_this.self._03 = 0.0;
-				_this.self._10 = 0.0;
-				_this.self._11 = 1.0;
-				_this.self._12 = 0.0;
-				_this.self._13 = 0.0;
-				_this.self._20 = 0.0;
-				_this.self._21 = 0.0;
-				_this.self._22 = 1.0;
-				_this.self._23 = 0.0;
-				_this.self._30 = 0.0;
-				_this.self._31 = 0.0;
-				_this.self._32 = 0.0;
-				_this.self._33 = 1.0;
-			} else {
-				det = 1.0 / det;
-				_this.self._00 = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-				_this.self._01 = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-				_this.self._02 = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-				_this.self._03 = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-				_this.self._10 = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-				_this.self._11 = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-				_this.self._12 = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-				_this.self._13 = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-				_this.self._20 = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-				_this.self._21 = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-				_this.self._22 = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-				_this.self._23 = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-				_this.self._30 = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-				_this.self._31 = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-				_this.self._32 = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-				_this.self._33 = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-			}
-			let _this1 = this.q;
-			let _this2 = this.mat;
-			let x = _this2.self._00;
-			let y = _this2.self._01;
-			let z = _this2.self._02;
-			if(z == null) {
-				z = 0.0;
-			}
-			if(y == null) {
-				y = 0.0;
-			}
-			if(x == null) {
-				x = 0.0;
-			}
-			let axis_x = x;
-			let axis_y = y;
-			let axis_z = z;
-			let axis_w = 1.0;
-			let angle = -this.angle;
-			let s = Math.sin(angle * 0.5);
-			_this1.x = axis_x * s;
-			_this1.y = axis_y * s;
-			_this1.z = axis_z * s;
-			_this1.w = Math.cos(angle * 0.5);
-			let l = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z + _this1.w * _this1.w);
-			if(l == 0.0) {
-				_this1.x = 0;
-				_this1.y = 0;
-				_this1.z = 0;
-				_this1.w = 0;
-			} else {
-				l = 1.0 / l;
-				_this1.x *= l;
-				_this1.y *= l;
-				_this1.z *= l;
-				_this1.w *= l;
-			}
-			let q = this.q;
-			let _this3 = iron_math_Mat4.helpMat;
-			let x1 = q.x;
-			let y1 = q.y;
-			let z1 = q.z;
-			let w = q.w;
-			let x2 = x1 + x1;
-			let y2 = y1 + y1;
-			let z2 = z1 + z1;
-			let xx = x1 * x2;
-			let xy = x1 * y2;
-			let xz = x1 * z2;
-			let yy = y1 * y2;
-			let yz = y1 * z2;
-			let zz = z1 * z2;
-			let wx = w * x2;
-			let wy = w * y2;
-			let wz = w * z2;
-			_this3.self._00 = 1.0 - (yy + zz);
-			_this3.self._10 = xy - wz;
-			_this3.self._20 = xz + wy;
-			_this3.self._01 = xy + wz;
-			_this3.self._11 = 1.0 - (xx + zz);
-			_this3.self._21 = yz - wx;
-			_this3.self._02 = xz - wy;
-			_this3.self._12 = yz + wx;
-			_this3.self._22 = 1.0 - (xx + yy);
-			_this3.self._03 = 0.0;
-			_this3.self._13 = 0.0;
-			_this3.self._23 = 0.0;
-			_this3.self._30 = 0.0;
-			_this3.self._31 = 0.0;
-			_this3.self._32 = 0.0;
-			_this3.self._33 = 1.0;
-			let m = iron_math_Mat4.helpMat;
-			let a001 = m1b.self._00;
-			let a011 = m1b.self._01;
-			let a021 = m1b.self._02;
-			let a031 = m1b.self._03;
-			let a101 = m1b.self._10;
-			let a111 = m1b.self._11;
-			let a121 = m1b.self._12;
-			let a131 = m1b.self._13;
-			let a201 = m1b.self._20;
-			let a211 = m1b.self._21;
-			let a221 = m1b.self._22;
-			let a231 = m1b.self._23;
-			let a301 = m1b.self._30;
-			let a311 = m1b.self._31;
-			let a321 = m1b.self._32;
-			let a331 = m1b.self._33;
-			let b0 = m.self._00;
-			let b1 = m.self._10;
-			let b2 = m.self._20;
-			let b3 = m.self._30;
-			m1b.self._00 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._10 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._20 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._30 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			b0 = m.self._01;
-			b1 = m.self._11;
-			b2 = m.self._21;
-			b3 = m.self._31;
-			m1b.self._01 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._11 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._21 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._31 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			b0 = m.self._02;
-			b1 = m.self._12;
-			b2 = m.self._22;
-			b3 = m.self._32;
-			m1b.self._02 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._12 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._22 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._32 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			b0 = m.self._03;
-			b1 = m.self._13;
-			b2 = m.self._23;
-			b3 = m.self._33;
-			m1b.self._03 = a001 * b0 + a011 * b1 + a021 * b2 + a031 * b3;
-			m1b.self._13 = a101 * b0 + a111 * b1 + a121 * b2 + a131 * b3;
-			m1b.self._23 = a201 * b0 + a211 * b1 + a221 * b2 + a231 * b3;
-			m1b.self._33 = a301 * b0 + a311 * b1 + a321 * b2 + a331 * b3;
-			m1b.self._30 = tx;
-			m1b.self._31 = ty;
-			m1b.self._32 = tz;
-			let tx1 = m2b.self._30;
-			let ty1 = m2b.self._31;
-			let tz1 = m2b.self._32;
-			m2b.self._30 = 0;
-			m2b.self._31 = 0;
-			m2b.self._32 = 0;
-			let _this4 = this.mat;
-			let a002 = a2.self._00;
-			let a012 = a2.self._01;
-			let a022 = a2.self._02;
-			let a032 = a2.self._03;
-			let a102 = a2.self._10;
-			let a112 = a2.self._11;
-			let a122 = a2.self._12;
-			let a132 = a2.self._13;
-			let a202 = a2.self._20;
-			let a212 = a2.self._21;
-			let a222 = a2.self._22;
-			let a232 = a2.self._23;
-			let a302 = a2.self._30;
-			let a312 = a2.self._31;
-			let a322 = a2.self._32;
-			let a332 = a2.self._33;
-			let b001 = a002 * a112 - a012 * a102;
-			let b011 = a002 * a122 - a022 * a102;
-			let b021 = a002 * a132 - a032 * a102;
-			let b031 = a012 * a122 - a022 * a112;
-			let b041 = a012 * a132 - a032 * a112;
-			let b051 = a022 * a132 - a032 * a122;
-			let b061 = a202 * a312 - a212 * a302;
-			let b071 = a202 * a322 - a222 * a302;
-			let b081 = a202 * a332 - a232 * a302;
-			let b091 = a212 * a322 - a222 * a312;
-			let b101 = a212 * a332 - a232 * a312;
-			let b111 = a222 * a332 - a232 * a322;
-			let det1 = b001 * b111 - b011 * b101 + b021 * b091 + b031 * b081 - b041 * b071 + b051 * b061;
-			if(det1 == 0.0) {
-				_this4.self._00 = 1.0;
-				_this4.self._01 = 0.0;
-				_this4.self._02 = 0.0;
-				_this4.self._03 = 0.0;
-				_this4.self._10 = 0.0;
-				_this4.self._11 = 1.0;
-				_this4.self._12 = 0.0;
-				_this4.self._13 = 0.0;
-				_this4.self._20 = 0.0;
-				_this4.self._21 = 0.0;
-				_this4.self._22 = 1.0;
-				_this4.self._23 = 0.0;
-				_this4.self._30 = 0.0;
-				_this4.self._31 = 0.0;
-				_this4.self._32 = 0.0;
-				_this4.self._33 = 1.0;
-			} else {
-				det1 = 1.0 / det1;
-				_this4.self._00 = (a112 * b111 - a122 * b101 + a132 * b091) * det1;
-				_this4.self._01 = (a022 * b101 - a012 * b111 - a032 * b091) * det1;
-				_this4.self._02 = (a312 * b051 - a322 * b041 + a332 * b031) * det1;
-				_this4.self._03 = (a222 * b041 - a212 * b051 - a232 * b031) * det1;
-				_this4.self._10 = (a122 * b081 - a102 * b111 - a132 * b071) * det1;
-				_this4.self._11 = (a002 * b111 - a022 * b081 + a032 * b071) * det1;
-				_this4.self._12 = (a322 * b021 - a302 * b051 - a332 * b011) * det1;
-				_this4.self._13 = (a202 * b051 - a222 * b021 + a232 * b011) * det1;
-				_this4.self._20 = (a102 * b101 - a112 * b081 + a132 * b061) * det1;
-				_this4.self._21 = (a012 * b081 - a002 * b101 - a032 * b061) * det1;
-				_this4.self._22 = (a302 * b041 - a312 * b021 + a332 * b001) * det1;
-				_this4.self._23 = (a212 * b021 - a202 * b041 - a232 * b001) * det1;
-				_this4.self._30 = (a112 * b071 - a102 * b091 - a122 * b061) * det1;
-				_this4.self._31 = (a002 * b091 - a012 * b071 + a022 * b061) * det1;
-				_this4.self._32 = (a312 * b011 - a302 * b031 - a322 * b001) * det1;
-				_this4.self._33 = (a202 * b031 - a212 * b011 + a222 * b001) * det1;
-			}
-			let _this5 = this.mat;
-			let x3 = _this5.self._00;
-			let y3 = _this5.self._01;
-			let z3 = _this5.self._02;
-			if(z3 == null) {
-				z3 = 0.0;
-			}
-			if(y3 == null) {
-				y3 = 0.0;
-			}
-			if(x3 == null) {
-				x3 = 0.0;
-			}
-			let v_x = x3;
-			let v_y = y3;
-			let v_z = z3;
-			let v_w = 1.0;
-			v_x *= -1;
-			v_y *= -1;
-			v_z *= -1;
-			let _this6 = this.q;
-			let s1 = Math.sin(-0.8);
-			_this6.x = v_x * s1;
-			_this6.y = v_y * s1;
-			_this6.z = v_z * s1;
-			_this6.w = Math.cos(-0.8);
-			let l1 = Math.sqrt(_this6.x * _this6.x + _this6.y * _this6.y + _this6.z * _this6.z + _this6.w * _this6.w);
-			if(l1 == 0.0) {
-				_this6.x = 0;
-				_this6.y = 0;
-				_this6.z = 0;
-				_this6.w = 0;
-			} else {
-				l1 = 1.0 / l1;
-				_this6.x *= l1;
-				_this6.y *= l1;
-				_this6.z *= l1;
-				_this6.w *= l1;
-			}
-			let q1 = this.q;
-			let _this7 = iron_math_Mat4.helpMat;
-			let x4 = q1.x;
-			let y4 = q1.y;
-			let z4 = q1.z;
-			let w1 = q1.w;
-			let x21 = x4 + x4;
-			let y21 = y4 + y4;
-			let z21 = z4 + z4;
-			let xx1 = x4 * x21;
-			let xy1 = x4 * y21;
-			let xz1 = x4 * z21;
-			let yy1 = y4 * y21;
-			let yz1 = y4 * z21;
-			let zz1 = z4 * z21;
-			let wx1 = w1 * x21;
-			let wy1 = w1 * y21;
-			let wz1 = w1 * z21;
-			_this7.self._00 = 1.0 - (yy1 + zz1);
-			_this7.self._10 = xy1 - wz1;
-			_this7.self._20 = xz1 + wy1;
-			_this7.self._01 = xy1 + wz1;
-			_this7.self._11 = 1.0 - (xx1 + zz1);
-			_this7.self._21 = yz1 - wx1;
-			_this7.self._02 = xz1 - wy1;
-			_this7.self._12 = yz1 + wx1;
-			_this7.self._22 = 1.0 - (xx1 + yy1);
-			_this7.self._03 = 0.0;
-			_this7.self._13 = 0.0;
-			_this7.self._23 = 0.0;
-			_this7.self._30 = 0.0;
-			_this7.self._31 = 0.0;
-			_this7.self._32 = 0.0;
-			_this7.self._33 = 1.0;
-			let m1 = iron_math_Mat4.helpMat;
-			let a003 = m2b.self._00;
-			let a013 = m2b.self._01;
-			let a023 = m2b.self._02;
-			let a033 = m2b.self._03;
-			let a103 = m2b.self._10;
-			let a113 = m2b.self._11;
-			let a123 = m2b.self._12;
-			let a133 = m2b.self._13;
-			let a203 = m2b.self._20;
-			let a213 = m2b.self._21;
-			let a223 = m2b.self._22;
-			let a233 = m2b.self._23;
-			let a303 = m2b.self._30;
-			let a313 = m2b.self._31;
-			let a323 = m2b.self._32;
-			let a333 = m2b.self._33;
-			let b010 = m1.self._00;
-			let b12 = m1.self._10;
-			let b21 = m1.self._20;
-			let b31 = m1.self._30;
-			m2b.self._00 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._10 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._20 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._30 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			b010 = m1.self._01;
-			b12 = m1.self._11;
-			b21 = m1.self._21;
-			b31 = m1.self._31;
-			m2b.self._01 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._11 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._21 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._31 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			b010 = m1.self._02;
-			b12 = m1.self._12;
-			b21 = m1.self._22;
-			b31 = m1.self._32;
-			m2b.self._02 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._12 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._22 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._32 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			b010 = m1.self._03;
-			b12 = m1.self._13;
-			b21 = m1.self._23;
-			b31 = m1.self._33;
-			m2b.self._03 = a003 * b010 + a013 * b12 + a023 * b21 + a033 * b31;
-			m2b.self._13 = a103 * b010 + a113 * b12 + a123 * b21 + a133 * b31;
-			m2b.self._23 = a203 * b010 + a213 * b12 + a223 * b21 + a233 * b31;
-			m2b.self._33 = a303 * b010 + a313 * b12 + a323 * b21 + a333 * b31;
-			m2b.self._30 = tx1;
-			m2b.self._31 = ty1;
-			m2b.self._32 = tz1;
-		}
-	}
 }
-$hxClasses["arm.FirstPersonController"] = arm_FirstPersonController;
-arm_FirstPersonController.__name__ = true;
-arm_FirstPersonController.__super__ = armory_trait_internal_CameraController;
-Object.assign(arm_FirstPersonController.prototype, {
-	__class__: arm_FirstPersonController
+$hxClasses["arm.PlayerLogic"] = arm_PlayerLogic;
+arm_PlayerLogic.__name__ = true;
+arm_PlayerLogic.__super__ = armory_trait_internal_CameraController;
+Object.assign(arm_PlayerLogic.prototype, {
+	__class__: arm_PlayerLogic
 	,head: null
-	,armature: null
-	,anim: null
-	,lastLook: null
-	,q: null
-	,mat: null
-	,angle: null
-	,speed: null
+	,rotationSpeed: null
 	,xVec: null
 	,zVec: null
+	,armature: null
+	,animations: null
+	,aimNode: null
+	,initAimLoc: null
+	,state: null
+	,shootingAnimData: null
+	,speed: null
 	,dir: null
 });
 class armory_logicnode_LogicTree extends iron_Trait {
@@ -1562,7 +917,7 @@ Object.assign(armory_logicnode_LogicTree.prototype, {
 	,loopContinue: null
 	,paused: null
 });
-class arm_node_FollowNode extends armory_logicnode_LogicTree {
+class arm_node_BoneIK extends armory_logicnode_LogicTree {
 	constructor() {
 		super();
 		this.functionNodes = new haxe_ds_StringMap();
@@ -1570,219 +925,85 @@ class arm_node_FollowNode extends armory_logicnode_LogicTree {
 		this.notifyOnAdd($bind(this,this.add));
 	}
 	add() {
-		let _GotoLocation = new armory_logicnode_GoToLocationNode(this);
-		_GotoLocation.inputs.length = 9;
-		_GotoLocation.outputs.length = 3;
+		let _BoneIK = new armory_logicnode_BoneIKNode(this);
+		_BoneIK.inputs.length = 10;
+		_BoneIK.outputs.length = 1;
 		let _g = 0;
-		let _g1 = _GotoLocation.outputs.length;
+		let _g1 = _BoneIK.outputs.length;
 		while(_g < _g1) {
 			let i = _g++;
-			_GotoLocation.outputs[i] = [];
+			_BoneIK.outputs[i] = [];
 		}
-		let _IsNotNull = new armory_logicnode_IsNotNoneNode(this);
-		_IsNotNull.inputs.length = 2;
-		_IsNotNull.outputs.length = 1;
+		let _OnUpdate = new armory_logicnode_OnUpdateNode(this);
+		_OnUpdate.property0 = "Late Update";
+		_OnUpdate.inputs.length = 0;
+		_OnUpdate.outputs.length = 1;
 		let _g2 = 0;
-		let _g3 = _IsNotNull.outputs.length;
+		let _g3 = _OnUpdate.outputs.length;
 		while(_g2 < _g3) {
 			let i = _g2++;
-			_IsNotNull.outputs[i] = [];
+			_OnUpdate.outputs[i] = [];
 		}
-		let _OnTimer = new armory_logicnode_OnTimerNode(this);
-		_OnTimer.inputs.length = 2;
-		_OnTimer.outputs.length = 1;
-		let _g4 = 0;
-		let _g5 = _OnTimer.outputs.length;
-		while(_g4 < _g5) {
-			let i = _g4++;
-			_OnTimer.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.5),_OnTimer,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,true),_OnTimer,0,1);
-		armory_logicnode_LogicNode.addLink(_OnTimer,_IsNotNull,0,0);
+		armory_logicnode_LogicNode.addLink(_OnUpdate,_BoneIK,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,""),_BoneIK,0,1);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"mixamorig:LeftForeArm"),_BoneIK,0,2);
 		let _GetObjectLocation = new armory_logicnode_GetLocationNode(this);
 		_GetObjectLocation.inputs.length = 2;
 		_GetObjectLocation.outputs.length = 1;
-		let _g6 = 0;
-		let _g7 = _GetObjectLocation.outputs.length;
-		while(_g6 < _g7) {
-			let i = _g6++;
+		let _g4 = 0;
+		let _g5 = _GetObjectLocation.outputs.length;
+		while(_g4 < _g5) {
+			let i = _g4++;
 			_GetObjectLocation.outputs[i] = [];
 		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Игрок"),_GetObjectLocation,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"AimLeft"),_GetObjectLocation,0,0);
 		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_GetObjectLocation,0,1);
-		armory_logicnode_LogicNode.addLink(_GetObjectLocation,_IsNotNull,0,1);
-		armory_logicnode_LogicNode.addLink(_IsNotNull,_GotoLocation,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,""),_GotoLocation,0,1);
-		armory_logicnode_LogicNode.addLink(_GetObjectLocation,_GotoLocation,0,2);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,1.0),_GotoLocation,0,3);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.4000000059604645),_GotoLocation,0,4);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.0),_GotoLocation,0,5);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_GotoLocation,0,6);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,-5.0),_GotoLocation,0,7);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,1),_GotoLocation,0,8);
-		armory_logicnode_LogicNode.addLink(_GotoLocation,new armory_logicnode_NullNode(this),0,0);
-		armory_logicnode_LogicNode.addLink(_GotoLocation,new armory_logicnode_NullNode(this),1,0);
-		armory_logicnode_LogicNode.addLink(_GotoLocation,new armory_logicnode_NullNode(this),2,0);
-		let _StopAgent = new armory_logicnode_StopAgentNode(this);
-		_StopAgent.inputs.length = 2;
-		_StopAgent.outputs.length = 1;
+		armory_logicnode_LogicNode.addLink(_GetObjectLocation,_BoneIK,0,3);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_BoneIK,0,4);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_VectorNode(this,0.0,0.0,0.0),_BoneIK,0,5);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,2),_BoneIK,0,6);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,10),_BoneIK,0,7);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.009999999776482582),_BoneIK,0,8);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.0),_BoneIK,0,9);
+		armory_logicnode_LogicNode.addLink(_BoneIK,new armory_logicnode_NullNode(this),0,0);
+		let _BoneIK_001 = new armory_logicnode_BoneIKNode(this);
+		_BoneIK_001.inputs.length = 10;
+		_BoneIK_001.outputs.length = 1;
+		let _g6 = 0;
+		let _g7 = _BoneIK_001.outputs.length;
+		while(_g6 < _g7) {
+			let i = _g6++;
+			_BoneIK_001.outputs[i] = [];
+		}
+		armory_logicnode_LogicNode.addLink(_OnUpdate,_BoneIK_001,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,""),_BoneIK_001,0,1);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"mixamorig:RightForeArm"),_BoneIK_001,0,2);
+		let _GetObjectLocation_001 = new armory_logicnode_GetLocationNode(this);
+		_GetObjectLocation_001.inputs.length = 2;
+		_GetObjectLocation_001.outputs.length = 1;
 		let _g8 = 0;
-		let _g9 = _StopAgent.outputs.length;
+		let _g9 = _GetObjectLocation_001.outputs.length;
 		while(_g8 < _g9) {
 			let i = _g8++;
-			_StopAgent.outputs[i] = [];
+			_GetObjectLocation_001.outputs[i] = [];
 		}
-		let _Gate = new armory_logicnode_GateNode(this);
-		_Gate.property0 = "Less Equal";
-		_Gate.property1 = 9.999999747378752e-05;
-		_Gate.inputs.length = 3;
-		_Gate.outputs.length = 2;
-		let _g10 = 0;
-		let _g11 = _Gate.outputs.length;
-		while(_g10 < _g11) {
-			let i = _g10++;
-			_Gate.outputs[i] = [];
-		}
-		let _OnUpdate = new armory_logicnode_OnUpdateNode(this);
-		_OnUpdate.property0 = "Update";
-		_OnUpdate.inputs.length = 0;
-		_OnUpdate.outputs.length = 1;
-		let _g12 = 0;
-		let _g13 = _OnUpdate.outputs.length;
-		while(_g12 < _g13) {
-			let i = _g12++;
-			_OnUpdate.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(_OnUpdate,_Gate,0,0);
-		let _GetDistance = new armory_logicnode_GetDistanceNode(this);
-		_GetDistance.inputs.length = 2;
-		_GetDistance.outputs.length = 1;
-		let _g14 = 0;
-		let _g15 = _GetDistance.outputs.length;
-		while(_g14 < _g15) {
-			let i = _g14++;
-			_GetDistance.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Игрок"),_GetDistance,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Монстр"),_GetDistance,0,1);
-		armory_logicnode_LogicNode.addLink(_GetDistance,_Gate,0,1);
-		let _Float = new armory_logicnode_FloatNode(this);
-		_Float.inputs.length = 1;
-		_Float.outputs.length = 1;
-		let _g16 = 0;
-		let _g17 = _Float.outputs.length;
-		while(_g16 < _g17) {
-			let i = _g16++;
-			_Float.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,1.5),_Float,0,0);
-		armory_logicnode_LogicNode.addLink(_Float,_Gate,0,2);
-		armory_logicnode_LogicNode.addLink(_Gate,new armory_logicnode_NullNode(this),1,0);
-		armory_logicnode_LogicNode.addLink(_Gate,_StopAgent,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Монстр"),_StopAgent,0,1);
-		armory_logicnode_LogicNode.addLink(_StopAgent,new armory_logicnode_NullNode(this),0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"AimRight"),_GetObjectLocation_001,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_GetObjectLocation_001,0,1);
+		armory_logicnode_LogicNode.addLink(_GetObjectLocation_001,_BoneIK_001,0,3);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_BoneIK_001,0,4);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_VectorNode(this,0.0,0.0,0.0),_BoneIK_001,0,5);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,2),_BoneIK_001,0,6);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,10),_BoneIK_001,0,7);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.009999999776482582),_BoneIK_001,0,8);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.0),_BoneIK_001,0,9);
+		armory_logicnode_LogicNode.addLink(_BoneIK_001,new armory_logicnode_NullNode(this),0,0);
 	}
 }
-$hxClasses["arm.node.FollowNode"] = arm_node_FollowNode;
-arm_node_FollowNode.__name__ = true;
-arm_node_FollowNode.__super__ = armory_logicnode_LogicTree;
-Object.assign(arm_node_FollowNode.prototype, {
-	__class__: arm_node_FollowNode
-	,functionNodes: null
-	,functionOutputNodes: null
-});
-class arm_node_MonsterAnimation extends armory_logicnode_LogicTree {
-	constructor() {
-		super();
-		this.functionNodes = new haxe_ds_StringMap();
-		this.functionOutputNodes = new haxe_ds_StringMap();
-		this.notifyOnAdd($bind(this,this.add));
-	}
-	add() {
-		let _PlayActionFrom = new armory_logicnode_PlayActionFromNode(this);
-		_PlayActionFrom.inputs.length = 9;
-		_PlayActionFrom.outputs.length = 2;
-		let _g = 0;
-		let _g1 = _PlayActionFrom.outputs.length;
-		while(_g < _g1) {
-			let i = _g++;
-			_PlayActionFrom.outputs[i] = [];
-		}
-		let _OnInit = new armory_logicnode_OnInitNode(this);
-		_OnInit.inputs.length = 0;
-		_OnInit.outputs.length = 1;
-		let _g2 = 0;
-		let _g3 = _OnInit.outputs.length;
-		while(_g2 < _g3) {
-			let i = _g2++;
-			_OnInit.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(_OnInit,_PlayActionFrom,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Huggy"),_PlayActionFrom,0,1);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"Move_Huggy"),_PlayActionFrom,0,2);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,0),_PlayActionFrom,0,3);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,80),_PlayActionFrom,0,4);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.25),_PlayActionFrom,0,5);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.5),_PlayActionFrom,0,6);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,true),_PlayActionFrom,0,7);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_PlayActionFrom,0,8);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),0,0);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),1,0);
-	}
-}
-$hxClasses["arm.node.MonsterAnimation"] = arm_node_MonsterAnimation;
-arm_node_MonsterAnimation.__name__ = true;
-arm_node_MonsterAnimation.__super__ = armory_logicnode_LogicTree;
-Object.assign(arm_node_MonsterAnimation.prototype, {
-	__class__: arm_node_MonsterAnimation
-	,functionNodes: null
-	,functionOutputNodes: null
-});
-class arm_node_PlayerAnim extends armory_logicnode_LogicTree {
-	constructor() {
-		super();
-		this.functionNodes = new haxe_ds_StringMap();
-		this.functionOutputNodes = new haxe_ds_StringMap();
-		this.notifyOnAdd($bind(this,this.add));
-	}
-	add() {
-		let _PlayActionFrom = new armory_logicnode_PlayActionFromNode(this);
-		_PlayActionFrom.inputs.length = 9;
-		_PlayActionFrom.outputs.length = 2;
-		let _g = 0;
-		let _g1 = _PlayActionFrom.outputs.length;
-		while(_g < _g1) {
-			let i = _g++;
-			_PlayActionFrom.outputs[i] = [];
-		}
-		let _OnInit = new armory_logicnode_OnInitNode(this);
-		_OnInit.inputs.length = 0;
-		_OnInit.outputs.length = 1;
-		let _g2 = 0;
-		let _g3 = _OnInit.outputs.length;
-		while(_g2 < _g3) {
-			let i = _g2++;
-			_OnInit.outputs[i] = [];
-		}
-		armory_logicnode_LogicNode.addLink(_OnInit,_PlayActionFrom,0,0);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Policeman"),_PlayActionFrom,0,1);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"Idle_Policeman"),_PlayActionFrom,0,2);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,0),_PlayActionFrom,0,3);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_IntegerNode(this,26),_PlayActionFrom,0,4);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,0.25),_PlayActionFrom,0,5);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(this,1.0),_PlayActionFrom,0,6);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,true),_PlayActionFrom,0,7);
-		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,false),_PlayActionFrom,0,8);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),0,0);
-		armory_logicnode_LogicNode.addLink(_PlayActionFrom,new armory_logicnode_NullNode(this),1,0);
-	}
-}
-$hxClasses["arm.node.PlayerAnim"] = arm_node_PlayerAnim;
-arm_node_PlayerAnim.__name__ = true;
-arm_node_PlayerAnim.__super__ = armory_logicnode_LogicTree;
-Object.assign(arm_node_PlayerAnim.prototype, {
-	__class__: arm_node_PlayerAnim
+$hxClasses["arm.node.BoneIK"] = arm_node_BoneIK;
+arm_node_BoneIK.__name__ = true;
+arm_node_BoneIK.__super__ = armory_logicnode_LogicTree;
+Object.assign(arm_node_BoneIK.prototype, {
+	__class__: arm_node_BoneIK
 	,functionNodes: null
 	,functionOutputNodes: null
 });
@@ -1876,6 +1097,75 @@ Object.assign(armory_logicnode_LogicNode.prototype, {
 	,tree: null
 	,inputs: null
 	,outputs: null
+});
+class armory_logicnode_BoneIKNode extends armory_logicnode_LogicNode {
+	constructor(tree) {
+		armory_logicnode_LogicNode._hx_skip_constructor = true;
+		super();
+		armory_logicnode_LogicNode._hx_skip_constructor = false;
+		this._hx_constructor(tree);
+	}
+	_hx_constructor(tree) {
+		this.notified = false;
+		super._hx_constructor(tree);
+	}
+	run(from) {
+		let _this = this.inputs[1];
+		let object = _this.fromNode.get(_this.fromIndex);
+		let _this1 = this.inputs[2];
+		let boneName = _this1.fromNode.get(_this1.fromIndex);
+		let _this2 = this.inputs[3];
+		this.goal = _this2.fromNode.get(_this2.fromIndex);
+		let _this3 = this.inputs[4];
+		this.poleEnabled = _this3.fromNode.get(_this3.fromIndex);
+		let _this4 = this.inputs[5];
+		this.pole = _this4.fromNode.get(_this4.fromIndex);
+		let _this5 = this.inputs[6];
+		this.chainLength = _this5.fromNode.get(_this5.fromIndex);
+		let _this6 = this.inputs[7];
+		this.maxIterartions = _this6.fromNode.get(_this6.fromIndex);
+		let _this7 = this.inputs[8];
+		this.precision = _this7.fromNode.get(_this7.fromIndex);
+		let _this8 = this.inputs[9];
+		this.rollAngle = _this8.fromNode.get(_this8.fromIndex);
+		if(object == null || this.goal == null) {
+			return;
+		}
+		let anim = object.animation != null ? js_Boot.__cast(object.animation , iron_object_BoneAnimation) : null;
+		if(anim == null) {
+			anim = object.getParentArmature(object.name);
+		}
+		let bone = anim.getBone(boneName);
+		if(!this.poleEnabled) {
+			this.pole = null;
+		}
+		let solveBone = null;
+		let _gthis = this;
+		solveBone = function() {
+			anim.solveIK(bone,_gthis.goal,_gthis.precision,_gthis.maxIterartions,_gthis.chainLength,_gthis.pole,_gthis.rollAngle);
+			anim.removeUpdate(solveBone);
+			_gthis.notified = false;
+		};
+		if(!this.notified) {
+			anim.notifyOnUpdate(solveBone);
+			this.notified = true;
+		}
+		this.runOutput(0);
+	}
+}
+$hxClasses["armory.logicnode.BoneIKNode"] = armory_logicnode_BoneIKNode;
+armory_logicnode_BoneIKNode.__name__ = true;
+armory_logicnode_BoneIKNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_BoneIKNode.prototype, {
+	__class__: armory_logicnode_BoneIKNode
+	,goal: null
+	,pole: null
+	,poleEnabled: null
+	,chainLength: null
+	,maxIterartions: null
+	,precision: null
+	,rollAngle: null
+	,notified: null
 });
 class armory_logicnode_BooleanNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
@@ -1979,169 +1269,6 @@ armory_logicnode_FunctionOutputNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_FunctionOutputNode.prototype, {
 	__class__: armory_logicnode_FunctionOutputNode
 	,result: null
-});
-class armory_logicnode_GateNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let v1 = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[2];
-		let v2 = _this1.fromNode.get(_this1.fromIndex);
-		let cond = false;
-		switch(this.property0) {
-		case "Almost Equal":
-			if(((v1) instanceof iron_math_Vec4)) {
-				let _this = v1;
-				let v = v2;
-				let prec = this.property1;
-				cond = Math.abs(_this.x - v.x) < prec && Math.abs(_this.y - v.y) < prec && Math.abs(_this.z - v.z) < prec;
-			} else {
-				cond = Math.abs(v1 - v2) < this.property1;
-			}
-			break;
-		case "And":
-			cond = true;
-			let _g = 1;
-			let _g1 = this.inputs.length;
-			while(_g < _g1) {
-				let i = _g++;
-				let _this = this.inputs[i];
-				if(!_this.fromNode.get(_this.fromIndex)) {
-					cond = false;
-					break;
-				}
-			}
-			break;
-		case "Between":
-			let _this2 = this.inputs[3];
-			let v3 = _this2.fromNode.get(_this2.fromIndex);
-			cond = ((v1) instanceof iron_math_Vec4) ? v2.x <= v1.x && v2.y <= v1.y && v2.z <= v1.z && v1.x <= v3.x && v1.y <= v3.y && v1.z <= v3.z : v2 <= v1 && v1 <= v3;
-			break;
-		case "Equal":
-			if(((v1) instanceof iron_math_Vec4)) {
-				let _this = v1;
-				let v = v2;
-				cond = _this.x == v.x && _this.y == v.y && _this.z == v.z;
-			} else {
-				cond = v1 == v2;
-			}
-			break;
-		case "Greater":
-			cond = v1 > v2;
-			break;
-		case "Greater Equal":
-			cond = v1 >= v2;
-			break;
-		case "Less":
-			cond = v1 < v2;
-			break;
-		case "Less Equal":
-			cond = v1 <= v2;
-			break;
-		case "Not Equal":
-			if(((v1) instanceof iron_math_Vec4)) {
-				let _this = v1;
-				let v = v2;
-				cond = !(_this.x == v.x && _this.y == v.y && _this.z == v.z);
-			} else {
-				cond = v1 != v2;
-			}
-			break;
-		case "Or":
-			let _g2 = 1;
-			let _g3 = this.inputs.length;
-			while(_g2 < _g3) {
-				let i = _g2++;
-				let _this = this.inputs[i];
-				if(_this.fromNode.get(_this.fromIndex)) {
-					cond = true;
-					break;
-				}
-			}
-			break;
-		}
-		if(cond) {
-			this.runOutput(0);
-		} else {
-			this.runOutput(1);
-		}
-	}
-}
-$hxClasses["armory.logicnode.GateNode"] = armory_logicnode_GateNode;
-armory_logicnode_GateNode.__name__ = true;
-armory_logicnode_GateNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_GateNode.prototype, {
-	__class__: armory_logicnode_GateNode
-	,property0: null
-	,property1: null
-});
-class armory_logicnode_GetDistanceNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	get(from) {
-		let _this = this.inputs[0];
-		let object1 = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[1];
-		let object2 = _this1.fromNode.get(_this1.fromIndex);
-		if(object1 == null || object2 == null) {
-			return 0;
-		}
-		let _this2 = object1.transform.world;
-		let x = _this2.self._30;
-		let y = _this2.self._31;
-		let z = _this2.self._32;
-		let w = _this2.self._33;
-		if(w == null) {
-			w = 1.0;
-		}
-		if(z == null) {
-			z = 0.0;
-		}
-		if(y == null) {
-			y = 0.0;
-		}
-		if(x == null) {
-			x = 0.0;
-		}
-		let v1_x = x;
-		let v1_y = y;
-		let v1_z = z;
-		let v1_w = w;
-		let _this3 = object2.transform.world;
-		let x1 = _this3.self._30;
-		let y1 = _this3.self._31;
-		let z1 = _this3.self._32;
-		let w1 = _this3.self._33;
-		if(w1 == null) {
-			w1 = 1.0;
-		}
-		if(z1 == null) {
-			z1 = 0.0;
-		}
-		if(y1 == null) {
-			y1 = 0.0;
-		}
-		if(x1 == null) {
-			x1 = 0.0;
-		}
-		let v2_x = x1;
-		let v2_y = y1;
-		let v2_z = z1;
-		let v2_w = w1;
-		let vx = v1_x - v2_x;
-		let vy = v1_y - v2_y;
-		let vz = v1_z - v2_z;
-		return Math.sqrt(vx * vx + vy * vy + vz * vz);
-	}
-}
-$hxClasses["armory.logicnode.GetDistanceNode"] = armory_logicnode_GetDistanceNode;
-armory_logicnode_GetDistanceNode.__name__ = true;
-armory_logicnode_GetDistanceNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_GetDistanceNode.prototype, {
-	__class__: armory_logicnode_GetDistanceNode
 });
 class armory_logicnode_GetLocationNode extends armory_logicnode_LogicNode {
 	constructor(tree) {
@@ -2250,102 +1377,6 @@ armory_logicnode_GetLocationNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_GetLocationNode.prototype, {
 	__class__: armory_logicnode_GetLocationNode
 });
-class armory_logicnode_GoToLocationNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		this.object = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[2];
-		this.location = _this1.fromNode.get(_this1.fromIndex);
-		let _this2 = this.inputs[3];
-		this.speed = _this2.fromNode.get(_this2.fromIndex);
-		let _this3 = this.inputs[4];
-		this.turnDuration = _this3.fromNode.get(_this3.fromIndex);
-		let _this4 = this.inputs[5];
-		this.heightOffset = _this4.fromNode.get(_this4.fromIndex);
-		let _this5 = this.inputs[6];
-		this.useRaycast = _this5.fromNode.get(_this5.fromIndex);
-		let _this6 = this.inputs[7];
-		this.rayCastDepth = _this6.fromNode.get(_this6.fromIndex);
-		let _this7 = this.inputs[8];
-		this.rayCastMask = _this7.fromNode.get(_this7.fromIndex);
-		if(this.object == null) {
-			armory_system_Assert.throwAssertionError("object != null","The object input not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 35, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(this.location == null) {
-			armory_system_Assert.throwAssertionError("location != null","The location to navigate to must not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 36, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(this.speed == null) {
-			armory_system_Assert.throwAssertionError("speed != null","Speed of Nav Agent should not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 37, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(!(this.speed >= 0)) {
-			let optMsg = "\n\tMessage: " + "Speed of Nav Agent should be positive";
-			haxe_Log.trace("Failed assertion:" + optMsg + "\n\tExpression: (" + "speed >= 0" + ")",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 38, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(this.turnDuration == null) {
-			armory_system_Assert.throwAssertionError("turnDuration != null","Turn Duration of Nav Agent should not be null",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 39, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		if(!(this.turnDuration >= 0)) {
-			let optMsg = "\n\tMessage: " + "Turn Duration of Nav Agent should be positive";
-			haxe_Log.trace("Failed assertion:" + optMsg + "\n\tExpression: (" + "turnDuration >= 0" + ")",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 40, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		let _this8 = this.object.transform.world;
-		let from1 = new iron_math_Vec4(_this8.self._30,_this8.self._31,_this8.self._32,_this8.self._33);
-		let to = this.location;
-		if(armory_trait_navigation_Navigation.active.navMeshes.length <= 0) {
-			armory_system_Assert.throwAssertionError("Navigation.active.navMeshes.length > 0","No Navigation Mesh Present",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 46, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-		}
-		let _gthis = this;
-		armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from1,to,function(path) {
-			let agent = _gthis.object.getTrait(armory_trait_NavAgent);
-			if(agent == null) {
-				armory_system_Assert.throwAssertionError("agent != null","Object does not have a NavAgent trait",{ fileName : "Sources/armory/logicnode/GoToLocationNode.hx", lineNumber : 49, className : "armory.logicnode.GoToLocationNode", methodName : "run"});
-			}
-			agent.speed = _gthis.speed;
-			agent.turnDuration = _gthis.turnDuration;
-			agent.heightOffset = _gthis.heightOffset;
-			agent.tickPos = $bind(_gthis,_gthis.tickPos);
-			agent.tickRot = $bind(_gthis,_gthis.tickRot);
-			agent.setPath(path);
-		});
-		this.runOutput(0);
-	}
-	tickPos() {
-		if(this.useRaycast) {
-			this.setAgentHeight();
-		}
-		this.runOutput(1);
-	}
-	tickRot() {
-		this.runOutput(2);
-	}
-	setAgentHeight() {
-		let _this = this.object.transform.world;
-		let fromLoc = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
-		let toLoc = new iron_math_Vec4(fromLoc.x,fromLoc.y,fromLoc.z,fromLoc.w);
-		toLoc.z += this.rayCastDepth;
-		let hit = armory_trait_physics_bullet_PhysicsWorld.active.rayCast(fromLoc,toLoc,this.rayCastMask);
-		if(hit != null) {
-			this.object.transform.loc.z = hit.pos.z + this.heightOffset;
-		}
-	}
-}
-$hxClasses["armory.logicnode.GoToLocationNode"] = armory_logicnode_GoToLocationNode;
-armory_logicnode_GoToLocationNode.__name__ = true;
-armory_logicnode_GoToLocationNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_GoToLocationNode.prototype, {
-	__class__: armory_logicnode_GoToLocationNode
-	,object: null
-	,location: null
-	,speed: null
-	,turnDuration: null
-	,heightOffset: null
-	,useRaycast: null
-	,rayCastDepth: null
-	,rayCastMask: null
-});
 class armory_logicnode_IntegerNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
 		if(value == null) {
@@ -2375,24 +1406,6 @@ armory_logicnode_IntegerNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_IntegerNode.prototype, {
 	__class__: armory_logicnode_IntegerNode
 	,value: null
-});
-class armory_logicnode_IsNotNoneNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let v1 = _this.fromNode.get(_this.fromIndex);
-		if(v1 != null) {
-			this.runOutput(0);
-		}
-	}
-}
-$hxClasses["armory.logicnode.IsNotNoneNode"] = armory_logicnode_IsNotNoneNode;
-armory_logicnode_IsNotNoneNode.__name__ = true;
-armory_logicnode_IsNotNoneNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_IsNotNoneNode.prototype, {
-	__class__: armory_logicnode_IsNotNoneNode
 });
 class armory_logicnode_LogicNodeLink {
 	constructor(fromNode,toNode,fromIndex,toIndex) {
@@ -2473,67 +1486,6 @@ Object.assign(armory_logicnode_ObjectNode.prototype, {
 	,objectName: null
 	,value: null
 });
-class armory_logicnode_OnInitNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-		tree.notifyOnInit($bind(this,this.init));
-	}
-	init() {
-		let noPhysics = armory_trait_physics_bullet_PhysicsWorld.active == null || armory_trait_physics_bullet_PhysicsWorld.active._lateUpdate == null;
-		if(noPhysics) {
-			this.runOutput(0);
-		} else {
-			armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.physics_init));
-		}
-	}
-	physics_init() {
-		armory_trait_physics_bullet_PhysicsWorld.active.removePreUpdate($bind(this,this.physics_init));
-		this.runOutput(0);
-	}
-}
-$hxClasses["armory.logicnode.OnInitNode"] = armory_logicnode_OnInitNode;
-armory_logicnode_OnInitNode.__name__ = true;
-armory_logicnode_OnInitNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_OnInitNode.prototype, {
-	__class__: armory_logicnode_OnInitNode
-});
-class armory_logicnode_OnTimerNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		armory_logicnode_LogicNode._hx_skip_constructor = true;
-		super();
-		armory_logicnode_LogicNode._hx_skip_constructor = false;
-		this._hx_constructor(tree);
-	}
-	_hx_constructor(tree) {
-		this.repeat = false;
-		this.duration = 0.0;
-		super._hx_constructor(tree);
-		tree.notifyOnUpdate($bind(this,this.update));
-	}
-	update() {
-		if(this.duration <= 0.0) {
-			let _this = this.inputs[0];
-			this.duration = _this.fromNode.get(_this.fromIndex);
-			let _this1 = this.inputs[1];
-			this.repeat = _this1.fromNode.get(_this1.fromIndex);
-		}
-		this.duration -= iron_system_Time.get_delta();
-		if(this.duration <= 0.0) {
-			if(!this.repeat) {
-				this.tree.removeUpdate($bind(this,this.update));
-			}
-			this.runOutput(0);
-		}
-	}
-}
-$hxClasses["armory.logicnode.OnTimerNode"] = armory_logicnode_OnTimerNode;
-armory_logicnode_OnTimerNode.__name__ = true;
-armory_logicnode_OnTimerNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_OnTimerNode.prototype, {
-	__class__: armory_logicnode_OnTimerNode
-	,duration: null
-	,repeat: null
-});
 class armory_logicnode_OnUpdateNode extends armory_logicnode_LogicNode {
 	constructor(tree) {
 		super(tree);
@@ -2561,224 +1513,6 @@ armory_logicnode_OnUpdateNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_OnUpdateNode.prototype, {
 	__class__: armory_logicnode_OnUpdateNode
 	,property0: null
-});
-class armory_logicnode_PlayActionFromNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		armory_logicnode_LogicNode._hx_skip_constructor = true;
-		super();
-		armory_logicnode_LogicNode._hx_skip_constructor = false;
-		this._hx_constructor(tree);
-	}
-	_hx_constructor(tree) {
-		this.endFrame = -1;
-		super._hx_constructor(tree);
-		tree.notifyOnUpdate($bind(this,this.update));
-	}
-	update() {
-		if(this.animation != null) {
-			if(this.animation.currentFrame() == this.endFrame) {
-				if(this.loop) {
-					this.animation.setFrame(this.startFrame);
-				} else if(!this.animation.paused) {
-					this.animation.pause();
-					this.runOutput(1);
-				}
-			}
-		}
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let object = _this.fromNode.get(_this.fromIndex);
-		let _this1 = this.inputs[2];
-		let action = _this1.fromNode.get(_this1.fromIndex);
-		let _this2 = this.inputs[3];
-		this.startFrame = _this2.fromNode.get(_this2.fromIndex);
-		let _this3 = this.inputs[4];
-		this.endFrame = _this3.fromNode.get(_this3.fromIndex);
-		let _this4 = this.inputs[5];
-		let blendTime = _this4.fromNode.get(_this4.fromIndex);
-		let _this5 = this.inputs[6];
-		let speed = _this5.fromNode.get(_this5.fromIndex);
-		let _this6 = this.inputs[7];
-		this.loop = _this6.fromNode.get(_this6.fromIndex);
-		let _this7 = this.inputs[8];
-		this.reverse = _this7.fromNode.get(_this7.fromIndex);
-		if(object == null) {
-			return;
-		}
-		this.animation = object.animation;
-		if(this.animation == null) {
-			this.animation = object.getParentArmature(object.name);
-		}
-		if(this.reverse) {
-			let isnew = true;
-			this.actionR = action + "Reverse";
-			if(this.animation.isSkinned) {
-				let _g = 0;
-				let _g1 = this.animation.armature.actions;
-				while(_g < _g1.length) {
-					let a = _g1[_g];
-					++_g;
-					if(a.name == this.actionR) {
-						isnew = false;
-					}
-				}
-				if(isnew) {
-					let _g = 0;
-					let _g1 = this.animation.armature.actions;
-					while(_g < _g1.length) {
-						let a = _g1[_g];
-						++_g;
-						if(a.name == action) {
-							this.animation.armature.actions.push({ name : this.actionR, bones : a.bones, mats : null});
-						}
-					}
-					let _g2 = 0;
-					let _g3 = this.animation.armature.actions;
-					while(_g2 < _g3.length) {
-						let a = _g3[_g2];
-						++_g2;
-						if(a.name == this.actionR) {
-							let _g = 0;
-							let _g1 = a.bones;
-							while(_g < _g1.length) {
-								let bone = _g1[_g];
-								++_g;
-								let val = [];
-								let v = bone.anim.tracks[0];
-								let len = v.values.byteLength >> 2;
-								let l = len / 16 | 0;
-								let _g2 = 0;
-								let _g3 = l;
-								while(_g2 < _g3) {
-									let i = _g2++;
-									let _g = 0;
-									while(_g < 16) {
-										let j = _g++;
-										val.push(v.values.getFloat32(((l - i) * 16 + j - 16) * 4,kha_arrays_ByteArray.LITTLE_ENDIAN));
-									}
-								}
-								let _g4 = 0;
-								let _g5 = v.values.byteLength >> 2;
-								while(_g4 < _g5) {
-									let i = _g4++;
-									let v1 = val[i];
-									v.values.setFloat32(i * 4,v1,true);
-								}
-							}
-							let castBoneAnim = js_Boot.__cast(this.animation , iron_object_BoneAnimation);
-							castBoneAnim.data.geom.actions.h[this.actionR] = a.bones;
-							castBoneAnim.data.geom.mats.h[this.actionR] = castBoneAnim.data.geom.mats.h[action];
-							let _g2 = 0;
-							let _g3 = iron_Scene.active.raw.objects;
-							while(_g2 < _g3.length) {
-								let o = _g3[_g2];
-								++_g2;
-								if(o.name == object.name) {
-									o.bone_actions.push("action_" + o.bone_actions[0].split("_")[1] + "_" + this.actionR);
-								}
-							}
-						}
-					}
-				}
-			} else {
-				let oaction = null;
-				let tracks = [];
-				let oactions = (js_Boot.__cast(this.animation , iron_object_ObjectAnimation)).oactions;
-				let _g = 0;
-				while(_g < oactions.length) {
-					let a = oactions[_g];
-					++_g;
-					if(a.objects[0].name == this.actionR) {
-						isnew = false;
-					}
-				}
-				if(isnew) {
-					let _g = 0;
-					while(_g < oactions.length) {
-						let a = oactions[_g];
-						++_g;
-						if(a.objects[0].name == action) {
-							oaction = a.objects[0];
-							let _g = 0;
-							let _g1 = a.objects[0].anim.tracks;
-							while(_g < _g1.length) {
-								let b = _g1[_g];
-								++_g;
-								let val = [];
-								let _g2 = 0;
-								let _g3 = b.values;
-								while(_g2 < _g3.byteLength >> 2) {
-									let c = _g3.getFloat32(_g2 * 4,kha_arrays_ByteArray.LITTLE_ENDIAN);
-									++_g2;
-									val.push(c);
-								}
-								val.reverse();
-								let vali = kha_arrays_Float32Array._new(val.length);
-								let _g4 = 0;
-								let _g5 = val.length;
-								while(_g4 < _g5) {
-									let i = _g4++;
-									let v = val[i];
-									vali.setFloat32(i * 4,v,true);
-								}
-								tracks.push({ target : b.target, frames : b.frames, values : vali});
-							}
-							oactions.push({ objects : [{ name : this.actionR, anim : { begin : oaction.anim.begin, end : oaction.anim.end, tracks : tracks}, type : "object", data_ref : "", transform : null}]});
-							let _g2 = 0;
-							let _g3 = iron_Scene.active.raw.objects;
-							while(_g2 < _g3.length) {
-								let o = _g3[_g2];
-								++_g2;
-								if(o.name == object.name) {
-									o.object_actions.push("action_" + this.actionR);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		let _gthis = this;
-		this.animation.play(this.reverse ? this.actionR : action,function() {
-			_gthis.runOutput(1);
-		},blendTime,speed,this.loop);
-		this.animation.update(this.startFrame * iron_Scene.active.raw.frame_time);
-		this.runOutput(0);
-	}
-}
-$hxClasses["armory.logicnode.PlayActionFromNode"] = armory_logicnode_PlayActionFromNode;
-armory_logicnode_PlayActionFromNode.__name__ = true;
-armory_logicnode_PlayActionFromNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_PlayActionFromNode.prototype, {
-	__class__: armory_logicnode_PlayActionFromNode
-	,animation: null
-	,startFrame: null
-	,endFrame: null
-	,loop: null
-	,reverse: null
-	,actionR: null
-});
-class armory_logicnode_StopAgentNode extends armory_logicnode_LogicNode {
-	constructor(tree) {
-		super(tree);
-	}
-	run(from) {
-		let _this = this.inputs[1];
-		let object = _this.fromNode.get(_this.fromIndex);
-		if(object == null) {
-			return;
-		}
-		let agent = object.getTrait(armory_trait_NavAgent);
-		agent.stop();
-		this.runOutput(0);
-	}
-}
-$hxClasses["armory.logicnode.StopAgentNode"] = armory_logicnode_StopAgentNode;
-armory_logicnode_StopAgentNode.__name__ = true;
-armory_logicnode_StopAgentNode.__super__ = armory_logicnode_LogicNode;
-Object.assign(armory_logicnode_StopAgentNode.prototype, {
-	__class__: armory_logicnode_StopAgentNode
 });
 class armory_logicnode_StringNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
@@ -2808,6 +1542,48 @@ armory_logicnode_StringNode.__name__ = true;
 armory_logicnode_StringNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_StringNode.prototype, {
 	__class__: armory_logicnode_StringNode
+	,value: null
+});
+class armory_logicnode_VectorNode extends armory_logicnode_LogicNode {
+	constructor(tree,x,y,z) {
+		armory_logicnode_LogicNode._hx_skip_constructor = true;
+		super();
+		armory_logicnode_LogicNode._hx_skip_constructor = false;
+		this._hx_constructor(tree,x,y,z);
+	}
+	_hx_constructor(tree,x,y,z) {
+		this.value = new iron_math_Vec4();
+		super._hx_constructor(tree);
+		if(x != null) {
+			armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(tree,x),this,0,0);
+			armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(tree,y),this,0,1);
+			armory_logicnode_LogicNode.addLink(new armory_logicnode_FloatNode(tree,z),this,0,2);
+		}
+	}
+	get(from) {
+		this.value = new iron_math_Vec4();
+		let _this = this.inputs[0];
+		let tmp = _this.fromNode.get(_this.fromIndex);
+		this.value.x = tmp;
+		let _this1 = this.inputs[1];
+		let tmp1 = _this1.fromNode.get(_this1.fromIndex);
+		this.value.y = tmp1;
+		let _this2 = this.inputs[2];
+		let tmp2 = _this2.fromNode.get(_this2.fromIndex);
+		this.value.z = tmp2;
+		return this.value;
+	}
+	set(value) {
+		this.inputs[0].fromNode.set(value.x);
+		this.inputs[1].fromNode.set(value.y);
+		this.inputs[2].fromNode.set(value.z);
+	}
+}
+$hxClasses["armory.logicnode.VectorNode"] = armory_logicnode_VectorNode;
+armory_logicnode_VectorNode.__name__ = true;
+armory_logicnode_VectorNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_VectorNode.prototype, {
+	__class__: armory_logicnode_VectorNode
 	,value: null
 });
 class armory_math_Helper {
@@ -32853,290 +31629,282 @@ class kha_Shaders {
 		blobs.push(kha_internal_BytesBlob.fromBytes(bytes));
 		kha_Shaders.HuggyHair_Inst_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs,["HuggyHair_Inst_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs1 = [];
-		let data1 = Reflect.field(kha_Shaders,"HuggyHair_Inst_007_armskin_mesh_vertData" + 0);
+		let data1 = Reflect.field(kha_Shaders,"World_World_fragData" + 0);
 		let bytes1 = haxe_Unserializer.run(data1);
 		blobs1.push(kha_internal_BytesBlob.fromBytes(bytes1));
-		let data2 = Reflect.field(kha_Shaders,"HuggyHair_Inst_007_armskin_mesh_vertData" + 1);
+		let data2 = Reflect.field(kha_Shaders,"World_World_fragData" + 1);
 		let bytes2 = haxe_Unserializer.run(data2);
 		blobs1.push(kha_internal_BytesBlob.fromBytes(bytes2));
-		kha_Shaders.HuggyHair_Inst_007_armskin_mesh_vert = new kha_graphics4_VertexShader(blobs1,["HuggyHair_Inst_007_armskin_mesh.vert.essl","HuggyHair_Inst_007_armskin_mesh-webgl2.vert.essl"]);
+		kha_Shaders.World_World_frag = new kha_graphics4_FragmentShader(blobs1,["World_World.frag.essl","World_World-webgl2.frag.essl"]);
 		let blobs2 = [];
-		let data3 = Reflect.field(kha_Shaders,"World_World_fragData" + 0);
+		let data3 = Reflect.field(kha_Shaders,"World_World_vertData" + 0);
 		let bytes3 = haxe_Unserializer.run(data3);
 		blobs2.push(kha_internal_BytesBlob.fromBytes(bytes3));
-		let data4 = Reflect.field(kha_Shaders,"World_World_fragData" + 1);
+		let data4 = Reflect.field(kha_Shaders,"World_World_vertData" + 1);
 		let bytes4 = haxe_Unserializer.run(data4);
 		blobs2.push(kha_internal_BytesBlob.fromBytes(bytes4));
-		kha_Shaders.World_World_frag = new kha_graphics4_FragmentShader(blobs2,["World_World.frag.essl","World_World-webgl2.frag.essl"]);
+		kha_Shaders.World_World_vert = new kha_graphics4_VertexShader(blobs2,["World_World.vert.essl","World_World-webgl2.vert.essl"]);
 		let blobs3 = [];
-		let data5 = Reflect.field(kha_Shaders,"World_World_vertData" + 0);
+		let data5 = Reflect.field(kha_Shaders,"____________mesh_fragData" + 0);
 		let bytes5 = haxe_Unserializer.run(data5);
 		blobs3.push(kha_internal_BytesBlob.fromBytes(bytes5));
-		let data6 = Reflect.field(kha_Shaders,"World_World_vertData" + 1);
-		let bytes6 = haxe_Unserializer.run(data6);
-		blobs3.push(kha_internal_BytesBlob.fromBytes(bytes6));
-		kha_Shaders.World_World_vert = new kha_graphics4_VertexShader(blobs3,["World_World.vert.essl","World_World-webgl2.vert.essl"]);
+		kha_Shaders.____________mesh_frag = new kha_graphics4_FragmentShader(blobs3,["____________mesh-webgl2.frag.essl"]);
 		let blobs4 = [];
-		let data7 = Reflect.field(kha_Shaders,"____________mesh_fragData" + 0);
-		let bytes7 = haxe_Unserializer.run(data7);
-		blobs4.push(kha_internal_BytesBlob.fromBytes(bytes7));
-		kha_Shaders.____________mesh_frag = new kha_graphics4_FragmentShader(blobs4,["____________mesh-webgl2.frag.essl"]);
+		let data6 = Reflect.field(kha_Shaders,"__________mesh_fragData" + 0);
+		let bytes6 = haxe_Unserializer.run(data6);
+		blobs4.push(kha_internal_BytesBlob.fromBytes(bytes6));
+		kha_Shaders.__________mesh_frag = new kha_graphics4_FragmentShader(blobs4,["__________mesh-webgl2.frag.essl"]);
 		let blobs5 = [];
-		let data8 = Reflect.field(kha_Shaders,"__________mesh_fragData" + 0);
-		let bytes8 = haxe_Unserializer.run(data8);
-		blobs5.push(kha_internal_BytesBlob.fromBytes(bytes8));
-		kha_Shaders.__________mesh_frag = new kha_graphics4_FragmentShader(blobs5,["__________mesh-webgl2.frag.essl"]);
+		let data7 = Reflect.field(kha_Shaders,"_________mesh_fragData" + 0);
+		let bytes7 = haxe_Unserializer.run(data7);
+		blobs5.push(kha_internal_BytesBlob.fromBytes(bytes7));
+		kha_Shaders._________mesh_frag = new kha_graphics4_FragmentShader(blobs5,["_________mesh-webgl2.frag.essl"]);
 		let blobs6 = [];
-		let data9 = Reflect.field(kha_Shaders,"_________mesh_fragData" + 0);
-		let bytes9 = haxe_Unserializer.run(data9);
-		blobs6.push(kha_internal_BytesBlob.fromBytes(bytes9));
-		kha_Shaders._________mesh_frag = new kha_graphics4_FragmentShader(blobs6,["_________mesh-webgl2.frag.essl"]);
+		let data8 = Reflect.field(kha_Shaders,"_______armskin_mesh_fragData" + 0);
+		let bytes8 = haxe_Unserializer.run(data8);
+		blobs6.push(kha_internal_BytesBlob.fromBytes(bytes8));
+		kha_Shaders._______armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs6,["_______armskin_mesh-webgl2.frag.essl"]);
 		let blobs7 = [];
-		let data10 = Reflect.field(kha_Shaders,"_______armskin_mesh_fragData" + 0);
-		let bytes10 = haxe_Unserializer.run(data10);
-		blobs7.push(kha_internal_BytesBlob.fromBytes(bytes10));
-		kha_Shaders._______armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs7,["_______armskin_mesh-webgl2.frag.essl"]);
+		let data9 = Reflect.field(kha_Shaders,"______mesh_fragData" + 0);
+		let bytes9 = haxe_Unserializer.run(data9);
+		blobs7.push(kha_internal_BytesBlob.fromBytes(bytes9));
+		kha_Shaders.______mesh_frag = new kha_graphics4_FragmentShader(blobs7,["______mesh-webgl2.frag.essl"]);
 		let blobs8 = [];
-		let data11 = Reflect.field(kha_Shaders,"______mesh_fragData" + 0);
+		let data10 = Reflect.field(kha_Shaders,"______mesh_vertData" + 0);
+		let bytes10 = haxe_Unserializer.run(data10);
+		blobs8.push(kha_internal_BytesBlob.fromBytes(bytes10));
+		let data11 = Reflect.field(kha_Shaders,"______mesh_vertData" + 1);
 		let bytes11 = haxe_Unserializer.run(data11);
 		blobs8.push(kha_internal_BytesBlob.fromBytes(bytes11));
-		kha_Shaders.______mesh_frag = new kha_graphics4_FragmentShader(blobs8,["______mesh-webgl2.frag.essl"]);
+		kha_Shaders.______mesh_vert = new kha_graphics4_VertexShader(blobs8,["______mesh.vert.essl","______mesh-webgl2.vert.essl"]);
 		let blobs9 = [];
-		let data12 = Reflect.field(kha_Shaders,"______mesh_vertData" + 0);
+		let data12 = Reflect.field(kha_Shaders,"_____armskin_mesh_fragData" + 0);
 		let bytes12 = haxe_Unserializer.run(data12);
 		blobs9.push(kha_internal_BytesBlob.fromBytes(bytes12));
-		let data13 = Reflect.field(kha_Shaders,"______mesh_vertData" + 1);
-		let bytes13 = haxe_Unserializer.run(data13);
-		blobs9.push(kha_internal_BytesBlob.fromBytes(bytes13));
-		kha_Shaders.______mesh_vert = new kha_graphics4_VertexShader(blobs9,["______mesh.vert.essl","______mesh-webgl2.vert.essl"]);
+		kha_Shaders._____armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs9,["_____armskin_mesh-webgl2.frag.essl"]);
 		let blobs10 = [];
-		let data14 = Reflect.field(kha_Shaders,"_____armskin_mesh_fragData" + 0);
-		let bytes14 = haxe_Unserializer.run(data14);
-		blobs10.push(kha_internal_BytesBlob.fromBytes(bytes14));
-		kha_Shaders._____armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs10,["_____armskin_mesh-webgl2.frag.essl"]);
+		let data13 = Reflect.field(kha_Shaders,"armdefault_mesh_fragData" + 0);
+		let bytes13 = haxe_Unserializer.run(data13);
+		blobs10.push(kha_internal_BytesBlob.fromBytes(bytes13));
+		kha_Shaders.armdefault_mesh_frag = new kha_graphics4_FragmentShader(blobs10,["armdefault_mesh-webgl2.frag.essl"]);
 		let blobs11 = [];
-		let data15 = Reflect.field(kha_Shaders,"armdefault_mesh_fragData" + 0);
+		let data14 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 0);
+		let bytes14 = haxe_Unserializer.run(data14);
+		blobs11.push(kha_internal_BytesBlob.fromBytes(bytes14));
+		let data15 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 1);
 		let bytes15 = haxe_Unserializer.run(data15);
 		blobs11.push(kha_internal_BytesBlob.fromBytes(bytes15));
-		kha_Shaders.armdefault_mesh_frag = new kha_graphics4_FragmentShader(blobs11,["armdefault_mesh-webgl2.frag.essl"]);
+		kha_Shaders.armdefault_mesh_vert = new kha_graphics4_VertexShader(blobs11,["armdefault_mesh.vert.essl","armdefault_mesh-webgl2.vert.essl"]);
 		let blobs12 = [];
-		let data16 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 0);
+		let data16 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_fragData" + 0);
 		let bytes16 = haxe_Unserializer.run(data16);
 		blobs12.push(kha_internal_BytesBlob.fromBytes(bytes16));
-		let data17 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 1);
-		let bytes17 = haxe_Unserializer.run(data17);
-		blobs12.push(kha_internal_BytesBlob.fromBytes(bytes17));
-		kha_Shaders.armdefault_mesh_vert = new kha_graphics4_VertexShader(blobs12,["armdefault_mesh.vert.essl","armdefault_mesh-webgl2.vert.essl"]);
+		kha_Shaders.armdefaultskin_mesh_frag = new kha_graphics4_FragmentShader(blobs12,["armdefaultskin_mesh-webgl2.frag.essl"]);
 		let blobs13 = [];
-		let data18 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_fragData" + 0);
+		let data17 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_vertData" + 0);
+		let bytes17 = haxe_Unserializer.run(data17);
+		blobs13.push(kha_internal_BytesBlob.fromBytes(bytes17));
+		let data18 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_vertData" + 1);
 		let bytes18 = haxe_Unserializer.run(data18);
 		blobs13.push(kha_internal_BytesBlob.fromBytes(bytes18));
-		kha_Shaders.armdefaultskin_mesh_frag = new kha_graphics4_FragmentShader(blobs13,["armdefaultskin_mesh-webgl2.frag.essl"]);
+		kha_Shaders.armdefaultskin_mesh_vert = new kha_graphics4_VertexShader(blobs13,["armdefaultskin_mesh.vert.essl","armdefaultskin_mesh-webgl2.vert.essl"]);
 		let blobs14 = [];
-		let data19 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_vertData" + 0);
+		let data19 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 0);
 		let bytes19 = haxe_Unserializer.run(data19);
 		blobs14.push(kha_internal_BytesBlob.fromBytes(bytes19));
-		let data20 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_vertData" + 1);
+		let data20 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 1);
 		let bytes20 = haxe_Unserializer.run(data20);
 		blobs14.push(kha_internal_BytesBlob.fromBytes(bytes20));
-		kha_Shaders.armdefaultskin_mesh_vert = new kha_graphics4_VertexShader(blobs14,["armdefaultskin_mesh.vert.essl","armdefaultskin_mesh-webgl2.vert.essl"]);
+		kha_Shaders.compositor_pass_frag = new kha_graphics4_FragmentShader(blobs14,["compositor_pass.frag.essl","compositor_pass-webgl2.frag.essl"]);
 		let blobs15 = [];
-		let data21 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 0);
+		let data21 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 0);
 		let bytes21 = haxe_Unserializer.run(data21);
 		blobs15.push(kha_internal_BytesBlob.fromBytes(bytes21));
-		let data22 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 1);
+		let data22 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 1);
 		let bytes22 = haxe_Unserializer.run(data22);
 		blobs15.push(kha_internal_BytesBlob.fromBytes(bytes22));
-		kha_Shaders.compositor_pass_frag = new kha_graphics4_FragmentShader(blobs15,["compositor_pass.frag.essl","compositor_pass-webgl2.frag.essl"]);
+		kha_Shaders.compositor_pass_vert = new kha_graphics4_VertexShader(blobs15,["compositor_pass.vert.essl","compositor_pass-webgl2.vert.essl"]);
 		let blobs16 = [];
-		let data23 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 0);
+		let data23 = Reflect.field(kha_Shaders,"deferred_light_fragData" + 0);
 		let bytes23 = haxe_Unserializer.run(data23);
 		blobs16.push(kha_internal_BytesBlob.fromBytes(bytes23));
-		let data24 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 1);
-		let bytes24 = haxe_Unserializer.run(data24);
-		blobs16.push(kha_internal_BytesBlob.fromBytes(bytes24));
-		kha_Shaders.compositor_pass_vert = new kha_graphics4_VertexShader(blobs16,["compositor_pass.vert.essl","compositor_pass-webgl2.vert.essl"]);
+		kha_Shaders.deferred_light_frag = new kha_graphics4_FragmentShader(blobs16,["deferred_light-webgl2.frag.essl"]);
 		let blobs17 = [];
-		let data25 = Reflect.field(kha_Shaders,"deferred_light_fragData" + 0);
-		let bytes25 = haxe_Unserializer.run(data25);
-		blobs17.push(kha_internal_BytesBlob.fromBytes(bytes25));
-		kha_Shaders.deferred_light_frag = new kha_graphics4_FragmentShader(blobs17,["deferred_light-webgl2.frag.essl"]);
+		let data24 = Reflect.field(kha_Shaders,"huggy_MAT_Inst_007_armskin_mesh_fragData" + 0);
+		let bytes24 = haxe_Unserializer.run(data24);
+		blobs17.push(kha_internal_BytesBlob.fromBytes(bytes24));
+		kha_Shaders.huggy_MAT_Inst_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs17,["huggy_MAT_Inst_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs18 = [];
-		let data26 = Reflect.field(kha_Shaders,"huggy_MAT_Inst_007_armskin_mesh_fragData" + 0);
-		let bytes26 = haxe_Unserializer.run(data26);
-		blobs18.push(kha_internal_BytesBlob.fromBytes(bytes26));
-		kha_Shaders.huggy_MAT_Inst_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs18,["huggy_MAT_Inst_007_armskin_mesh-webgl2.frag.essl"]);
+		let data25 = Reflect.field(kha_Shaders,"huggy_MAT_Lips_007_armskin_mesh_fragData" + 0);
+		let bytes25 = haxe_Unserializer.run(data25);
+		blobs18.push(kha_internal_BytesBlob.fromBytes(bytes25));
+		kha_Shaders.huggy_MAT_Lips_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs18,["huggy_MAT_Lips_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs19 = [];
-		let data27 = Reflect.field(kha_Shaders,"huggy_MAT_Lips_007_armskin_mesh_fragData" + 0);
-		let bytes27 = haxe_Unserializer.run(data27);
-		blobs19.push(kha_internal_BytesBlob.fromBytes(bytes27));
-		kha_Shaders.huggy_MAT_Lips_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs19,["huggy_MAT_Lips_007_armskin_mesh-webgl2.frag.essl"]);
+		let data26 = Reflect.field(kha_Shaders,"lambert2_007_armskin_mesh_fragData" + 0);
+		let bytes26 = haxe_Unserializer.run(data26);
+		blobs19.push(kha_internal_BytesBlob.fromBytes(bytes26));
+		kha_Shaders.lambert2_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs19,["lambert2_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs20 = [];
-		let data28 = Reflect.field(kha_Shaders,"lambert2_007_armskin_mesh_fragData" + 0);
-		let bytes28 = haxe_Unserializer.run(data28);
-		blobs20.push(kha_internal_BytesBlob.fromBytes(bytes28));
-		kha_Shaders.lambert2_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs20,["lambert2_007_armskin_mesh-webgl2.frag.essl"]);
+		let data27 = Reflect.field(kha_Shaders,"lambert3_007_armskin_mesh_fragData" + 0);
+		let bytes27 = haxe_Unserializer.run(data27);
+		blobs20.push(kha_internal_BytesBlob.fromBytes(bytes27));
+		kha_Shaders.lambert3_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs20,["lambert3_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs21 = [];
-		let data29 = Reflect.field(kha_Shaders,"lambert3_007_armskin_mesh_fragData" + 0);
+		let data28 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 0);
+		let bytes28 = haxe_Unserializer.run(data28);
+		blobs21.push(kha_internal_BytesBlob.fromBytes(bytes28));
+		let data29 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 1);
 		let bytes29 = haxe_Unserializer.run(data29);
 		blobs21.push(kha_internal_BytesBlob.fromBytes(bytes29));
-		kha_Shaders.lambert3_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs21,["lambert3_007_armskin_mesh-webgl2.frag.essl"]);
+		kha_Shaders.painter_colored_frag = new kha_graphics4_FragmentShader(blobs21,["painter-colored.frag.essl","painter-colored-webgl2.frag.essl"]);
 		let blobs22 = [];
-		let data30 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 0);
+		let data30 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 0);
 		let bytes30 = haxe_Unserializer.run(data30);
 		blobs22.push(kha_internal_BytesBlob.fromBytes(bytes30));
-		let data31 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 1);
+		let data31 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 1);
 		let bytes31 = haxe_Unserializer.run(data31);
 		blobs22.push(kha_internal_BytesBlob.fromBytes(bytes31));
-		kha_Shaders.painter_colored_frag = new kha_graphics4_FragmentShader(blobs22,["painter-colored.frag.essl","painter-colored-webgl2.frag.essl"]);
+		kha_Shaders.painter_colored_vert = new kha_graphics4_VertexShader(blobs22,["painter-colored.vert.essl","painter-colored-webgl2.vert.essl"]);
 		let blobs23 = [];
-		let data32 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 0);
+		let data32 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
 		let bytes32 = haxe_Unserializer.run(data32);
 		blobs23.push(kha_internal_BytesBlob.fromBytes(bytes32));
-		let data33 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 1);
+		let data33 = Reflect.field(kha_Shaders,"painter_image_fragData" + 1);
 		let bytes33 = haxe_Unserializer.run(data33);
 		blobs23.push(kha_internal_BytesBlob.fromBytes(bytes33));
-		kha_Shaders.painter_colored_vert = new kha_graphics4_VertexShader(blobs23,["painter-colored.vert.essl","painter-colored-webgl2.vert.essl"]);
+		kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs23,["painter-image.frag.essl","painter-image-webgl2.frag.essl"]);
 		let blobs24 = [];
-		let data34 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
+		let data34 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
 		let bytes34 = haxe_Unserializer.run(data34);
 		blobs24.push(kha_internal_BytesBlob.fromBytes(bytes34));
-		let data35 = Reflect.field(kha_Shaders,"painter_image_fragData" + 1);
+		let data35 = Reflect.field(kha_Shaders,"painter_image_vertData" + 1);
 		let bytes35 = haxe_Unserializer.run(data35);
 		blobs24.push(kha_internal_BytesBlob.fromBytes(bytes35));
-		kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs24,["painter-image.frag.essl","painter-image-webgl2.frag.essl"]);
+		kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs24,["painter-image.vert.essl","painter-image-webgl2.vert.essl"]);
 		let blobs25 = [];
-		let data36 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
+		let data36 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
 		let bytes36 = haxe_Unserializer.run(data36);
 		blobs25.push(kha_internal_BytesBlob.fromBytes(bytes36));
-		let data37 = Reflect.field(kha_Shaders,"painter_image_vertData" + 1);
+		let data37 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
 		let bytes37 = haxe_Unserializer.run(data37);
 		blobs25.push(kha_internal_BytesBlob.fromBytes(bytes37));
-		kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs25,["painter-image.vert.essl","painter-image-webgl2.vert.essl"]);
+		kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs25,["painter-text.frag.essl","painter-text-webgl2.frag.essl"]);
 		let blobs26 = [];
-		let data38 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
+		let data38 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
 		let bytes38 = haxe_Unserializer.run(data38);
 		blobs26.push(kha_internal_BytesBlob.fromBytes(bytes38));
-		let data39 = Reflect.field(kha_Shaders,"painter_text_fragData" + 1);
+		let data39 = Reflect.field(kha_Shaders,"painter_text_vertData" + 1);
 		let bytes39 = haxe_Unserializer.run(data39);
 		blobs26.push(kha_internal_BytesBlob.fromBytes(bytes39));
-		kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs26,["painter-text.frag.essl","painter-text-webgl2.frag.essl"]);
+		kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs26,["painter-text.vert.essl","painter-text-webgl2.vert.essl"]);
 		let blobs27 = [];
-		let data40 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
+		let data40 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
 		let bytes40 = haxe_Unserializer.run(data40);
 		blobs27.push(kha_internal_BytesBlob.fromBytes(bytes40));
-		let data41 = Reflect.field(kha_Shaders,"painter_text_vertData" + 1);
+		let data41 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
 		let bytes41 = haxe_Unserializer.run(data41);
 		blobs27.push(kha_internal_BytesBlob.fromBytes(bytes41));
-		kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs27,["painter-text.vert.essl","painter-text-webgl2.vert.essl"]);
+		kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs27,["painter-video.frag.essl","painter-video-webgl2.frag.essl"]);
 		let blobs28 = [];
-		let data42 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
+		let data42 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
 		let bytes42 = haxe_Unserializer.run(data42);
 		blobs28.push(kha_internal_BytesBlob.fromBytes(bytes42));
-		let data43 = Reflect.field(kha_Shaders,"painter_video_fragData" + 1);
+		let data43 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
 		let bytes43 = haxe_Unserializer.run(data43);
 		blobs28.push(kha_internal_BytesBlob.fromBytes(bytes43));
-		kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs28,["painter-video.frag.essl","painter-video-webgl2.frag.essl"]);
+		kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs28,["painter-video.vert.essl","painter-video-webgl2.vert.essl"]);
 		let blobs29 = [];
-		let data44 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
+		let data44 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 0);
 		let bytes44 = haxe_Unserializer.run(data44);
 		blobs29.push(kha_internal_BytesBlob.fromBytes(bytes44));
-		let data45 = Reflect.field(kha_Shaders,"painter_video_vertData" + 1);
+		let data45 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 1);
 		let bytes45 = haxe_Unserializer.run(data45);
 		blobs29.push(kha_internal_BytesBlob.fromBytes(bytes45));
-		kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs29,["painter-video.vert.essl","painter-video-webgl2.vert.essl"]);
+		kha_Shaders.pass_copy_frag = new kha_graphics4_FragmentShader(blobs29,["pass_copy.frag.essl","pass_copy-webgl2.frag.essl"]);
 		let blobs30 = [];
-		let data46 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 0);
+		let data46 = Reflect.field(kha_Shaders,"pass_vertData" + 0);
 		let bytes46 = haxe_Unserializer.run(data46);
 		blobs30.push(kha_internal_BytesBlob.fromBytes(bytes46));
-		let data47 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 1);
+		let data47 = Reflect.field(kha_Shaders,"pass_vertData" + 1);
 		let bytes47 = haxe_Unserializer.run(data47);
 		blobs30.push(kha_internal_BytesBlob.fromBytes(bytes47));
-		kha_Shaders.pass_copy_frag = new kha_graphics4_FragmentShader(blobs30,["pass_copy.frag.essl","pass_copy-webgl2.frag.essl"]);
+		kha_Shaders.pass_vert = new kha_graphics4_VertexShader(blobs30,["pass.vert.essl","pass-webgl2.vert.essl"]);
 		let blobs31 = [];
-		let data48 = Reflect.field(kha_Shaders,"pass_vertData" + 0);
+		let data48 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 0);
 		let bytes48 = haxe_Unserializer.run(data48);
 		blobs31.push(kha_internal_BytesBlob.fromBytes(bytes48));
-		let data49 = Reflect.field(kha_Shaders,"pass_vertData" + 1);
+		let data49 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 1);
 		let bytes49 = haxe_Unserializer.run(data49);
 		blobs31.push(kha_internal_BytesBlob.fromBytes(bytes49));
-		kha_Shaders.pass_vert = new kha_graphics4_VertexShader(blobs31,["pass.vert.essl","pass-webgl2.vert.essl"]);
+		kha_Shaders.pass_viewray_vert = new kha_graphics4_VertexShader(blobs31,["pass_viewray.vert.essl","pass_viewray-webgl2.vert.essl"]);
 		let blobs32 = [];
-		let data50 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 0);
+		let data50 = Reflect.field(kha_Shaders,"pasted__mouth_MAT_007_armskin_mesh_fragData" + 0);
 		let bytes50 = haxe_Unserializer.run(data50);
 		blobs32.push(kha_internal_BytesBlob.fromBytes(bytes50));
-		let data51 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 1);
-		let bytes51 = haxe_Unserializer.run(data51);
-		blobs32.push(kha_internal_BytesBlob.fromBytes(bytes51));
-		kha_Shaders.pass_viewray_vert = new kha_graphics4_VertexShader(blobs32,["pass_viewray.vert.essl","pass_viewray-webgl2.vert.essl"]);
+		kha_Shaders.pasted__mouth_MAT_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs32,["pasted__mouth_MAT_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs33 = [];
-		let data52 = Reflect.field(kha_Shaders,"pasted__mouth_MAT_007_armskin_mesh_fragData" + 0);
-		let bytes52 = haxe_Unserializer.run(data52);
-		blobs33.push(kha_internal_BytesBlob.fromBytes(bytes52));
-		kha_Shaders.pasted__mouth_MAT_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs33,["pasted__mouth_MAT_007_armskin_mesh-webgl2.frag.essl"]);
+		let data51 = Reflect.field(kha_Shaders,"pasted__saliva_MAT_007_armskin_mesh_fragData" + 0);
+		let bytes51 = haxe_Unserializer.run(data51);
+		blobs33.push(kha_internal_BytesBlob.fromBytes(bytes51));
+		kha_Shaders.pasted__saliva_MAT_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs33,["pasted__saliva_MAT_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs34 = [];
-		let data53 = Reflect.field(kha_Shaders,"pasted__saliva_MAT_007_armskin_mesh_fragData" + 0);
-		let bytes53 = haxe_Unserializer.run(data53);
-		blobs34.push(kha_internal_BytesBlob.fromBytes(bytes53));
-		kha_Shaders.pasted__saliva_MAT_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs34,["pasted__saliva_MAT_007_armskin_mesh-webgl2.frag.essl"]);
+		let data52 = Reflect.field(kha_Shaders,"pasted__teeth_MAT_007_armskin_mesh_fragData" + 0);
+		let bytes52 = haxe_Unserializer.run(data52);
+		blobs34.push(kha_internal_BytesBlob.fromBytes(bytes52));
+		kha_Shaders.pasted__teeth_MAT_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs34,["pasted__teeth_MAT_007_armskin_mesh-webgl2.frag.essl"]);
 		let blobs35 = [];
-		let data54 = Reflect.field(kha_Shaders,"pasted__teeth_MAT_007_armskin_mesh_fragData" + 0);
-		let bytes54 = haxe_Unserializer.run(data54);
-		blobs35.push(kha_internal_BytesBlob.fromBytes(bytes54));
-		kha_Shaders.pasted__teeth_MAT_007_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs35,["pasted__teeth_MAT_007_armskin_mesh-webgl2.frag.essl"]);
+		let data53 = Reflect.field(kha_Shaders,"pistol_mesh_fragData" + 0);
+		let bytes53 = haxe_Unserializer.run(data53);
+		blobs35.push(kha_internal_BytesBlob.fromBytes(bytes53));
+		kha_Shaders.pistol_mesh_frag = new kha_graphics4_FragmentShader(blobs35,["pistol_mesh-webgl2.frag.essl"]);
 		let blobs36 = [];
-		let data55 = Reflect.field(kha_Shaders,"pistol_mesh_fragData" + 0);
+		let data54 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 0);
+		let bytes54 = haxe_Unserializer.run(data54);
+		blobs36.push(kha_internal_BytesBlob.fromBytes(bytes54));
+		let data55 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 1);
 		let bytes55 = haxe_Unserializer.run(data55);
 		blobs36.push(kha_internal_BytesBlob.fromBytes(bytes55));
-		kha_Shaders.pistol_mesh_frag = new kha_graphics4_FragmentShader(blobs36,["pistol_mesh-webgl2.frag.essl"]);
+		kha_Shaders.smaa_blend_weight_frag = new kha_graphics4_FragmentShader(blobs36,["smaa_blend_weight.frag.essl","smaa_blend_weight-webgl2.frag.essl"]);
 		let blobs37 = [];
-		let data56 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 0);
+		let data56 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 0);
 		let bytes56 = haxe_Unserializer.run(data56);
 		blobs37.push(kha_internal_BytesBlob.fromBytes(bytes56));
-		let data57 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 1);
+		let data57 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 1);
 		let bytes57 = haxe_Unserializer.run(data57);
 		blobs37.push(kha_internal_BytesBlob.fromBytes(bytes57));
-		kha_Shaders.smaa_blend_weight_frag = new kha_graphics4_FragmentShader(blobs37,["smaa_blend_weight.frag.essl","smaa_blend_weight-webgl2.frag.essl"]);
+		kha_Shaders.smaa_blend_weight_vert = new kha_graphics4_VertexShader(blobs37,["smaa_blend_weight.vert.essl","smaa_blend_weight-webgl2.vert.essl"]);
 		let blobs38 = [];
-		let data58 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 0);
+		let data58 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 0);
 		let bytes58 = haxe_Unserializer.run(data58);
 		blobs38.push(kha_internal_BytesBlob.fromBytes(bytes58));
-		let data59 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 1);
+		let data59 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 1);
 		let bytes59 = haxe_Unserializer.run(data59);
 		blobs38.push(kha_internal_BytesBlob.fromBytes(bytes59));
-		kha_Shaders.smaa_blend_weight_vert = new kha_graphics4_VertexShader(blobs38,["smaa_blend_weight.vert.essl","smaa_blend_weight-webgl2.vert.essl"]);
+		kha_Shaders.smaa_edge_detect_frag = new kha_graphics4_FragmentShader(blobs38,["smaa_edge_detect.frag.essl","smaa_edge_detect-webgl2.frag.essl"]);
 		let blobs39 = [];
-		let data60 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 0);
+		let data60 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 0);
 		let bytes60 = haxe_Unserializer.run(data60);
 		blobs39.push(kha_internal_BytesBlob.fromBytes(bytes60));
-		let data61 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 1);
+		let data61 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 1);
 		let bytes61 = haxe_Unserializer.run(data61);
 		blobs39.push(kha_internal_BytesBlob.fromBytes(bytes61));
-		kha_Shaders.smaa_edge_detect_frag = new kha_graphics4_FragmentShader(blobs39,["smaa_edge_detect.frag.essl","smaa_edge_detect-webgl2.frag.essl"]);
+		kha_Shaders.smaa_edge_detect_vert = new kha_graphics4_VertexShader(blobs39,["smaa_edge_detect.vert.essl","smaa_edge_detect-webgl2.vert.essl"]);
 		let blobs40 = [];
-		let data62 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 0);
+		let data62 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 0);
 		let bytes62 = haxe_Unserializer.run(data62);
 		blobs40.push(kha_internal_BytesBlob.fromBytes(bytes62));
-		let data63 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 1);
+		let data63 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 1);
 		let bytes63 = haxe_Unserializer.run(data63);
 		blobs40.push(kha_internal_BytesBlob.fromBytes(bytes63));
-		kha_Shaders.smaa_edge_detect_vert = new kha_graphics4_VertexShader(blobs40,["smaa_edge_detect.vert.essl","smaa_edge_detect-webgl2.vert.essl"]);
+		kha_Shaders.smaa_neighborhood_blend_frag = new kha_graphics4_FragmentShader(blobs40,["smaa_neighborhood_blend.frag.essl","smaa_neighborhood_blend-webgl2.frag.essl"]);
 		let blobs41 = [];
-		let data64 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 0);
+		let data64 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 0);
 		let bytes64 = haxe_Unserializer.run(data64);
 		blobs41.push(kha_internal_BytesBlob.fromBytes(bytes64));
-		let data65 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 1);
+		let data65 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 1);
 		let bytes65 = haxe_Unserializer.run(data65);
 		blobs41.push(kha_internal_BytesBlob.fromBytes(bytes65));
-		kha_Shaders.smaa_neighborhood_blend_frag = new kha_graphics4_FragmentShader(blobs41,["smaa_neighborhood_blend.frag.essl","smaa_neighborhood_blend-webgl2.frag.essl"]);
-		let blobs42 = [];
-		let data66 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 0);
-		let bytes66 = haxe_Unserializer.run(data66);
-		blobs42.push(kha_internal_BytesBlob.fromBytes(bytes66));
-		let data67 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 1);
-		let bytes67 = haxe_Unserializer.run(data67);
-		blobs42.push(kha_internal_BytesBlob.fromBytes(bytes67));
-		kha_Shaders.smaa_neighborhood_blend_vert = new kha_graphics4_VertexShader(blobs42,["smaa_neighborhood_blend.vert.essl","smaa_neighborhood_blend-webgl2.vert.essl"]);
+		kha_Shaders.smaa_neighborhood_blend_vert = new kha_graphics4_VertexShader(blobs41,["smaa_neighborhood_blend.vert.essl","smaa_neighborhood_blend-webgl2.vert.essl"]);
 	}
 }
 $hxClasses["kha.Shaders"] = kha_Shaders;
@@ -64411,14 +63179,15 @@ Main.projectName = "Game";
 Main.projectVersion = "1.0.0";
 Main.projectPackage = "arm";
 iron_Trait._hx_skip_constructor = false;
+arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}}};
+arm_HuggyLogic.navTimerInterval = 0.5;
 armory_trait_internal_CameraController.keyUp = "w";
 armory_trait_internal_CameraController.keyDown = "s";
 armory_trait_internal_CameraController.keyLeft = "a";
 armory_trait_internal_CameraController.keyRight = "d";
 armory_trait_internal_CameraController.keyStrafeUp = "e";
 armory_trait_internal_CameraController.keyStrafeDown = "q";
-arm_FirstPersonController.__meta__ = { fields : { speed : { prop : null}}};
-arm_FirstPersonController.rotationSpeed = 2.0;
+arm_PlayerLogic.__meta__ = { fields : { rotationSpeed : { prop : null}, speed : { prop : null}}};
 armory_data_Config.configLoaded = false;
 armory_logicnode_LogicNode._hx_skip_constructor = false;
 armory_renderpath_Downsampler.currentMipLevel = 0;
@@ -64677,8 +63446,6 @@ kha_Scheduler.DIF_COUNT = 3;
 kha_Scheduler.maxframetime = 0.5;
 kha_Scheduler.startTime = 0;
 kha_Shaders.HuggyHair_Inst_007_armskin_mesh_fragData0 = "s1694:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyB3bm9ybWFsOwpvdXQgaGlnaHAgdmVjNCBmcmFnQ29sb3JbMl07CgpoaWdocCB2ZWMyIG9jdGFoZWRyb25XcmFwKGhpZ2hwIHZlYzIgdikKewogICAgcmV0dXJuICh2ZWMyKDEuMCkgLSBhYnModi55eCkpICogdmVjMigodi54ID49IDAuMCkgPyAxLjAgOiAoLTEuMCksICh2LnkgPj0gMC4wKSA:IDEuMCA6ICgtMS4wKSk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdEludDE2KGhpZ2hwIGZsb2F0IGYsIHVpbnQgaSkKewogICAgdWludCBiaXRzSW50ID0gaSA8PCAxMnU7CiAgICB1aW50IGJpdHNGbG9hdCA9IHVpbnQoZiAqIDQwOTUuMCk7CiAgICByZXR1cm4gZmxvYXQoYml0c0ludCB8IGJpdHNGbG9hdCk7Cn0KCmhpZ2hwIGZsb2F0IHBhY2tGbG9hdDIoaGlnaHAgZmxvYXQgZjEsIGhpZ2hwIGZsb2F0IGYyKQp7CiAgICByZXR1cm4gZmxvb3IoZjEgKiAyNTUuMCkgKyBtaW4oZjIsIDAuOTkwMDAwMDA5NTM2NzQzMTY0MDYyNSk7Cn0KCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZSh3bm9ybWFsKTsKICAgIGhpZ2hwIHZlYzMgYmFzZWNvbCA9IHZlYzMoMC4zMDAwMDAwMTE5MjA5Mjg5NTUwNzgxMjUsIDAuODk5OTk5OTc2MTU4MTQyMDg5ODQzNzUsIDAuODk5OTk5OTc2MTU4MTQyMDg5ODQzNzUpOwogICAgaGlnaHAgZmxvYXQgcm91Z2huZXNzID0gMC41OwogICAgaGlnaHAgZmxvYXQgbWV0YWxsaWMgPSAwLjEwMDAwMDAwMTQ5MDExNjExOTM4NDc2NTYyNTsKICAgIGhpZ2hwIGZsb2F0IG9jY2x1c2lvbiA9IDEuMDsKICAgIGhpZ2hwIGZsb2F0IHNwZWN1bGFyID0gMC41OwogICAgaGlnaHAgdmVjMyBlbWlzc2lvbkNvbCA9IHZlYzMoMC4wKTsKICAgIG4gLz0gdmVjMygoYWJzKG4ueCkgKyBhYnMobi55KSkgKyBhYnMobi56KSk7CiAgICBoaWdocCB2ZWMyIF8xMDQ7CiAgICBpZiAobi56ID49IDAuMCkKICAgIHsKICAgICAgICBfMTA0ID0gbi54eTsKICAgIH0KICAgIGVsc2UKICAgIHsKICAgICAgICBfMTA0ID0gb2N0YWhlZHJvbldyYXAobi54eSk7CiAgICB9CiAgICBuID0gdmVjMyhfMTA0LngsIF8xMDQueSwgbi56KTsKICAgIGZyYWdDb2xvclswXSA9IHZlYzQobi54eSwgcm91Z2huZXNzLCBwYWNrRmxvYXRJbnQxNihtZXRhbGxpYywgMHUpKTsKICAgIGZyYWdDb2xvclsxXSA9IHZlYzQoYmFzZWNvbCwgcGFja0Zsb2F0MihvY2NsdXNpb24sIHNwZWN1bGFyKSk7Cn0KCg";
-kha_Shaders.HuggyHair_Inst_007_armskin_mesh_vertData0 = "s2370:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIHZlYzQgc2tpbkJvbmVzWzEzMF07CnVuaWZvcm0gZmxvYXQgcG9zVW5wYWNrOwp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBtYXQ0IFdWUDsKCmF0dHJpYnV0ZSB2ZWM0IHBvczsKYXR0cmlidXRlIHZlYzQgYm9uZTsKYXR0cmlidXRlIHZlYzQgd2VpZ2h0Owp2YXJ5aW5nIHZlYzMgd25vcm1hbDsKYXR0cmlidXRlIHZlYzIgbm9yOwoKdm9pZCBnZXRTa2lubmluZ0R1YWxRdWF0KGl2ZWM0IGJvbmVfMSwgaW5vdXQgdmVjNCB3ZWlnaHRfMSwgaW5vdXQgdmVjNCBBLCBpbm91dCB2ZWM0IEIpCnsKICAgIGl2ZWM0IGJvbmVpID0gYm9uZV8xICogaXZlYzQoMik7CiAgICBtYXQ0IG1hdEEgPSBtYXQ0KHZlYzQoc2tpbkJvbmVzW2JvbmVpLnhdKSwgdmVjNChza2luQm9uZXNbYm9uZWkueV0pLCB2ZWM0KHNraW5Cb25lc1tib25laS56XSksIHZlYzQoc2tpbkJvbmVzW2JvbmVpLnddKSk7CiAgICBtYXQ0IG1hdEIgPSBtYXQ0KHZlYzQoc2tpbkJvbmVzW2JvbmVpLnggKyAxXSksIHZlYzQoc2tpbkJvbmVzW2JvbmVpLnkgKyAxXSksIHZlYzQoc2tpbkJvbmVzW2JvbmVpLnogKyAxXSksIHZlYzQoc2tpbkJvbmVzW2JvbmVpLncgKyAxXSkpOwogICAgdmVjMyBfMTI5ID0gd2VpZ2h0XzEueHl6ICogc2lnbihtYXRBWzNdICogbWF0QSkueHl6OwogICAgd2VpZ2h0XzEgPSB2ZWM0KF8xMjkueCwgXzEyOS55LCBfMTI5LnosIHdlaWdodF8xLncpOwogICAgQSA9IG1hdEEgKiB3ZWlnaHRfMTsKICAgIEIgPSBtYXRCICogd2VpZ2h0XzE7CiAgICBmbG9hdCBpbnZOb3JtQSA9IDEuMCAvIGxlbmd0aChBKTsKICAgIEEgKj0gaW52Tm9ybUE7CiAgICBCICo9IGludk5vcm1BOwp9Cgp2b2lkIG1haW4oKQp7CiAgICB2ZWM0IHNwb3MgPSB2ZWM0KHBvcy54eXosIDEuMCk7CiAgICB2ZWM0IHBhcmFtID0gd2VpZ2h0OwogICAgdmVjNCBza2luQjsKICAgIHZlYzQgcGFyYW1fMiA9IHNraW5COwogICAgdmVjNCBwYXJhbV8xOwogICAgZ2V0U2tpbm5pbmdEdWFsUXVhdChpdmVjNChib25lICogMzI3NjcuMCksIHBhcmFtLCBwYXJhbV8xLCBwYXJhbV8yKTsKICAgIHZlYzQgc2tpbkEgPSBwYXJhbV8xOwogICAgc2tpbkIgPSBwYXJhbV8yOwogICAgdmVjMyBfMTc5ID0gc3Bvcy54eXogKiBwb3NVbnBhY2s7CiAgICBzcG9zID0gdmVjNChfMTc5LngsIF8xNzkueSwgXzE3OS56LCBzcG9zLncpOwogICAgdmVjMyBfMjAwID0gc3Bvcy54eXogKyAoY3Jvc3Moc2tpbkEueHl6LCBjcm9zcyhza2luQS54eXosIHNwb3MueHl6KSArIChzcG9zLnh5eiAqIHNraW5BLncpKSAqIDIuMCk7CiAgICBzcG9zID0gdmVjNChfMjAwLngsIF8yMDAueSwgXzIwMC56LCBzcG9zLncpOwogICAgdmVjMyBfMjIzID0gc3Bvcy54eXogKyAoKCgoc2tpbkIueHl6ICogc2tpbkEudykgLSAoc2tpbkEueHl6ICogc2tpbkIudykpICsgY3Jvc3Moc2tpbkEueHl6LCBza2luQi54eXopKSAqIDIuMCk7CiAgICBzcG9zID0gdmVjNChfMjIzLngsIF8yMjMueSwgXzIyMy56LCBzcG9zLncpOwogICAgdmVjMyBfMjMwID0gc3Bvcy54eXogLyB2ZWMzKHBvc1VucGFjayk7CiAgICBzcG9zID0gdmVjNChfMjMwLngsIF8yMzAueSwgXzIzMC56LCBzcG9zLncpOwogICAgd25vcm1hbCA9IG5vcm1hbGl6ZShOICogKHZlYzMobm9yLCBwb3MudykgKyAoY3Jvc3Moc2tpbkEueHl6LCBjcm9zcyhza2luQS54eXosIHZlYzMobm9yLCBwb3MudykpICsgKHZlYzMobm9yLCBwb3MudykgKiBza2luQS53KSkgKiAyLjApKSk7CiAgICBnbF9Qb3NpdGlvbiA9IFdWUCAqIHNwb3M7Cn0KCg";
-kha_Shaders.HuggyHair_Inst_007_armskin_mesh_vertData1 = "s2331:I3ZlcnNpb24gMzAwIGVzCgp1bmlmb3JtIHZlYzQgc2tpbkJvbmVzWzEzMF07CnVuaWZvcm0gZmxvYXQgcG9zVW5wYWNrOwp1bmlmb3JtIG1hdDMgTjsKdW5pZm9ybSBtYXQ0IFdWUDsKCmluIHZlYzQgcG9zOwppbiB2ZWM0IGJvbmU7CmluIHZlYzQgd2VpZ2h0OwpvdXQgdmVjMyB3bm9ybWFsOwppbiB2ZWMyIG5vcjsKCnZvaWQgZ2V0U2tpbm5pbmdEdWFsUXVhdChpdmVjNCBib25lXzEsIGlub3V0IHZlYzQgd2VpZ2h0XzEsIGlub3V0IHZlYzQgQSwgaW5vdXQgdmVjNCBCKQp7CiAgICBpdmVjNCBib25laSA9IGJvbmVfMSAqIGl2ZWM0KDIpOwogICAgbWF0NCBtYXRBID0gbWF0NCh2ZWM0KHNraW5Cb25lc1tib25laS54XSksIHZlYzQoc2tpbkJvbmVzW2JvbmVpLnldKSwgdmVjNChza2luQm9uZXNbYm9uZWkuel0pLCB2ZWM0KHNraW5Cb25lc1tib25laS53XSkpOwogICAgbWF0NCBtYXRCID0gbWF0NCh2ZWM0KHNraW5Cb25lc1tib25laS54ICsgMV0pLCB2ZWM0KHNraW5Cb25lc1tib25laS55ICsgMV0pLCB2ZWM0KHNraW5Cb25lc1tib25laS56ICsgMV0pLCB2ZWM0KHNraW5Cb25lc1tib25laS53ICsgMV0pKTsKICAgIHZlYzMgXzEyOSA9IHdlaWdodF8xLnh5eiAqIHNpZ24obWF0QVszXSAqIG1hdEEpLnh5ejsKICAgIHdlaWdodF8xID0gdmVjNChfMTI5LngsIF8xMjkueSwgXzEyOS56LCB3ZWlnaHRfMS53KTsKICAgIEEgPSBtYXRBICogd2VpZ2h0XzE7CiAgICBCID0gbWF0QiAqIHdlaWdodF8xOwogICAgZmxvYXQgaW52Tm9ybUEgPSAxLjAgLyBsZW5ndGgoQSk7CiAgICBBICo9IGludk5vcm1BOwogICAgQiAqPSBpbnZOb3JtQTsKfQoKdm9pZCBtYWluKCkKewogICAgdmVjNCBzcG9zID0gdmVjNChwb3MueHl6LCAxLjApOwogICAgdmVjNCBwYXJhbSA9IHdlaWdodDsKICAgIHZlYzQgc2tpbkI7CiAgICB2ZWM0IHBhcmFtXzIgPSBza2luQjsKICAgIHZlYzQgcGFyYW1fMTsKICAgIGdldFNraW5uaW5nRHVhbFF1YXQoaXZlYzQoYm9uZSAqIDMyNzY3LjApLCBwYXJhbSwgcGFyYW1fMSwgcGFyYW1fMik7CiAgICB2ZWM0IHNraW5BID0gcGFyYW1fMTsKICAgIHNraW5CID0gcGFyYW1fMjsKICAgIHZlYzMgXzE3OSA9IHNwb3MueHl6ICogcG9zVW5wYWNrOwogICAgc3BvcyA9IHZlYzQoXzE3OS54LCBfMTc5LnksIF8xNzkueiwgc3Bvcy53KTsKICAgIHZlYzMgXzIwMCA9IHNwb3MueHl6ICsgKGNyb3NzKHNraW5BLnh5eiwgY3Jvc3Moc2tpbkEueHl6LCBzcG9zLnh5eikgKyAoc3Bvcy54eXogKiBza2luQS53KSkgKiAyLjApOwogICAgc3BvcyA9IHZlYzQoXzIwMC54LCBfMjAwLnksIF8yMDAueiwgc3Bvcy53KTsKICAgIHZlYzMgXzIyMyA9IHNwb3MueHl6ICsgKCgoKHNraW5CLnh5eiAqIHNraW5BLncpIC0gKHNraW5BLnh5eiAqIHNraW5CLncpKSArIGNyb3NzKHNraW5BLnh5eiwgc2tpbkIueHl6KSkgKiAyLjApOwogICAgc3BvcyA9IHZlYzQoXzIyMy54LCBfMjIzLnksIF8yMjMueiwgc3Bvcy53KTsKICAgIHZlYzMgXzIzMCA9IHNwb3MueHl6IC8gdmVjMyhwb3NVbnBhY2spOwogICAgc3BvcyA9IHZlYzQoXzIzMC54LCBfMjMwLnksIF8yMzAueiwgc3Bvcy53KTsKICAgIHdub3JtYWwgPSBub3JtYWxpemUoTiAqICh2ZWMzKG5vciwgcG9zLncpICsgKGNyb3NzKHNraW5BLnh5eiwgY3Jvc3Moc2tpbkEueHl6LCB2ZWMzKG5vciwgcG9zLncpKSArICh2ZWMzKG5vciwgcG9zLncpICogc2tpbkEudykpICogMi4wKSkpOwogICAgZ2xfUG9zaXRpb24gPSBXVlAgKiBzcG9zOwp9Cgo";
 kha_Shaders.World_World_fragData0 = "s444:I3ZlcnNpb24gMTAwCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKdmFyeWluZyBoaWdocCB2ZWMzIG5vcm1hbDsKCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZShub3JtYWwpOwogICAgZ2xfRnJhZ0RhdGFbMF0gPSB2ZWM0KHZlYzMoMC4wNTA4NzYwODg0NDA0MTgyNDM0MDgyMDMxMjUpLngsIHZlYzMoMC4wNTA4NzYwODg0NDA0MTgyNDM0MDgyMDMxMjUpLnksIHZlYzMoMC4wNTA4NzYwODg0NDA0MTgyNDM0MDgyMDMxMjUpLnosIGdsX0ZyYWdEYXRhWzBdLncpOwogICAgZ2xfRnJhZ0RhdGFbMF0udyA9IDAuMDsKfQoK";
 kha_Shaders.World_World_fragData1 = "s456:I3ZlcnNpb24gMzAwIGVzCnByZWNpc2lvbiBtZWRpdW1wIGZsb2F0OwpwcmVjaXNpb24gaGlnaHAgaW50OwoKaW4gaGlnaHAgdmVjMyBub3JtYWw7Cm91dCBoaWdocCB2ZWM0IGZyYWdDb2xvcjsKCnZvaWQgbWFpbigpCnsKICAgIGhpZ2hwIHZlYzMgbiA9IG5vcm1hbGl6ZShub3JtYWwpOwogICAgZnJhZ0NvbG9yID0gdmVjNCh2ZWMzKDAuMDUwODc2MDg4NDQwNDE4MjQzNDA4MjAzMTI1KS54LCB2ZWMzKDAuMDUwODc2MDg4NDQwNDE4MjQzNDA4MjAzMTI1KS55LCB2ZWMzKDAuMDUwODc2MDg4NDQwNDE4MjQzNDA4MjAzMTI1KS56LCBmcmFnQ29sb3Iudyk7CiAgICBmcmFnQ29sb3IudyA9IDAuMDsKfQoK";
 kha_Shaders.World_World_vertData0 = "s278:I3ZlcnNpb24gMTAwCgp1bmlmb3JtIG1hdDQgU01WUDsKCnZhcnlpbmcgdmVjMyBub3JtYWw7CmF0dHJpYnV0ZSB2ZWMzIG5vcjsKYXR0cmlidXRlIHZlYzMgcG9zOwoKdm9pZCBtYWluKCkKewogICAgbm9ybWFsID0gbm9yOwogICAgdmVjNCBwb3NpdGlvbiA9IFNNVlAgKiB2ZWM0KHBvcywgMS4wKTsKICAgIGdsX1Bvc2l0aW9uID0gdmVjNChwb3NpdGlvbik7Cn0KCg";

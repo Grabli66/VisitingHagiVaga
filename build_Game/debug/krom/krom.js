@@ -502,6 +502,16 @@ var arm_PlayerState = $hxEnums["arm.PlayerState"] = { __ename__:true,__construct
 	,Dead: {_hx_name:"Dead",_hx_index:5,__enum__:"arm.PlayerState",toString:$estr}
 };
 arm_PlayerState.__constructs__ = [arm_PlayerState.None,arm_PlayerState.Idle,arm_PlayerState.Walk,arm_PlayerState.Shoot,arm_PlayerState.Reload,arm_PlayerState.Dead];
+class arm_ShootAnimData {
+	constructor() {
+	}
+}
+$hxClasses["arm.ShootAnimData"] = arm_ShootAnimData;
+arm_ShootAnimData.__name__ = true;
+Object.assign(arm_ShootAnimData.prototype, {
+	__class__: arm_ShootAnimData
+	,isFiring: null
+});
 class armory_trait_internal_CameraController extends iron_Trait {
 	constructor() {
 		if(iron_Trait._hx_skip_constructor) {
@@ -559,10 +569,12 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 	}
 	_hx_constructor() {
 		this.dir = new iron_math_Vec4();
-		this.zVec = new iron_math_Vec4(0.0,0.0,1.0);
-		this.xVec = new iron_math_Vec4(1.0,0.0,0.0);
 		this.speed = 3;
+		this.shootingAnimData = new arm_ShootAnimData();
 		this.state = arm_PlayerState.None;
+		this.zVec = new iron_math_Vec4(0.0,0.0,1.0);
+		this.yVec = new iron_math_Vec4(0.0,1.0,0.0);
+		this.xVec = new iron_math_Vec4(1.0,0.0,0.0);
 		this.rotationSpeed = 2.0;
 		super._hx_constructor();
 		iron_Scene.active.notifyOnInit($bind(this,this.init));
@@ -597,6 +609,24 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.state = arm_PlayerState.Walk;
 		this.animations.play("Walk_Policeman");
 	}
+	startShooting() {
+		if(this.shootingAnimData.isFiring) {
+			return;
+		}
+		this.shootingAnimData.isFiring = true;
+		let _gthis = this;
+		iron_system_Tween.to({ target : this, props : { fromValue : 1.0}, duration : 0.2, tick : function() {
+			_gthis.aimNode.transform.translate(0.0,-0.01,-0.0);
+			_gthis.aimNode.transform.rotate(_gthis.yVec,-0.05);
+		}, done : function() {
+			iron_system_Tween.to({ target : _gthis, props : { fromValue : 1.0}, duration : 0.2, tick : function() {
+				_gthis.aimNode.transform.rotate(_gthis.yVec,0.05);
+				_gthis.aimNode.transform.translate(0.0,0.01,0.0);
+			}, done : function() {
+				_gthis.shootingAnimData.isFiring = false;
+			}});
+		}});
+	}
 	init() {
 		this.head = this.object.getChildOfType(iron_object_CameraObject);
 		armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.preUpdate));
@@ -619,22 +649,19 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		} else if(kb.started("escape") && mouse.locked) {
 			mouse.unlock();
 		}
+		if(!mouse.locked) {
+			return;
+		}
 		if(mouse.moved) {
-			let d = -mouse.movementY / 450;
+			let d = -mouse.movementY / 250;
 			this.aimNode.transform.translate(0,0,d);
-			let thr = 0.01;
-			if(this.aimNode.transform.loc.z <= this.initAimLoc.z - thr) {
-				this.aimNode.transform.loc.z = this.initAimLoc.z - thr;
-			}
-			if(this.aimNode.transform.loc.z >= this.initAimLoc.z + thr) {
-				this.aimNode.transform.loc.z = this.initAimLoc.z + thr;
-			}
 		}
-		if(mouse.locked || mouse.down()) {
-			this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * this.rotationSpeed);
-			this.transform.rotate(this.zVec,-mouse.movementX / 250 * this.rotationSpeed);
-			this.body.syncTransform();
+		if(mouse.started()) {
+			this.startShooting();
 		}
+		this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * this.rotationSpeed);
+		this.transform.rotate(this.zVec,-mouse.movementX / 250 * this.rotationSpeed);
+		this.body.syncTransform();
 	}
 	removed() {
 		armory_trait_physics_bullet_PhysicsWorld.active.removePreUpdate($bind(this,this.preUpdate));
@@ -779,14 +806,16 @@ Object.assign(arm_PlayerLogic.prototype, {
 	__class__: arm_PlayerLogic
 	,head: null
 	,rotationSpeed: null
+	,xVec: null
+	,yVec: null
+	,zVec: null
 	,armature: null
 	,animations: null
 	,aimNode: null
 	,initAimLoc: null
 	,state: null
+	,shootingAnimData: null
 	,speed: null
-	,xVec: null
-	,zVec: null
 	,dir: null
 });
 class armory_logicnode_LogicTree extends iron_Trait {
@@ -2904,6 +2933,78 @@ class armory_system_AssertLevel {
 		}
 	}
 }
+class haxe_IMap {
+}
+$hxClasses["haxe.IMap"] = haxe_IMap;
+haxe_IMap.__name__ = true;
+haxe_IMap.__isInterface__ = true;
+class haxe_ds_StringMap {
+	constructor() {
+		this.h = Object.create(null);
+	}
+}
+$hxClasses["haxe.ds.StringMap"] = haxe_ds_StringMap;
+haxe_ds_StringMap.__name__ = true;
+haxe_ds_StringMap.__interfaces__ = [haxe_IMap];
+Object.assign(haxe_ds_StringMap.prototype, {
+	__class__: haxe_ds_StringMap
+	,h: null
+});
+class armory_system_Event {
+	static send(name,mask) {
+		if(mask == null) {
+			mask = -1;
+		}
+		let entries = armory_system_Event.get(name);
+		if(entries != null) {
+			let _g = 0;
+			while(_g < entries.length) {
+				let e = entries[_g];
+				++_g;
+				if(mask == -1 || mask == e.mask) {
+					e.onEvent();
+				}
+			}
+		}
+	}
+	static get(name) {
+		return armory_system_Event.events.h[name];
+	}
+	static add(name,onEvent,mask) {
+		if(mask == null) {
+			mask = -1;
+		}
+		let e = { name : name, onEvent : onEvent, mask : mask};
+		let entries = armory_system_Event.events.h[name];
+		if(entries != null) {
+			entries.push(e);
+		} else {
+			armory_system_Event.events.h[name] = [e];
+		}
+		return e;
+	}
+	static remove(name) {
+		let _this = armory_system_Event.events;
+		if(Object.prototype.hasOwnProperty.call(_this.h,name)) {
+			delete(_this.h[name]);
+		}
+	}
+	static removeListener(event) {
+		let entries = armory_system_Event.events.h[event.name];
+		if(entries != null) {
+			HxOverrides.remove(entries,event);
+			if(entries.length == 0) {
+				let key = event.name;
+				let _this = armory_system_Event.events;
+				if(Object.prototype.hasOwnProperty.call(_this.h,key)) {
+					delete(_this.h[key]);
+				}
+			}
+		}
+	}
+}
+$hxClasses["armory.system.Event"] = armory_system_Event;
+armory_system_Event.__name__ = true;
 class armory_system_Starter {
 	static main(scene,mode,resize,min,max,w,h,msaa,vsync,getRenderPath) {
 		let tasks = 0;
@@ -3183,6 +3284,189 @@ Object.assign(armory_trait_NavMesh.prototype, {
 	,agentMaxSlope: null
 	,recast: null
 	,ready: null
+});
+class armory_trait_internal_CanvasScript extends iron_Trait {
+	constructor(canvasName,font) {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor(canvasName,font);
+	}
+	_hx_constructor(canvasName,font) {
+		if(font == null) {
+			font = "font_default.ttf";
+		}
+		this.onReadyFuncs = null;
+		this.canvas = null;
+		super._hx_constructor();
+		this.cnvName = canvasName;
+		let _gthis = this;
+		iron_data_Data.getBlob(canvasName + ".json",function(blob) {
+			iron_data_Data.getBlob("_themes.json",function(tBlob) {
+				if(tBlob.get_length() != 0) {
+					armory_ui_Canvas.themes = JSON.parse(tBlob.toString());
+				} else {
+					haxe_Log.trace("\"_themes.json\" is empty! Using default theme instead.",{ fileName : "Sources/armory/trait/internal/CanvasScript.hx", lineNumber : 39, className : "armory.trait.internal.CanvasScript", methodName : "new"});
+				}
+				if(armory_ui_Canvas.themes.length == 0) {
+					armory_ui_Canvas.themes.push(armory_ui_Themes.light);
+				}
+				iron_data_Data.getFont(font,function(defaultFont) {
+					let c = JSON.parse(blob.toString());
+					if(c.theme == null) {
+						c.theme = armory_ui_Canvas.themes[0].NAME;
+					}
+					let tmp = armory_ui_Canvas.getTheme(c.theme);
+					_gthis.cui = new zui_Zui({ font : defaultFont, theme : tmp});
+					if(c.assets == null || c.assets.length == 0) {
+						_gthis.canvas = c;
+					} else {
+						let loaded = 0;
+						let _g = 0;
+						let _g1 = c.assets;
+						while(_g < _g1.length) {
+							let asset = _g1[_g];
+							++_g;
+							let file = asset.name;
+							if(file != null && file.toLowerCase().endsWith(".ttf")) {
+								iron_data_Data.getFont(file,function(f) {
+									armory_ui_Canvas.assetMap.h[asset.id] = f;
+									if((loaded += 1) >= c.assets.length) {
+										_gthis.canvas = c;
+									}
+								});
+							} else {
+								iron_data_Data.getImage(file,function(image) {
+									armory_ui_Canvas.assetMap.h[asset.id] = image;
+									if((loaded += 1) >= c.assets.length) {
+										_gthis.canvas = c;
+									}
+								});
+							}
+						}
+					}
+				});
+			});
+		});
+		this.notifyOnRender2D(function(g) {
+			if(_gthis.canvas == null) {
+				return;
+			}
+			_gthis.setCanvasDimensions(kha_System.windowWidth(),kha_System.windowHeight());
+			let events = armory_ui_Canvas.draw(_gthis.cui,_gthis.canvas,g);
+			let _g = 0;
+			while(_g < events.length) {
+				let e = events[_g];
+				++_g;
+				let all = armory_system_Event.get(e);
+				if(all != null) {
+					let _g = 0;
+					while(_g < all.length) {
+						let entry = all[_g];
+						++_g;
+						entry.onEvent();
+					}
+				}
+			}
+			if(_gthis.onReadyFuncs != null) {
+				let _g = 0;
+				let _g1 = _gthis.onReadyFuncs;
+				while(_g < _g1.length) {
+					let f = _g1[_g];
+					++_g;
+					f();
+				}
+				_gthis.onReadyFuncs.length = 0;
+			}
+		});
+	}
+	get_ready() {
+		return this.canvas != null;
+	}
+	notifyOnReady(f) {
+		if(this.onReadyFuncs == null) {
+			this.onReadyFuncs = [];
+		}
+		this.onReadyFuncs.push(f);
+	}
+	getElement(name) {
+		let _g = 0;
+		let _g1 = this.canvas.elements;
+		while(_g < _g1.length) {
+			let e = _g1[_g];
+			++_g;
+			if(e.name == name) {
+				return e;
+			}
+		}
+		return null;
+	}
+	getElements() {
+		return this.canvas.elements;
+	}
+	getCanvas() {
+		return this.canvas;
+	}
+	setUiScale(factor) {
+		this.cui.setScale(factor);
+	}
+	getUiScale() {
+		return this.cui.ops.scaleFactor;
+	}
+	setCanvasVisibility(visible) {
+		let _g = 0;
+		let _g1 = this.canvas.elements;
+		while(_g < _g1.length) {
+			let e = _g1[_g];
+			++_g;
+			e.visible = visible;
+		}
+	}
+	setCanvasDimensions(x,y) {
+		this.canvas.width = x;
+		this.canvas.height = y;
+	}
+	setCanvasFontSize(fontSize) {
+		this.cui.t.FONT_SIZE = fontSize;
+		this.cui.setScale(this.cui.ops.scaleFactor);
+	}
+	getCanvasFontSize() {
+		return this.cui.t.FONT_SIZE;
+	}
+	setCanvasInputTextFocus(e,focus) {
+		if(focus == true) {
+			this.cui.startTextEdit(e);
+		} else {
+			this.cui.deselectText();
+		}
+	}
+	getHandle(name) {
+		let this1 = armory_ui_Canvas.h.children;
+		let key = this.getElement(name).id;
+		return this1.h[key];
+	}
+	static getActiveCanvas() {
+		let activeCanvas = iron_Scene.active.getTrait(armory_trait_internal_CanvasScript);
+		if(activeCanvas == null) {
+			activeCanvas = iron_Scene.active.camera.getTrait(armory_trait_internal_CanvasScript);
+		}
+		if(activeCanvas == null) {
+			armory_system_Assert.throwAssertionError("activeCanvas != null","Could not find a canvas trait on the active scene or camera",{ fileName : "Sources/armory/trait/internal/CanvasScript.hx", lineNumber : 193, className : "armory.trait.internal.CanvasScript", methodName : "getActiveCanvas"});
+		}
+		return activeCanvas;
+	}
+}
+$hxClasses["armory.trait.internal.CanvasScript"] = armory_trait_internal_CanvasScript;
+armory_trait_internal_CanvasScript.__name__ = true;
+armory_trait_internal_CanvasScript.__super__ = iron_Trait;
+Object.assign(armory_trait_internal_CanvasScript.prototype, {
+	__class__: armory_trait_internal_CanvasScript
+	,cnvName: null
+	,cui: null
+	,canvas: null
+	,ready: null
+	,onReadyFuncs: null
+	,__properties__: {get_ready: "get_ready"}
 });
 class armory_trait_internal_UniformsManager extends iron_Trait {
 	constructor() {
@@ -9553,6 +9837,10 @@ class armory_ui_Popup {
 }
 $hxClasses["armory.ui.Popup"] = armory_ui_Popup;
 armory_ui_Popup.__name__ = true;
+class armory_ui_Themes {
+}
+$hxClasses["armory.ui.Themes"] = armory_ui_Themes;
+armory_ui_Themes.__name__ = true;
 class bullet_BulletString {
 	static toHaxeString(this1) {
 		return bullet_BulletString.js_UTF8ToString(this1,this1);
@@ -9564,11 +9852,6 @@ class bullet_BulletString {
 		return haxe_io_Bytes.ofData(heap.buffer).getString(heapOffset,end - heapOffset,haxe_io_Encoding.UTF8);
 	}
 }
-class haxe_IMap {
-}
-$hxClasses["haxe.IMap"] = haxe_IMap;
-haxe_IMap.__name__ = true;
-haxe_IMap.__isInterface__ = true;
 class haxe_Log {
 	static formatOutput(v,infos) {
 		let str = Std.string(v);
@@ -10075,18 +10358,6 @@ haxe_ds_ObjectMap.__name__ = true;
 haxe_ds_ObjectMap.__interfaces__ = [haxe_IMap];
 Object.assign(haxe_ds_ObjectMap.prototype, {
 	__class__: haxe_ds_ObjectMap
-	,h: null
-});
-class haxe_ds_StringMap {
-	constructor() {
-		this.h = Object.create(null);
-	}
-}
-$hxClasses["haxe.ds.StringMap"] = haxe_ds_StringMap;
-haxe_ds_StringMap.__name__ = true;
-haxe_ds_StringMap.__interfaces__ = [haxe_IMap];
-Object.assign(haxe_ds_StringMap.prototype, {
-	__class__: haxe_ds_StringMap
 	,h: null
 });
 class haxe_exceptions_NotImplementedException extends haxe_exceptions_PosException {
@@ -58239,6 +58510,7 @@ armory_renderpath_RenderPathCreator.applyConfig = armory_renderpath_RenderPathDe
 armory_system_AssertLevel.Warning = 0;
 armory_system_AssertLevel.Error = 1;
 armory_system_AssertLevel.NoAssertions = 2;
+armory_system_Event.events = new haxe_ds_StringMap();
 armory_trait_NavAgent.__meta__ = { fields : { speed : { prop : null}, turnDuration : { prop : null}, heightOffset : { prop : null}}};
 armory_trait_NavMesh.__meta__ = { fields : { cellSize : { prop : null}, cellHeight : { prop : null}, agentHeight : { prop : null}, agentRadius : { prop : null}, agentMaxClimb : { prop : null}, agentMaxSlope : { prop : null}}};
 armory_trait_internal_UniformsManager.floatsRegistered = false;
@@ -58314,6 +58586,7 @@ armory_ui_Popup.modalX = 0;
 armory_ui_Popup.modalY = 0;
 armory_ui_Popup.modalW = 400;
 armory_ui_Popup.modalH = 160;
+armory_ui_Themes.light = { NAME : "Default Light", WINDOW_BG_COL : -1052689, WINDOW_TINT_COL : -14540254, ACCENT_COL : -1118482, ACCENT_HOVER_COL : -4473925, ACCENT_SELECT_COL : -5592406, BUTTON_COL : -3355444, BUTTON_TEXT_COL : -14540254, BUTTON_HOVER_COL : -5000269, BUTTON_PRESSED_COL : -5131855, TEXT_COL : -6710887, LABEL_COL : -5592406, SEPARATOR_COL : -6710887, HIGHLIGHT_COL : -14656100, CONTEXT_COL : -5592406, PANEL_BG_COL : -5592406, FONT_SIZE : 26, ELEMENT_W : 200, ELEMENT_H : 48, ELEMENT_OFFSET : 8, ARROW_SIZE : 10, BUTTON_H : 44, CHECK_SIZE : 30, CHECK_SELECT_SIZE : 16, SCROLL_W : 12, TEXT_OFFSET : 16, TAB_W : 24, FILL_WINDOW_BG : false, FILL_BUTTON_BG : true, FILL_ACCENT_BG : false, LINK_STYLE : 0, FULL_TABS : false};
 haxe_Unserializer.DEFAULT_RESOLVER = new haxe__$Unserializer_DefaultResolver();
 haxe_Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
 haxe_io_FPHelper.helper = new DataView(new ArrayBuffer(8));

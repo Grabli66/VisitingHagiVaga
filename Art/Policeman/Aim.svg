@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="Aim.svg"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   inkscape:export-filename="Aim.png"
+   inkscape:export-xdpi="192.91939"
+   inkscape:export-ydpi="192.91939"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="2.0899411"
+     inkscape:cx="333.02374"
+     inkscape:cy="585.4232"
+     inkscape:window-width="1350"
+     inkscape:window-height="1237"
+     inkscape:window-x="1046"
+     inkscape:window-y="81"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g4"
+       style="fill:#a05a2c">
+      <path
+         id="rect1"
+         style="fill:#a05a2c;stroke:none;stroke-width:0.1;stroke-opacity:0.607843"
+         d="M 76.718831 128.37098 L 76.718831 129.38383 L 81.276176 129.38383 L 81.276176 128.37098 L 76.718831 128.37098 z M 85.327608 128.37098 L 85.327608 129.38383 L 89.884953 129.38383 L 89.884953 128.37098 L 85.327608 128.37098 z " />
+      <path
+         id="rect2"
+         style="fill:#a05a2c;stroke:none;stroke-width:0.1;stroke-opacity:0.607843"
+         d="M 122.29434 -82.795463 L 126.78813 -82.795463 L 126.78813 -83.808321 L 122.29434 -83.808321 L 122.29434 -82.795463 z M 130.83956 -82.795463 L 135.46047 -82.795463 L 135.46047 -83.808321 L 130.83956 -83.808321 L 130.83956 -82.795463 z "
+         transform="rotate(90)" />
+    </g>
+  </g>
+</svg>
