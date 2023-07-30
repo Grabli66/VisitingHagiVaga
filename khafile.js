@@ -23,6 +23,8 @@ project.addParameter('armory.trait.NavAgent');
 project.addParameter("--macro keep('armory.trait.NavAgent')");
 project.addParameter('armory.trait.NavMesh');
 project.addParameter("--macro keep('armory.trait.NavMesh')");
+project.addParameter('arm.node.FistLogic');
+project.addParameter("--macro keep('arm.node.FistLogic')");
 project.addParameter('armory.trait.internal.UniformsManager');
 project.addParameter("--macro keep('armory.trait.internal.UniformsManager')");
 project.addParameter('armory.trait.navigation.Navigation');

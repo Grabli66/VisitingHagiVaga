@@ -1,5 +1,6 @@
 package arm;
 
+import armory.trait.physics.bullet.RigidBody;
 import iron.system.Tween;
 import iron.math.Mat4;
 import iron.object.BoneAnimation;
@@ -45,8 +46,9 @@ class PlayerLogic extends CameraController {
 
 	// Скелет игрока
 	var armature:Object;
+
 	// Анимации
-	var animations:BoneAnimation;
+	var animations:BoneAnimation;	
 
 	// Прицел для IK
 	var aimNode:Object;
@@ -135,6 +137,7 @@ class PlayerLogic extends CameraController {
 
 	// Инициализирует
 	function init() {
+		object.properties = new Map<String, Dynamic>();
 		head = object.getChildOfType(CameraObject);
 
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
@@ -144,7 +147,8 @@ class PlayerLogic extends CameraController {
 		aimNode = object.getChild("Aim");
 		initAimLoc = aimNode.transform.loc;
 		armature = object.getChild("Policeman");
-		animations = findAnimation(armature);
+		animations = findAnimation(armature);		
+
 		startIdle();
 	}
 
@@ -173,10 +177,13 @@ class PlayerLogic extends CameraController {
 		// Обрабатывает выстрел
 		if (mouse.started()) {
 			startShooting();
-		}
+		}		
 
-		// Обновляет анимацию стрельбы
-		// updateShooting();
+		// Проверяет удар Хаги
+		if (object.properties["is_hit"]) {
+			object.properties["is_hit"] = false;
+			trace("OOOOUUUCH");
+		}
 
 		// Обрабатывает поворот игрока
 		head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);

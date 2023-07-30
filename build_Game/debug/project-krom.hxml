@@ -74,6 +74,8 @@ armory.trait.NavAgent
 --macro keep('armory.trait.NavAgent')
 armory.trait.NavMesh
 --macro keep('armory.trait.NavMesh')
+arm.node.FistLogic
+--macro keep('arm.node.FistLogic')
 armory.trait.internal.UniformsManager
 --macro keep('armory.trait.internal.UniformsManager')
 armory.trait.navigation.Navigation

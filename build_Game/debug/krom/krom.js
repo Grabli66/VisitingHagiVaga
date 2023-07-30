@@ -628,6 +628,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		}});
 	}
 	init() {
+		this.object.properties = new haxe_ds_StringMap();
 		this.head = this.object.getChildOfType(iron_object_CameraObject);
 		armory_trait_physics_bullet_PhysicsWorld.active.notifyOnPreUpdate($bind(this,this.preUpdate));
 		this.notifyOnUpdate($bind(this,this.update));
@@ -658,6 +659,10 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		}
 		if(mouse.started()) {
 			this.startShooting();
+		}
+		if(this.object.properties.h["is_hit"]) {
+			this.object.properties.h["is_hit"] = false;
+			haxe_Log.trace("OOOOUUUCH",{ fileName : "arm/PlayerLogic.hx", lineNumber : 185, className : "arm.PlayerLogic", methodName : "preUpdate"});
 		}
 		this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * this.rotationSpeed);
 		this.transform.rotate(this.zVec,-mouse.movementX / 250 * this.rotationSpeed);
@@ -978,6 +983,60 @@ arm_node_BoneIK.__name__ = true;
 arm_node_BoneIK.__super__ = armory_logicnode_LogicTree;
 Object.assign(arm_node_BoneIK.prototype, {
 	__class__: arm_node_BoneIK
+	,functionNodes: null
+	,functionOutputNodes: null
+});
+class arm_node_FistLogic extends armory_logicnode_LogicTree {
+	constructor() {
+		super();
+		this.functionNodes = new haxe_ds_StringMap();
+		this.functionOutputNodes = new haxe_ds_StringMap();
+		this.notifyOnAdd($bind(this,this.add));
+	}
+	add() {
+		let _SetObjectProperty = new armory_logicnode_SetPropertyNode(this);
+		_SetObjectProperty.inputs.length = 4;
+		_SetObjectProperty.outputs.length = 1;
+		let _g = 0;
+		let _g1 = _SetObjectProperty.outputs.length;
+		while(_g < _g1) {
+			let i = _g++;
+			_SetObjectProperty.outputs[i] = [];
+		}
+		let _OnContact = new armory_logicnode_OnContactNode(this);
+		_OnContact.property0 = "begin";
+		_OnContact.inputs.length = 2;
+		_OnContact.outputs.length = 1;
+		let _g2 = 0;
+		let _g3 = _OnContact.outputs.length;
+		while(_g2 < _g3) {
+			let i = _g2++;
+			_OnContact.outputs[i] = [];
+		}
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Игрок"),_OnContact,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,""),_OnContact,0,1);
+		armory_logicnode_LogicNode.addLink(_OnContact,_SetObjectProperty,0,0);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_ObjectNode(this,"Игрок"),_SetObjectProperty,0,1);
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_StringNode(this,"is_hit"),_SetObjectProperty,0,2);
+		let _Boolean = new armory_logicnode_BooleanNode(this);
+		_Boolean.inputs.length = 1;
+		_Boolean.outputs.length = 1;
+		let _g4 = 0;
+		let _g5 = _Boolean.outputs.length;
+		while(_g4 < _g5) {
+			let i = _g4++;
+			_Boolean.outputs[i] = [];
+		}
+		armory_logicnode_LogicNode.addLink(new armory_logicnode_BooleanNode(this,true),_Boolean,0,0);
+		armory_logicnode_LogicNode.addLink(_Boolean,_SetObjectProperty,0,3);
+		armory_logicnode_LogicNode.addLink(_SetObjectProperty,new armory_logicnode_NullNode(this),0,0);
+	}
+}
+$hxClasses["arm.node.FistLogic"] = arm_node_FistLogic;
+arm_node_FistLogic.__name__ = true;
+arm_node_FistLogic.__super__ = armory_logicnode_LogicTree;
+Object.assign(arm_node_FistLogic.prototype, {
+	__class__: arm_node_FistLogic
 	,functionNodes: null
 	,functionOutputNodes: null
 });
@@ -1461,6 +1520,73 @@ Object.assign(armory_logicnode_ObjectNode.prototype, {
 	,objectName: null
 	,value: null
 });
+class armory_logicnode_OnContactNode extends armory_logicnode_LogicNode {
+	constructor(tree) {
+		armory_logicnode_LogicNode._hx_skip_constructor = true;
+		super();
+		armory_logicnode_LogicNode._hx_skip_constructor = false;
+		this._hx_constructor(tree);
+	}
+	_hx_constructor(tree) {
+		this.lastContact = false;
+		super._hx_constructor(tree);
+		tree.notifyOnUpdate($bind(this,this.update));
+	}
+	update() {
+		let _this = this.inputs[0];
+		let object1 = _this.fromNode.get(_this.fromIndex);
+		let _this1 = this.inputs[1];
+		let object2 = _this1.fromNode.get(_this1.fromIndex);
+		if(object1 == null) {
+			object1 = this.tree.object;
+		}
+		if(object2 == null) {
+			object2 = this.tree.object;
+		}
+		let contact = false;
+		let physics = armory_trait_physics_bullet_PhysicsWorld.active;
+		let rb1 = object1.getTrait(armory_trait_physics_bullet_RigidBody);
+		if(rb1 != null) {
+			let rbs = physics.getContacts(rb1);
+			if(rbs != null) {
+				let rb2 = object2.getTrait(armory_trait_physics_bullet_RigidBody);
+				let _g = 0;
+				while(_g < rbs.length) {
+					let rb = rbs[_g];
+					++_g;
+					if(rb == rb2) {
+						contact = true;
+						break;
+					}
+				}
+			}
+		}
+		let b = false;
+		switch(this.property0) {
+		case "begin":
+			b = contact && !this.lastContact;
+			break;
+		case "end":
+			b = !contact && this.lastContact;
+			break;
+		case "overlap":
+			b = contact;
+			break;
+		}
+		this.lastContact = contact;
+		if(b) {
+			this.runOutput(0);
+		}
+	}
+}
+$hxClasses["armory.logicnode.OnContactNode"] = armory_logicnode_OnContactNode;
+armory_logicnode_OnContactNode.__name__ = true;
+armory_logicnode_OnContactNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_OnContactNode.prototype, {
+	__class__: armory_logicnode_OnContactNode
+	,property0: null
+	,lastContact: null
+});
 class armory_logicnode_OnUpdateNode extends armory_logicnode_LogicNode {
 	constructor(tree) {
 		super(tree);
@@ -1488,6 +1614,33 @@ armory_logicnode_OnUpdateNode.__super__ = armory_logicnode_LogicNode;
 Object.assign(armory_logicnode_OnUpdateNode.prototype, {
 	__class__: armory_logicnode_OnUpdateNode
 	,property0: null
+});
+class armory_logicnode_SetPropertyNode extends armory_logicnode_LogicNode {
+	constructor(tree) {
+		super(tree);
+	}
+	run(from) {
+		let _this = this.inputs[1];
+		let object = _this.fromNode.get(_this.fromIndex);
+		let _this1 = this.inputs[2];
+		let property = _this1.fromNode.get(_this1.fromIndex);
+		let _this2 = this.inputs[3];
+		let value = _this2.fromNode.get(_this2.fromIndex);
+		if(object == null) {
+			return;
+		}
+		if(object.properties == null) {
+			object.properties = new haxe_ds_StringMap();
+		}
+		object.properties.h[property] = value;
+		this.runOutput(0);
+	}
+}
+$hxClasses["armory.logicnode.SetPropertyNode"] = armory_logicnode_SetPropertyNode;
+armory_logicnode_SetPropertyNode.__name__ = true;
+armory_logicnode_SetPropertyNode.__super__ = armory_logicnode_LogicNode;
+Object.assign(armory_logicnode_SetPropertyNode.prototype, {
+	__class__: armory_logicnode_SetPropertyNode
 });
 class armory_logicnode_StringNode extends armory_logicnode_LogicNode {
 	constructor(tree,value) {
