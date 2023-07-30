@@ -60,26 +60,26 @@
 -D kha_version=1810
 -D kha_project_name=Game_1_0_0
 -js krom\krom.js.temp
-armory.trait.internal.CanvasScript
---macro keep('armory.trait.internal.CanvasScript')
 arm.PlayerLogic
 --macro keep('arm.PlayerLogic')
 arm.HuggyLogic
 --macro keep('arm.HuggyLogic')
 armory.trait.physics.bullet.PhysicsWorld
 --macro keep('armory.trait.physics.bullet.PhysicsWorld')
-armory.trait.physics.bullet.RigidBody
---macro keep('armory.trait.physics.bullet.RigidBody')
-armory.trait.NavAgent
---macro keep('armory.trait.NavAgent')
-armory.trait.NavMesh
---macro keep('armory.trait.NavMesh')
+armory.trait.internal.CanvasScript
+--macro keep('armory.trait.internal.CanvasScript')
 arm.node.FistLogic
 --macro keep('arm.node.FistLogic')
-armory.trait.internal.UniformsManager
---macro keep('armory.trait.internal.UniformsManager')
 armory.trait.navigation.Navigation
 --macro keep('armory.trait.navigation.Navigation')
+armory.trait.NavAgent
+--macro keep('armory.trait.NavAgent')
+armory.trait.physics.bullet.RigidBody
+--macro keep('armory.trait.physics.bullet.RigidBody')
 arm.node.BoneIK
 --macro keep('arm.node.BoneIK')
+armory.trait.internal.UniformsManager
+--macro keep('armory.trait.internal.UniformsManager')
+armory.trait.NavMesh
+--macro keep('armory.trait.NavMesh')
 -main Main

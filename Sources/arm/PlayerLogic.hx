@@ -26,7 +26,7 @@ enum PlayerState {
 class ShootAnimData {
 	// Признак что идёт анимация стрельбы
 	public var isFiring:Bool;
-	
+
 	// Конструктор
 	public function new() {}
 }
@@ -48,7 +48,7 @@ class PlayerLogic extends CameraController {
 	var armature:Object;
 
 	// Анимации
-	var animations:BoneAnimation;	
+	var animations:BoneAnimation;
 
 	// Прицел для IK
 	var aimNode:Object;
@@ -84,7 +84,7 @@ class PlayerLogic extends CameraController {
 			return;
 
 		state = Idle;
-		animations.play('Idle_Policeman');
+		animations.play('Idle_Policeman', null, 1.0, 0.5);
 	}
 
 	// Переходит в состояние Walk
@@ -93,7 +93,7 @@ class PlayerLogic extends CameraController {
 			return;
 
 		state = Walk;
-		animations.play('Walk_Policeman');
+		animations.play('Walk_Policeman', null, 1.0, 0.5);
 	}
 
 	// Производит анимацию стрельбы
@@ -147,7 +147,7 @@ class PlayerLogic extends CameraController {
 		aimNode = object.getChild("Aim");
 		initAimLoc = aimNode.transform.loc;
 		armature = object.getChild("Policeman");
-		animations = findAnimation(armature);		
+		animations = findAnimation(armature);
 
 		startIdle();
 	}
@@ -177,7 +177,7 @@ class PlayerLogic extends CameraController {
 		// Обрабатывает выстрел
 		if (mouse.started()) {
 			startShooting();
-		}		
+		}
 
 		// Проверяет удар Хаги
 		if (object.properties["is_hit"]) {
