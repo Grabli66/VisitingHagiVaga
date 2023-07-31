@@ -27,6 +27,9 @@ class ShootAnimData {
 	// Признак что идёт анимация стрельбы
 	public var isFiring:Bool;
 
+	// Нода вспышки
+	public var flashNode:Object;
+
 	// Конструктор
 	public function new() {}
 }
@@ -53,7 +56,7 @@ class PlayerLogic extends CameraController {
 	var state = PlayerState.None;
 
 	// Данные анимации стрельбы
-	var shootingAnimData = new ShootAnimData();
+	var shootingAnimData:ShootAnimData;
 
 	// Скорость поворота
 	@prop
@@ -123,6 +126,16 @@ class PlayerLogic extends CameraController {
 				});
 			}
 		});
+
+		shootingAnimData.flashNode.visible = true;
+		Tween.to({
+			target: this,
+			props: {fromValue: 1.0},
+			duration: 0.07,
+			done: () -> {
+				shootingAnimData.flashNode.visible = false;
+			}
+		});
 	}
 
 	// Начинает помирать
@@ -155,6 +168,10 @@ class PlayerLogic extends CameraController {
 		aimNode = object.getChild("Aim");		
 		armature = object.getChild("Policeman");
 		animations = findAnimation(armature);
+
+		shootingAnimData = new ShootAnimData();
+		shootingAnimData.flashNode = object.getChild("ВспышкаВыстрела");
+		shootingAnimData.flashNode.visible = false;
 
 		startIdle();
 	}
