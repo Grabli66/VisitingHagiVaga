@@ -14,6 +14,8 @@ uniform int envmapNumMipmaps;
 Texture2D<float4> senvmapRadiance : register(t4);
 SamplerState _senvmapRadiance_sampler : register(s4);
 uniform float envmapStrength;
+Texture2D<float4> gbufferEmission : register(t5);
+SamplerState _gbufferEmission_sampler : register(s5);
 uniform float3 sunDir;
 uniform float3 sunCol;
 uniform float3 pointPos;
@@ -184,16 +186,19 @@ void frag_main()
     envl += (prefilteredColor * ((f0 * envBRDF.x) + envBRDF.y.xxx));
     envl *= (envmapStrength * occspec.x);
     fragColor = float4(envl.x, envl.y, envl.z, fragColor.w);
+    float3 emission = gbufferEmission.SampleLevel(_gbufferEmission_sampler, texCoord, 0.0f).xyz;
+    float3 _628 = fragColor.xyz + emission;
+    fragColor = float4(_628.x, _628.y, _628.z, fragColor.w);
     float3 sh = normalize(v + sunDir);
     float sdotNH = max(0.0f, dot(n, sh));
     float sdotVH = max(0.0f, dot(v, sh));
     float sdotNL = max(0.0f, dot(n, sunDir));
     float svisibility = 1.0f;
     float3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y);
-    float3 _664 = fragColor.xyz + ((sdirect * svisibility) * sunCol);
-    fragColor = float4(_664.x, _664.y, _664.z, fragColor.w);
-    float3 _683 = fragColor.xyz + sampleLight(p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0);
-    fragColor = float4(_683.x, _683.y, _683.z, fragColor.w);
+    float3 _676 = fragColor.xyz + ((sdirect * svisibility) * sunCol);
+    fragColor = float4(_676.x, _676.y, _676.z, fragColor.w);
+    float3 _695 = fragColor.xyz + sampleLight(p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0);
+    fragColor = float4(_695.x, _695.y, _695.z, fragColor.w);
     fragColor.w = 1.0f;
 }
 

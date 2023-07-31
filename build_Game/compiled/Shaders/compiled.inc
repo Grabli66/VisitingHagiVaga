@@ -7,10 +7,12 @@
 #define _SinglePoint
 #define _Brdf
 #define _SMAA
+#define _EmissionShaded
 #define _CToneFilmic
-#define GBUF_SIZE 2
+#define GBUF_SIZE 3
 #define GBUF_IDX_0 0
 #define GBUF_IDX_1 1
+#define GBUF_IDX_EMISSION 2
 #if defined(HLSL) || defined(METAL)
 #define _InvY
 #endif

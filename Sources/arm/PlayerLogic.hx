@@ -35,11 +35,7 @@ class ShootAnimData {
 class PlayerLogic extends CameraController {
 	// Камера
 	var head:Object;
-
-	// Скорость поворота
-	@prop
-	var rotationSpeed = 2.0;
-
+	
 	var xVec = Vec4.xAxis();
 	var yVec = Vec4.yAxis();
 	var zVec = Vec4.zAxis();
@@ -51,16 +47,17 @@ class PlayerLogic extends CameraController {
 	var animations:BoneAnimation;
 
 	// Прицел для IK
-	var aimNode:Object;
-
-	// Начальная позиция прицела
-	var initAimLoc:Vec4;
+	var aimNode:Object;	
 
 	// Состояние
 	var state = PlayerState.None;
 
-	// Признак что идёт анимация стрельбы
+	// Данные анимации стрельбы
 	var shootingAnimData = new ShootAnimData();
+
+	// Скорость поворота
+	@prop
+	public var rotationSpeed = 2.0;
 
 	// Скорость передвижения
 	@prop
@@ -155,8 +152,7 @@ class PlayerLogic extends CameraController {
 		notifyOnUpdate(update);
 		notifyOnRemove(removed);
 
-		aimNode = object.getChild("Aim");
-		initAimLoc = aimNode.transform.loc;
+		aimNode = object.getChild("Aim");		
 		armature = object.getChild("Policeman");
 		animations = findAnimation(armature);
 

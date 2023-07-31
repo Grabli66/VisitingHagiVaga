@@ -43,6 +43,7 @@ project.addAssets("C:/Downloads/128x128/Brick/Brick_08-128x128.png", { notinlist
 project.addAssets("C:/Downloads/128x128/Plaster/Plaster_01-128x128.png", { notinlist: true });
 project.addAssets("C:/Downloads/128x128/Wood/Wood_01-128x128.png", { notinlist: true });
 project.addAssets("C:/Downloads/128x128/Wood/Wood_19-128x128.png", { notinlist: true });
+project.addAssets("C:/Workspace/VisitingHagiVaga/Art/Policeman/MuzzleFlash.png", { notinlist: true });
 project.addAssets("C:/Workspace/armsdk/armory/Assets/brdf.png", { notinlist: true });
 project.addAssets("C:/Workspace/armsdk/armory/Assets/smaa_area.png", { notinlist: true });
 project.addAssets("C:/Workspace/armsdk/armory/Assets/smaa_search.png", { notinlist: true });
@@ -57,6 +58,8 @@ project.addDefine('rp_compositornodes');
 project.addDefine('rp_antialiasing=SMAA');
 project.addDefine('rp_supersampling=1');
 project.addDefine('rp_ssgi=Off');
+project.addDefine('rp_translucency');
+project.addDefine('rp_gbuffer_emission');
 project.addDefine('js-es=6');
 project.addDefine('arm_physics');
 project.addDefine('arm_bullet');

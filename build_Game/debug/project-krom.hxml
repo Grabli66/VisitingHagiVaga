@@ -26,6 +26,8 @@
 -D rp_antialiasing=SMAA
 -D rp_supersampling=1
 -D rp_ssgi=Off
+-D rp_translucency
+-D rp_gbuffer_emission
 -D js-es=6
 -D arm_physics
 -D arm_bullet
