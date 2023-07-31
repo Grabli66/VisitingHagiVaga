@@ -128,6 +128,17 @@ class PlayerLogic extends CameraController {
 		});
 	}
 
+	// Начинает помирать
+	function startDead() {
+		if (state == Dead)
+			return;
+
+		state = Dead;
+		animations.play('Die', () -> {
+
+		}, 0.2, 1.0, false);
+	}
+
 	// Конструктор
 	public function new() {
 		super();
@@ -168,6 +179,10 @@ class PlayerLogic extends CameraController {
 		if (!mouse.locked)
 			return;
 
+		// Если игрок помер
+		if (state == Dead)
+			return;
+
 		// Обрабатывает прицеливание
 		if (mouse.moved) {
 			var d = -mouse.movementY / 250;
@@ -182,7 +197,7 @@ class PlayerLogic extends CameraController {
 		// Проверяет удар Хаги
 		if (object.properties["is_hit"]) {
 			object.properties["is_hit"] = false;
-			trace("OOOOUUUCH");
+			startDead();
 		}
 
 		// Обрабатывает поворот игрока
@@ -199,6 +214,10 @@ class PlayerLogic extends CameraController {
 
 	function update() {
 		if (!body.ready)
+			return;
+
+		// Если игрок помер
+		if (state == Dead)
 			return;
 
 		// Move
