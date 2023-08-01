@@ -15,6 +15,8 @@ project.addParameter('arm.PlayerLogic');
 project.addParameter("--macro keep('arm.PlayerLogic')");
 project.addParameter('armory.trait.physics.bullet.PhysicsWorld');
 project.addParameter("--macro keep('armory.trait.physics.bullet.PhysicsWorld')");
+project.addParameter('arm.GameCanvasLogic');
+project.addParameter("--macro keep('arm.GameCanvasLogic')");
 project.addParameter('armory.trait.internal.CanvasScript');
 project.addParameter("--macro keep('armory.trait.internal.CanvasScript')");
 project.addParameter('armory.trait.internal.UniformsManager');
@@ -36,6 +38,7 @@ project.addShaders("build_Game/compiled/Hlsl/*.glsl", { noprocessing: true, noem
 project.addAssets("build_Game/compiled/Assets/**", { notinlist: true });
 project.addAssets("build_Game/compiled/Shaders/*.arm", { notinlist: true });
 project.addAssets("Art/Policeman/Aim.png", { notinlist: true });
+project.addAssets("Art/Policeman/Pistol.png", { notinlist: true });
 project.addAssets("Bundled/canvas/GameCanvas.files", { notinlist: true });
 project.addAssets("Bundled/canvas/GameCanvas.json", { notinlist: true });
 project.addAssets("Bundled/canvas/_themes.json", { notinlist: true });

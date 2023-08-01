@@ -1,11 +1,10 @@
 package arm;
 
-import armory.trait.physics.bullet.RigidBody;
+import iron.Scene;
+import armory.system.Event;
 import iron.system.Tween;
-import iron.math.Mat4;
 import iron.object.BoneAnimation;
 import iron.math.Vec4;
-import iron.math.Quat;
 import iron.system.Input;
 import iron.object.Object;
 import iron.object.CameraObject;
@@ -61,6 +60,9 @@ class PlayerLogic extends CameraController {
 	// Данные анимации стрельбы
 	var shootingAnimData:ShootAnimData;
 
+	// Текущее количество патрон
+	var currentAmmo = 15;
+
 	// Скорость поворота
 	@prop
 	public var rotationSpeed = 2.0;
@@ -106,6 +108,18 @@ class PlayerLogic extends CameraController {
 
 		shootingAnimData.isFiring = true;
 
+		// Обновляет количество патрон
+		currentAmmo -= 1;
+		if (currentAmmo < 0)
+			currentAmmo = 0;
+
+		var canvas:GameCanvasLogic = Scene.active.getTrait(GameCanvasLogic);
+		canvas.setAmmoCount(currentAmmo);
+
+		if (currentAmmo < 1)
+			return;
+
+		// Кидает луч для определения попадания
 		var physics = PhysicsWorld.active;
 
 		var from = aimNode.transform.world.getLoc();

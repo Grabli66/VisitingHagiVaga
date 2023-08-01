@@ -68,6 +68,8 @@ arm.PlayerLogic
 --macro keep('arm.PlayerLogic')
 armory.trait.physics.bullet.PhysicsWorld
 --macro keep('armory.trait.physics.bullet.PhysicsWorld')
+arm.GameCanvasLogic
+--macro keep('arm.GameCanvasLogic')
 armory.trait.internal.CanvasScript
 --macro keep('armory.trait.internal.CanvasScript')
 armory.trait.internal.UniformsManager

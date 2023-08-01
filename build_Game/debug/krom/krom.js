@@ -290,14 +290,6 @@ class UInt {
 		}
 	}
 }
-var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
-	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
-	,Walk: {_hx_name:"Walk",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
-	,Attack: {_hx_name:"Attack",_hx_index:2,__enum__:"arm.HuggyState",toString:$estr}
-	,Hit: {_hx_name:"Hit",_hx_index:3,__enum__:"arm.HuggyState",toString:$estr}
-	,Dead: {_hx_name:"Dead",_hx_index:4,__enum__:"arm.HuggyState",toString:$estr}
-};
-arm_HuggyState.__constructs__ = [arm_HuggyState.None,arm_HuggyState.Walk,arm_HuggyState.Attack,arm_HuggyState.Hit,arm_HuggyState.Dead];
 class iron_Trait {
 	constructor() {
 		if(iron_Trait._hx_skip_constructor) {
@@ -396,6 +388,33 @@ Object.assign(iron_Trait.prototype, {
 	,_render: null
 	,_render2D: null
 });
+class arm_GameCanvasLogic extends iron_Trait {
+	constructor() {
+		super();
+		let _gthis = this;
+		this.notifyOnInit(function() {
+			_gthis.canvas = iron_Scene.active.getTrait(armory_trait_internal_CanvasScript);
+		});
+	}
+	setAmmoCount(val) {
+		this.canvas.getElement("PistolAmmo").text = "" + val + " / 15";
+	}
+}
+$hxClasses["arm.GameCanvasLogic"] = arm_GameCanvasLogic;
+arm_GameCanvasLogic.__name__ = true;
+arm_GameCanvasLogic.__super__ = iron_Trait;
+Object.assign(arm_GameCanvasLogic.prototype, {
+	__class__: arm_GameCanvasLogic
+	,canvas: null
+});
+var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
+	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
+	,Walk: {_hx_name:"Walk",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
+	,Attack: {_hx_name:"Attack",_hx_index:2,__enum__:"arm.HuggyState",toString:$estr}
+	,Hit: {_hx_name:"Hit",_hx_index:3,__enum__:"arm.HuggyState",toString:$estr}
+	,Dead: {_hx_name:"Dead",_hx_index:4,__enum__:"arm.HuggyState",toString:$estr}
+};
+arm_HuggyState.__constructs__ = [arm_HuggyState.None,arm_HuggyState.Walk,arm_HuggyState.Attack,arm_HuggyState.Hit,arm_HuggyState.Dead];
 class arm_HuggyLogic extends iron_Trait {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
@@ -622,6 +641,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.dir = new iron_math_Vec4();
 		this.speed = 3;
 		this.rotationSpeed = 2.0;
+		this.currentAmmo = 15;
 		this.state = arm_PlayerState.None;
 		this.zVec = new iron_math_Vec4(0.0,0.0,1.0);
 		this.yVec = new iron_math_Vec4(0.0,1.0,0.0);
@@ -664,6 +684,15 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			return;
 		}
 		this.shootingAnimData.isFiring = true;
+		this.currentAmmo -= 1;
+		if(this.currentAmmo < 0) {
+			this.currentAmmo = 0;
+		}
+		let canvas = iron_Scene.active.getTrait(arm_GameCanvasLogic);
+		canvas.setAmmoCount(this.currentAmmo);
+		if(this.currentAmmo < 1) {
+			return;
+		}
 		let physics = armory_trait_physics_bullet_PhysicsWorld.active;
 		let _this = this.aimNode.transform.world;
 		let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
@@ -903,6 +932,7 @@ Object.assign(arm_PlayerLogic.prototype, {
 	,aimTargetNode: null
 	,state: null
 	,shootingAnimData: null
+	,currentAmmo: null
 	,rotationSpeed: null
 	,speed: null
 	,dir: null
