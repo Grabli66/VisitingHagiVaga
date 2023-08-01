@@ -38,6 +38,7 @@ project.addShaders("build_Game/compiled/Hlsl/*.glsl", { noprocessing: true, noem
 project.addAssets("build_Game/compiled/Assets/**", { notinlist: true });
 project.addAssets("build_Game/compiled/Shaders/*.arm", { notinlist: true });
 project.addAssets("Art/Policeman/Aim.png", { notinlist: true });
+project.addAssets("Art/Policeman/Ammo.png", { notinlist: true });
 project.addAssets("Art/Policeman/Pistol.png", { notinlist: true });
 project.addAssets("Bundled/canvas/GameCanvas.files", { notinlist: true });
 project.addAssets("Bundled/canvas/GameCanvas.json", { notinlist: true });

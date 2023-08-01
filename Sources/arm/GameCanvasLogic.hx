@@ -24,6 +24,6 @@ class GameCanvasLogic extends iron.Trait {
 
 	// Устанавливает количество патронов
 	public function setAmmoCount(val:Int) {
-		canvas.getElement("PistolAmmo").text = '${val} / 15';
+		canvas.getElement("PistolAmmoCount").text = '${val} / 15';
 	}
 }

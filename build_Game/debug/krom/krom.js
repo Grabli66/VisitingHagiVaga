@@ -397,7 +397,7 @@ class arm_GameCanvasLogic extends iron_Trait {
 		});
 	}
 	setAmmoCount(val) {
-		this.canvas.getElement("PistolAmmo").text = "" + val + " / 15";
+		this.canvas.getElement("PistolAmmoCount").text = "" + val + " / 15";
 	}
 }
 $hxClasses["arm.GameCanvasLogic"] = arm_GameCanvasLogic;
