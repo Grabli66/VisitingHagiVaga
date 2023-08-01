@@ -291,10 +291,13 @@ class UInt {
 	}
 }
 var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
-	,Walking: {_hx_name:"Walking",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
-	,Attacking: {_hx_name:"Attacking",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
+	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
+	,Walk: {_hx_name:"Walk",_hx_index:1,__enum__:"arm.HuggyState",toString:$estr}
+	,Attack: {_hx_name:"Attack",_hx_index:2,__enum__:"arm.HuggyState",toString:$estr}
+	,Hit: {_hx_name:"Hit",_hx_index:3,__enum__:"arm.HuggyState",toString:$estr}
+	,Dead: {_hx_name:"Dead",_hx_index:4,__enum__:"arm.HuggyState",toString:$estr}
 };
-arm_HuggyState.__constructs__ = [arm_HuggyState.Walking,arm_HuggyState.Attacking];
+arm_HuggyState.__constructs__ = [arm_HuggyState.None,arm_HuggyState.Walk,arm_HuggyState.Attack,arm_HuggyState.Hit,arm_HuggyState.Dead];
 class iron_Trait {
 	constructor() {
 		if(iron_Trait._hx_skip_constructor) {
@@ -401,21 +404,24 @@ class arm_HuggyLogic extends iron_Trait {
 		this._hx_constructor();
 	}
 	_hx_constructor() {
-		this.state = arm_HuggyState.Walking;
+		this.maxHealth = 3;
 		this.attackDistance = 2.0;
 		this.speed = 1.0;
+		this.state = arm_HuggyState.None;
 		this.navTimerDuration = 0.0;
 		super._hx_constructor();
 		let _gthis = this;
 		this.notifyOnInit(function() {
+			_gthis.object.properties = new haxe_ds_StringMap();
 			_gthis.navTimerDuration = arm_HuggyLogic.navTimerInterval;
 			let armature = _gthis.object.getChild("Huggy");
 			_gthis.animimations = _gthis.findAnimation(armature);
 			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
+			_gthis.currentHealth = _gthis.maxHealth;
 			_gthis.startWalking();
 		});
 		this.notifyOnUpdate(function() {
-			_gthis.updateNavigation();
+			_gthis.update();
 		});
 	}
 	findAnimation(o) {
@@ -434,25 +440,76 @@ class arm_HuggyLogic extends iron_Trait {
 		}
 		return null;
 	}
-	startAttack() {
-		this.state = arm_HuggyState.Attacking;
-		let _gthis = this;
-		if(this.animimations.action != "Attack_Huggy") {
-			this.navAgent.stop();
-			this.animimations.play("Attack_Huggy",function() {
-				_gthis.startWalking();
-			});
+	startDead() {
+		if(this.state == arm_HuggyState.Dead) {
+			return;
 		}
+		this.state = arm_HuggyState.Dead;
+		this.navAgent.stop();
+		let _gthis = this;
+		this.animimations.play("Die_Huggy",function() {
+			_gthis.object.remove();
+		},0.2,1.0,false);
+	}
+	startHit() {
+		this.currentHealth -= 1;
+		if(this.currentHealth <= 0) {
+			this.startDead();
+			return;
+		}
+		if(this.state == arm_HuggyState.Hit) {
+			return;
+		}
+		this.state = arm_HuggyState.Hit;
+		this.navAgent.stop();
+		let _gthis = this;
+		this.animimations.play("Hit_Huggy",function() {
+			_gthis.startWalking();
+		},0.2,1.5,false);
+	}
+	startAttack() {
+		if(this.state == arm_HuggyState.Attack) {
+			return;
+		}
+		this.state = arm_HuggyState.Attack;
+		this.navAgent.stop();
+		let _gthis = this;
+		this.animimations.play("Attack_Huggy",function() {
+			_gthis.startWalking();
+		});
 	}
 	startWalking() {
-		this.state = arm_HuggyState.Walking;
-		if(this.animimations.action != "Move_Huggy") {
-			this.animimations.play("Move_Huggy");
+		if(this.state == arm_HuggyState.Walk) {
+			return;
 		}
+		this.state = arm_HuggyState.Walk;
+		this.animimations.play("Move_Huggy",null,0.2,0.6);
 	}
-	updateNavigation() {
-		this.navTimerDuration -= iron_system_Time.get_delta();
+	startNavigate(from,to) {
+		if(this.state == arm_HuggyState.Attack || this.state == arm_HuggyState.Hit) {
+			return;
+		}
 		let _gthis = this;
+		armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from,to,function(path) {
+			let agent = _gthis.object.getTrait(armory_trait_NavAgent);
+			agent.speed = _gthis.speed;
+			agent.turnDuration = 0.4;
+			agent.heightOffset = 0;
+			agent.setPath(path);
+		});
+	}
+	update() {
+		if(this.state == arm_HuggyState.Dead) {
+			return;
+		}
+		if(this.object.properties.h["is_hit"]) {
+			this.object.properties.h["is_hit"] = false;
+			this.startHit();
+		}
+		if(this.state == arm_HuggyState.Attack || this.state == arm_HuggyState.Hit || this.state == arm_HuggyState.Dead) {
+			return;
+		}
+		this.navTimerDuration -= iron_system_Time.get_delta();
 		if(this.navTimerDuration <= 0.0) {
 			this.navTimerDuration = arm_HuggyLogic.navTimerInterval;
 			let _this = this.object.transform.world;
@@ -466,16 +523,7 @@ class arm_HuggyLogic extends iron_Trait {
 			if(distance <= this.attackDistance) {
 				this.startAttack();
 			} else {
-				if(this.state == arm_HuggyState.Attacking) {
-					return;
-				}
-				armory_trait_navigation_Navigation.active.navMeshes[0].findPath(from,to,function(path) {
-					let agent = _gthis.object.getTrait(armory_trait_NavAgent);
-					agent.speed = _gthis.speed;
-					agent.turnDuration = 0.4;
-					agent.heightOffset = 0;
-					agent.setPath(path);
-				});
+				this.startNavigate(from,to);
 			}
 		}
 	}
@@ -486,12 +534,14 @@ arm_HuggyLogic.__super__ = iron_Trait;
 Object.assign(arm_HuggyLogic.prototype, {
 	__class__: arm_HuggyLogic
 	,navTimerDuration: null
-	,playerObject: null
-	,speed: null
-	,attackDistance: null
 	,state: null
 	,animimations: null
 	,navAgent: null
+	,currentHealth: null
+	,playerObject: null
+	,speed: null
+	,attackDistance: null
+	,maxHealth: null
 });
 var arm_PlayerState = $hxEnums["arm.PlayerState"] = { __ename__:true,__constructs__:null
 	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.PlayerState",toString:$estr}
@@ -614,6 +664,19 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			return;
 		}
 		this.shootingAnimData.isFiring = true;
+		let physics = armory_trait_physics_bullet_PhysicsWorld.active;
+		let _this = this.aimNode.transform.world;
+		let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
+		let _this1 = this.aimTargetNode.transform.world;
+		let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
+		let hit = physics.rayCast(from,to);
+		let rb = hit != null ? hit.rb : null;
+		if(rb != null && rb.object.name == "Physics") {
+			let parent = rb.object.parent;
+			if(parent.name == "Монстр") {
+				parent.properties.h["is_hit"] = true;
+			}
+		}
 		let _gthis = this;
 		iron_system_Tween.to({ target : this, props : { fromValue : 1.0}, duration : 0.2, tick : function() {
 			_gthis.aimNode.transform.translate(0.0,-0.01,-0.0);
@@ -646,6 +709,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.notifyOnUpdate($bind(this,this.update));
 		this.notifyOnRemove($bind(this,this.removed));
 		this.aimNode = this.object.getChild("Aim");
+		this.aimTargetNode = this.object.getChild("Цель");
 		this.armature = this.object.getChild("Policeman");
 		this.animations = this.findAnimation(this.armature);
 		this.shootingAnimData = new arm_ShootAnimData();
@@ -836,6 +900,7 @@ Object.assign(arm_PlayerLogic.prototype, {
 	,armature: null
 	,animations: null
 	,aimNode: null
+	,aimTargetNode: null
 	,state: null
 	,shootingAnimData: null
 	,rotationSpeed: null
@@ -58721,7 +58786,7 @@ Main.projectName = "Game";
 Main.projectVersion = "1.0.0";
 Main.projectPackage = "arm";
 iron_Trait._hx_skip_constructor = false;
-arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}}};
+arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}, maxHealth : { prop : null}}};
 arm_HuggyLogic.navTimerInterval = 0.5;
 armory_trait_internal_CameraController.keyUp = "w";
 armory_trait_internal_CameraController.keyDown = "s";

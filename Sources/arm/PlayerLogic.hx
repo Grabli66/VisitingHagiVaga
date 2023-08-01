@@ -38,7 +38,7 @@ class ShootAnimData {
 class PlayerLogic extends CameraController {
 	// Камера
 	var head:Object;
-	
+
 	var xVec = Vec4.xAxis();
 	var yVec = Vec4.yAxis();
 	var zVec = Vec4.zAxis();
@@ -50,7 +50,10 @@ class PlayerLogic extends CameraController {
 	var animations:BoneAnimation;
 
 	// Прицел для IK
-	var aimNode:Object;	
+	var aimNode:Object;
+
+	// Цель стрельбы для RayCast
+	var aimTargetNode:Object;
 
 	// Состояние
 	var state = PlayerState.None;
@@ -103,6 +106,20 @@ class PlayerLogic extends CameraController {
 
 		shootingAnimData.isFiring = true;
 
+		var physics = PhysicsWorld.active;
+
+		var from = aimNode.transform.world.getLoc();
+		var to = aimTargetNode.transform.world.getLoc();
+
+		var hit = physics.rayCast(from, to);
+		var rb = (hit != null) ? hit.rb : null;
+		if (rb != null && rb.object.name == 'Physics') {
+			var parent = rb.object.parent;
+			if (parent.name == "Монстр") {
+				parent.properties['is_hit'] = true;
+			}
+		}
+
 		Tween.to({
 			target: this,
 			props: {fromValue: 1.0},
@@ -144,9 +161,7 @@ class PlayerLogic extends CameraController {
 			return;
 
 		state = Dead;
-		animations.play('Die', () -> {
-
-		}, 0.2, 1.0, false);
+		animations.play('Die', () -> {}, 0.2, 1.0, false);
 	}
 
 	// Конструктор
@@ -165,7 +180,8 @@ class PlayerLogic extends CameraController {
 		notifyOnUpdate(update);
 		notifyOnRemove(removed);
 
-		aimNode = object.getChild("Aim");		
+		aimNode = object.getChild("Aim");
+		aimTargetNode = object.getChild("Цель");
 		armature = object.getChild("Policeman");
 		animations = findAnimation(armature);
 
