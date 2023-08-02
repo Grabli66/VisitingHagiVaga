@@ -1,5 +1,8 @@
 package arm;
 
+import iron.Trait;
+import kha.input.KeyCode;
+import common.ObjectWithActionTrait;
 import iron.Scene;
 import armory.system.Event;
 import iron.system.Tween;
@@ -42,6 +45,9 @@ class PlayerLogic extends CameraController {
 	var yVec = Vec4.yAxis();
 	var zVec = Vec4.zAxis();
 
+	// Скрипт управляющий UI
+	var canvas:GameCanvasLogic;
+
 	// Скелет игрока
 	var armature:Object;
 
@@ -50,6 +56,12 @@ class PlayerLogic extends CameraController {
 
 	// Прицел для IK
 	var aimNode:Object;
+
+	// Нода что бы выпускать луч для взаимодействия с объектом
+	var grabNode:Object;
+
+	// Объект с которым произошёл контакт
+	var contactObject:ObjectWithActionTrait;
 
 	// Цель стрельбы для RayCast
 	var aimTargetNode:Object;
@@ -83,6 +95,45 @@ class PlayerLogic extends CameraController {
 		return null;
 	}
 
+	// Обрабатывает взаимодействие с объектом
+	function processActionWithObject() {
+		var physics = PhysicsWorld.active;
+
+		var from = aimNode.transform.world.getLoc();
+		var to = grabNode.transform.world.getLoc();
+
+		var hit = physics.rayCast(from, to);
+		var rb = (hit != null) ? hit.rb : null;
+		// Есть контакт
+		if (rb != null && rb.object != null) {
+			// Не задан объект контакта
+			if (contactObject == null) {
+				var actionTrait = rb.object.traits;
+				if (actionTrait != null) {
+					for (t in actionTrait) {
+						if (t is ObjectWithActionTrait) {
+							contactObject = cast t;
+							canvas.showObjectAction();
+							break;
+						}
+					}										
+				}
+			}
+		} else {
+			if (contactObject != null) {
+				canvas.hideObjectAction();
+				contactObject = null;
+			}
+		}
+
+		if (contactObject != null) {
+			var kb = Input.getKeyboard();			
+			if (kb.started(Keyboard.keyCode(KeyCode.E))) {				
+				contactObject.start();
+			}
+		}
+	}
+
 	// Переходит в состояние Idle
 	function startIdle() {
 		if (state == Idle)
@@ -113,7 +164,6 @@ class PlayerLogic extends CameraController {
 		if (currentAmmo < 0)
 			currentAmmo = 0;
 
-		var canvas:GameCanvasLogic = Scene.active.getTrait(GameCanvasLogic);
 		canvas.setAmmoCount(currentAmmo);
 
 		if (currentAmmo < 1)
@@ -188,6 +238,8 @@ class PlayerLogic extends CameraController {
 	// Инициализирует
 	function init() {
 		object.properties = new Map<String, Dynamic>();
+
+		canvas = Scene.active.getTrait(GameCanvasLogic);
 		head = object.getChildOfType(CameraObject);
 
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
@@ -195,6 +247,7 @@ class PlayerLogic extends CameraController {
 		notifyOnRemove(removed);
 
 		aimNode = object.getChild("Aim");
+		grabNode = object.getChild('Хватать');
 		aimTargetNode = object.getChild("Цель");
 		armature = object.getChild("Policeman");
 		animations = findAnimation(armature);
@@ -225,6 +278,9 @@ class PlayerLogic extends CameraController {
 		// Если игрок помер
 		if (state == Dead)
 			return;
+
+		// Обрабатывает действие
+		processActionWithObject();
 
 		// Обрабатывает прицеливание
 		if (mouse.moved) {
