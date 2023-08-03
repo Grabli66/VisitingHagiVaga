@@ -78,6 +78,9 @@ class PlayerLogic extends CameraController {
 	// Текущее количество патрон
 	var currentAmmo = 15;
 
+	// Текущее количество жизни
+	var currentHealth = 3;
+
 	// Скорость поворота
 	@prop
 	public var rotationSpeed = 2.0;
@@ -311,7 +314,15 @@ class PlayerLogic extends CameraController {
 		// Проверяет удар Хаги
 		if (object.properties["is_hit"]) {
 			object.properties["is_hit"] = false;
-			startDead();
+
+			currentHealth -=1;
+			if (currentHealth >= 0) {
+				canvas.setHealth(currentHealth);
+			}
+
+			if (currentHealth <= 0) {				
+				startDead();
+			}
 		}
 
 		// Обрабатывает поворот игрока

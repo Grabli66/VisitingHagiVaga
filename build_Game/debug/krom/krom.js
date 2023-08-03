@@ -512,6 +512,25 @@ class arm_GameCanvasLogic extends iron_Trait {
 			_gthis.canvas = iron_Scene.active.getTrait(armory_trait_internal_CanvasScript);
 		});
 	}
+	setHealth(val) {
+		let full = "heart-full.png";
+		let empty = "heart-empty.png";
+		if(val > 0) {
+			this.canvas.getElement("Heart1").asset = full;
+		} else {
+			this.canvas.getElement("Heart1").asset = empty;
+		}
+		if(val > 1) {
+			this.canvas.getElement("Heart2").asset = full;
+		} else {
+			this.canvas.getElement("Heart2").asset = empty;
+		}
+		if(val > 2) {
+			this.canvas.getElement("Heart3").asset = full;
+		} else {
+			this.canvas.getElement("Heart3").asset = empty;
+		}
+	}
 	showObjectAction() {
 		this.canvas.getElement("ActionText").visible = true;
 	}
@@ -792,6 +811,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.dir = new iron_math_Vec4();
 		this.speed = 3;
 		this.rotationSpeed = 2.0;
+		this.currentHealth = 3;
 		this.currentAmmo = 15;
 		this.currentAmmoPack = 2;
 		this.state = arm_PlayerState.None;
@@ -971,7 +991,13 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		}
 		if(this.object.properties.h["is_hit"]) {
 			this.object.properties.h["is_hit"] = false;
-			this.startDead();
+			this.currentHealth -= 1;
+			if(this.currentHealth >= 0) {
+				this.canvas.setHealth(this.currentHealth);
+			}
+			if(this.currentHealth <= 0) {
+				this.startDead();
+			}
 		}
 		this.head.transform.rotate(this.xVec,-mouse.movementY / 250 * this.rotationSpeed);
 		this.transform.rotate(this.zVec,-mouse.movementX / 250 * this.rotationSpeed);
@@ -1136,6 +1162,7 @@ Object.assign(arm_PlayerLogic.prototype, {
 	,shootingAnimData: null
 	,currentAmmoPack: null
 	,currentAmmo: null
+	,currentHealth: null
 	,rotationSpeed: null
 	,speed: null
 	,dir: null

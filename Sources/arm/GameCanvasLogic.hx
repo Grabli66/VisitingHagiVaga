@@ -24,6 +24,30 @@ class GameCanvasLogic extends iron.Trait {
 		// });
 	}
 
+	// Устанавливает здоровье
+	public function setHealth(val : Int) {
+		var full = 'heart-full.png';
+		var empty = 'heart-empty.png';
+
+		if (val > 0) {
+			canvas.getElement("Heart1").asset = full;
+		} else {
+			canvas.getElement("Heart1").asset = empty;
+		}
+
+		if (val > 1) {
+			canvas.getElement("Heart2").asset = full;
+		} else {
+			canvas.getElement("Heart2").asset = empty;
+		}
+
+		if (val > 2) {
+			canvas.getElement("Heart3").asset = full;
+		} else {
+			canvas.getElement("Heart3").asset = empty;
+		}
+	}
+
 	// Отображает текст взаимодейтсвия с объектом
 	public function showObjectAction() {
 		canvas.getElement("ActionText").visible = true;
