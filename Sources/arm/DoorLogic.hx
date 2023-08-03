@@ -28,12 +28,6 @@ class DoorLogic extends ObjectWithActionTrait {
 		notifyOnInit(function() {
 			body = object.getTrait(RigidBody);
 		});
-
-		// notifyOnUpdate(function() {
-		// });
-
-		// notifyOnRemove(function() {
-		// });
 	}
 
 	// Запускает действие
@@ -66,5 +60,14 @@ class DoorLogic extends ObjectWithActionTrait {
 				inAction = false;
 			}
 		});
+	}
+
+	// Возвращает текст взаимодействия
+	public override function getActionText():String {
+		return if (isOpen) {
+			'[E] Закрыть дверь';
+		} else {
+			'[E] Открыть дверь';
+		}
 	}
 }

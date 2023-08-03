@@ -72,6 +72,9 @@ class PlayerLogic extends CameraController {
 	// Данные анимации стрельбы
 	var shootingAnimData:ShootAnimData;
 
+	// Текущее количество коробок с патронами
+	var currentAmmoPack = 2;
+
 	// Текущее количество патрон
 	var currentAmmo = 15;
 
@@ -99,7 +102,7 @@ class PlayerLogic extends CameraController {
 	function processActionWithObject() {
 		var physics = PhysicsWorld.active;
 
-		var from = aimNode.transform.world.getLoc();
+		var from = head.transform.world.getLoc();
 		var to = grabNode.transform.world.getLoc();
 
 		var hit = physics.rayCast(from, to);
@@ -113,10 +116,12 @@ class PlayerLogic extends CameraController {
 					for (t in actionTrait) {
 						if (t is ObjectWithActionTrait) {
 							contactObject = cast t;
+							var text = contactObject.getActionText();
+							canvas.setObjectActionText(text);
 							canvas.showObjectAction();
 							break;
 						}
-					}										
+					}
 				}
 			}
 		} else {
@@ -127,8 +132,8 @@ class PlayerLogic extends CameraController {
 		}
 
 		if (contactObject != null) {
-			var kb = Input.getKeyboard();			
-			if (kb.started(Keyboard.keyCode(KeyCode.E))) {				
+			var kb = Input.getKeyboard();
+			if (kb.started(Keyboard.keyCode(KeyCode.E))) {
 				contactObject.start();
 			}
 		}
@@ -228,6 +233,14 @@ class PlayerLogic extends CameraController {
 		animations.play('Die', () -> {}, 0.2, 1.0, false);
 	}
 
+	// Добавляет обработчики событий
+	function addEventListeners() {
+		Event.add('pick_ammo', () -> {
+			currentAmmoPack += 1;
+			canvas.setAmmoPackCount(currentAmmoPack);
+		});
+	}
+
 	// Конструктор
 	public function new() {
 		super();
@@ -255,6 +268,8 @@ class PlayerLogic extends CameraController {
 		shootingAnimData = new ShootAnimData();
 		shootingAnimData.flashNode = object.getChild("ВспышкаВыстрела");
 		shootingAnimData.flashNode.visible = false;
+
+		addEventListeners();
 
 		startIdle();
 	}

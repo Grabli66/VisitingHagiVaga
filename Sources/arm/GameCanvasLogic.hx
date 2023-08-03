@@ -34,8 +34,18 @@ class GameCanvasLogic extends iron.Trait {
 		canvas.getElement("ActionText").visible = false;
 	}
 
+	// Устанавливает текст взаимодейтсвия с объектом
+	public function setObjectActionText(val : String) {
+		canvas.getElement("ActionText").text = val;
+	}
+
 	// Устанавливает количество патронов
 	public function setAmmoCount(val:Int) {
 		canvas.getElement("PistolAmmoCount").text = '${val} / 15';
+	}
+
+	// Устанавливает количество коробок патронов
+	public function setAmmoPackCount(val:Int) {
+		canvas.getElement("AmmoBoxCount").text = '${val}';
 	}
 }
