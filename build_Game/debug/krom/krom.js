@@ -939,6 +939,48 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.animations.play("Die",function() {
 		},0.2,1.0,false);
 	}
+	startShakeCamera() {
+		let last_z;
+		let last_y;
+		let last_x;
+		let last_w;
+		last_x = 0.0;
+		last_y = 0.0;
+		last_z = 0.0;
+		last_w = 1.0;
+		let v = this.head.transform.loc;
+		last_x = v.x;
+		last_y = v.y;
+		last_z = v.z;
+		last_w = v.w;
+		let vec_z;
+		let vec_y;
+		let vec_x = 0.0;
+		vec_y = 0.0;
+		vec_z = 0.0;
+		let vec_w = 1.0;
+		let getRand = function() {
+			return kha_math_Random.getFloatIn(-1,1) / 30;
+		};
+		let _gthis = this;
+		iron_system_Tween.to({ target : this, props : { fromValue : 1.0}, duration : 0.5, tick : function() {
+			vec_x = getRand();
+			vec_y = getRand();
+			vec_z = getRand();
+			let _this = _gthis.head.transform.loc;
+			_this.x += vec_x;
+			_this.y += vec_y;
+			_this.z += vec_z;
+			_gthis.head.transform.buildMatrix();
+		}, done : function() {
+			let _this = _gthis.head.transform.loc;
+			_this.x = last_x;
+			_this.y = last_y;
+			_this.z = last_z;
+			_this.w = last_w;
+			_gthis.head.transform.buildMatrix();
+		}});
+	}
 	addEventListeners() {
 		let _gthis = this;
 		armory_system_Event.add("pick_ammo",function() {
@@ -947,6 +989,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		});
 	}
 	init() {
+		kha_math_Random.init(1000);
 		this.object.properties = new haxe_ds_StringMap();
 		this.canvas = iron_Scene.active.getTrait(arm_GameCanvasLogic);
 		this.head = this.object.getChildOfType(iron_object_CameraObject);
@@ -991,6 +1034,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		}
 		if(this.object.properties.h["is_hit"]) {
 			this.object.properties.h["is_hit"] = false;
+			this.startShakeCamera();
 			this.currentHealth -= 1;
 			if(this.currentHealth >= 0) {
 				this.canvas.setHealth(this.currentHealth);
@@ -55225,6 +55269,77 @@ Object.assign(kha_math_Matrix4.prototype, {
 	,_13: null
 	,_23: null
 	,_33: null
+});
+class kha_math_Random {
+	constructor(seed) {
+		this.d = seed;
+		this.a = 917435674;
+		this.b = 567587819;
+		this.c = -229541185;
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+		this.Get();
+	}
+	Get() {
+		let t = (this.a + this.b | 0) + this.d | 0;
+		this.d = this.d + 1 | 0;
+		this.a = this.b ^ this.b >>> 9;
+		this.b = this.c + (this.c << 3) | 0;
+		this.c = this.c << 21 | this.c >>> 11;
+		this.c = this.c + t | 0;
+		return t & 2147483647;
+	}
+	GetFloat() {
+		return this.Get() / 2147483647;
+	}
+	GetUpTo(max) {
+		return this.Get() % (max + 1);
+	}
+	GetIn(min,max) {
+		return this.Get() % (max + 1 - min) + min;
+	}
+	GetFloatIn(min,max) {
+		return min + this.GetFloat() * (max - min);
+	}
+	static init(seed) {
+		kha_math_Random.Default = new kha_math_Random(seed);
+	}
+	static get() {
+		return kha_math_Random.Default.Get();
+	}
+	static getFloat() {
+		return kha_math_Random.Default.GetFloat();
+	}
+	static getUpTo(max) {
+		return kha_math_Random.Default.GetUpTo(max);
+	}
+	static getIn(min,max) {
+		return kha_math_Random.Default.GetIn(min,max);
+	}
+	static getFloatIn(min,max) {
+		return min + kha_math_Random.Default.GetFloat() * (max - min);
+	}
+}
+$hxClasses["kha.math.Random"] = kha_math_Random;
+kha_math_Random.__name__ = true;
+Object.assign(kha_math_Random.prototype, {
+	__class__: kha_math_Random
+	,a: null
+	,b: null
+	,c: null
+	,d: null
 });
 class kha_math_Vector2 {
 	constructor(x,y) {

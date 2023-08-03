@@ -1,5 +1,7 @@
 package arm;
 
+import kha.math.Random;
+import iron.math.Vec3;
 import iron.Trait;
 import kha.input.KeyCode;
 import common.ObjectWithActionTrait;
@@ -236,6 +238,33 @@ class PlayerLogic extends CameraController {
 		animations.play('Die', () -> {}, 0.2, 1.0, false);
 	}
 
+	// Запускает тряску камеры
+	function startShakeCamera() {
+		var last = new Vec4().setFrom(head.transform.loc);
+		var vec = new Vec4();
+
+		function getRand():Float {
+			return Random.getFloatIn(-1, 1) / 30;
+		}
+
+		Tween.to({
+			target: this,
+			props: {fromValue: 1.0},
+			duration: 0.5,
+			tick: () -> {				
+				vec.x = getRand();
+				vec.y = getRand();
+				vec.z = getRand();
+				head.transform.loc.add(vec);
+				head.transform.buildMatrix();
+			},
+			done: () -> {				
+				head.transform.loc.setFrom(last);
+				head.transform.buildMatrix();				
+			}
+		});
+	}
+
 	// Добавляет обработчики событий
 	function addEventListeners() {
 		Event.add('pick_ammo', () -> {
@@ -253,6 +282,8 @@ class PlayerLogic extends CameraController {
 
 	// Инициализирует
 	function init() {
+		Random.init(1000);
+
 		object.properties = new Map<String, Dynamic>();
 
 		canvas = Scene.active.getTrait(GameCanvasLogic);
@@ -315,12 +346,14 @@ class PlayerLogic extends CameraController {
 		if (object.properties["is_hit"]) {
 			object.properties["is_hit"] = false;
 
-			currentHealth -=1;
+			startShakeCamera();
+
+			currentHealth -= 1;
 			if (currentHealth >= 0) {
 				canvas.setHealth(currentHealth);
 			}
 
-			if (currentHealth <= 0) {				
+			if (currentHealth <= 0) {
 				startDead();
 			}
 		}
@@ -337,6 +370,7 @@ class PlayerLogic extends CameraController {
 
 	var dir = new Vec4();
 
+	// Обновляет логику
 	function update() {
 		if (!body.ready)
 			return;
