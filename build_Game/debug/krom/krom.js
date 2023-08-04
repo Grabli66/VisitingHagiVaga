@@ -541,7 +541,7 @@ class arm_GameCanvasLogic extends iron_Trait {
 		this.canvas.getElement("ActionText").text = val;
 	}
 	setAmmoCount(val) {
-		this.canvas.getElement("PistolAmmoCount").text = "" + val + " / 15";
+		this.canvas.getElement("PistolAmmoCount").text = "" + val + " / " + 15;
 	}
 	setAmmoPackCount(val) {
 		this.canvas.getElement("AmmoBoxCount").text = "" + val;
@@ -872,6 +872,42 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			this.canvas.hideObjectAction();
 		}
 	}
+	processReload() {
+		let kb = iron_system_Input.getKeyboard();
+		if(this.currentAmmo < 1 && this.contactObject == null) {
+			this.canvas.setObjectActionText("[R] Перезарядить");
+			this.canvas.showObjectAction();
+		}
+		if(kb.started(iron_system_Keyboard.keyCode(82))) {
+			this.startReload();
+		}
+	}
+	startReload() {
+		if(this.currentAmmo == 15) {
+			return;
+		}
+		if(this.currentAmmoPack < 1) {
+			return;
+		}
+		if(this.state == arm_PlayerState.Reload) {
+			return;
+		}
+		this.state = arm_PlayerState.Reload;
+		let _gthis = this;
+		iron_system_Tween.to({ target : this, props : { fromValue : 1.0}, duration : 0.4, tick : function() {
+			_gthis.aimNode.transform.translate(0.0,0.0,-0.02);
+		}, done : function() {
+			iron_system_Tween.to({ target : _gthis, props : { fromValue : 1.0}, duration : 0.4, tick : function() {
+				_gthis.aimNode.transform.translate(0.0,0.0,0.02);
+			}, done : function() {
+				_gthis.currentAmmoPack -= 1;
+				_gthis.currentAmmo = 15;
+				_gthis.canvas.setAmmoCount(_gthis.currentAmmo);
+				_gthis.canvas.setAmmoPackCount(_gthis.currentAmmoPack);
+				_gthis.startIdle();
+			}});
+		}});
+	}
 	startIdle() {
 		if(this.state == arm_PlayerState.Idle) {
 			return;
@@ -887,6 +923,9 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.animations.play("Walk_Policeman",null,1.0,0.5);
 	}
 	startShooting() {
+		if(this.currentAmmo < 1) {
+			return;
+		}
 		if(this.shootingAnimData.isFiring) {
 			return;
 		}
@@ -896,9 +935,6 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			this.currentAmmo = 0;
 		}
 		this.canvas.setAmmoCount(this.currentAmmo);
-		if(this.currentAmmo < 1) {
-			return;
-		}
 		let physics = armory_trait_physics_bullet_PhysicsWorld.active;
 		let _this = this.aimNode.transform.world;
 		let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
@@ -1019,10 +1055,11 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		if(!mouse.locked) {
 			return;
 		}
-		if(this.state == arm_PlayerState.Dead) {
+		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.Reload) {
 			return;
 		}
 		this.processActionWithObject();
+		this.processReload();
 		if(mouse.moved) {
 			let d = -mouse.movementY / 250;
 			this.aimNode.transform.translate(0,0,d);
@@ -1052,7 +1089,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		if(!this.body.ready) {
 			return;
 		}
-		if(this.state == arm_PlayerState.Dead) {
+		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.Reload) {
 			return;
 		}
 		let _this = this.dir;
@@ -59192,6 +59229,7 @@ armory_trait_internal_CameraController.keyRight = "d";
 armory_trait_internal_CameraController.keyStrafeUp = "e";
 armory_trait_internal_CameraController.keyStrafeDown = "q";
 arm_PlayerLogic.__meta__ = { fields : { rotationSpeed : { prop : null}, speed : { prop : null}}};
+arm_PlayerLogic.maxAmmo = 15;
 armory_data_Config.configLoaded = false;
 armory_logicnode_LogicNode._hx_skip_constructor = false;
 armory_renderpath_Downsampler.currentMipLevel = 0;

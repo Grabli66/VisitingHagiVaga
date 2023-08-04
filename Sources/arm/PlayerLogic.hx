@@ -2,8 +2,6 @@ package arm;
 
 import armory.trait.physics.bullet.RigidBody;
 import kha.math.Random;
-import iron.math.Vec3;
-import iron.Trait;
 import kha.input.KeyCode;
 import common.ObjectWithActionTrait;
 import iron.Scene;
@@ -78,8 +76,11 @@ class PlayerLogic extends CameraController {
 	// Текущее количество коробок с патронами
 	var currentAmmoPack = 2;
 
+	// Максимальное количество патрон
+	public static inline var maxAmmo = 15;
+
 	// Текущее количество патрон
-	var currentAmmo = 15;
+	var currentAmmo = maxAmmo;
 
 	// Текущее количество жизни
 	var currentHealth = 3;
@@ -134,9 +135,64 @@ class PlayerLogic extends CameraController {
 			if (kb.started(Keyboard.keyCode(KeyCode.E))) {
 				contactObject.start();
 			}
-		} else {			
+		} else {
 			canvas.hideObjectAction();
-		}		
+		}
+	}
+
+	// Обрабатывает перезарядку
+	function processReload() {		
+		var kb = Input.getKeyboard();
+
+		if (currentAmmo < 1 && contactObject == null) {
+			canvas.setObjectActionText('[R] Перезарядить');
+			canvas.showObjectAction();
+		}
+
+		// Обрабатывает перезарядку
+		if (kb.started(Keyboard.keyCode(KeyCode.R))) {
+			startReload();
+		}
+	}
+
+	// Запускает перезарядку
+	function startReload() {		
+		if (currentAmmo == maxAmmo)
+			return;
+
+		if (currentAmmoPack < 1)
+			return;
+
+		if (state == Reload)
+			return;
+
+		state = Reload;
+
+		Tween.to({
+			target: this,
+			props: {fromValue: 1.0},
+			duration: 0.4,
+			tick: () -> {
+				aimNode.transform.translate(0.0, 0.0, -0.02);
+			},
+			done: () -> {
+				Tween.to({
+					target: this,
+					props: {fromValue: 1.0},
+					duration: 0.4,
+					tick: () -> {
+						aimNode.transform.translate(0.0, 0.0, 0.02);
+					},
+					done: () -> {
+						currentAmmoPack -= 1;
+						currentAmmo = maxAmmo;
+						canvas.setAmmoCount(currentAmmo);
+						canvas.setAmmoPackCount(currentAmmoPack);
+						startIdle();
+					}
+				});
+			}
+		});
 	}
 
 	// Переходит в состояние Idle
@@ -159,6 +215,9 @@ class PlayerLogic extends CameraController {
 
 	// Производит анимацию стрельбы
 	function startShooting() {
+		if (currentAmmo < 1)
+			return;
+
 		if (shootingAnimData.isFiring)
 			return;
 
@@ -169,10 +228,7 @@ class PlayerLogic extends CameraController {
 		if (currentAmmo < 0)
 			currentAmmo = 0;
 
-		canvas.setAmmoCount(currentAmmo);
-
-		if (currentAmmo < 1)
-			return;
+		canvas.setAmmoCount(currentAmmo);		
 
 		// Кидает луч для определения попадания
 		var physics = PhysicsWorld.active;
@@ -321,11 +377,14 @@ class PlayerLogic extends CameraController {
 			return;
 
 		// Если игрок помер
-		if (state == Dead)
+		if (state == Dead || state == Reload)
 			return;
 
 		// Обрабатывает действие
 		processActionWithObject();
+
+		// Обрабатывает перезарядку
+		processReload();
 
 		// Обрабатывает прицеливание
 		if (mouse.moved) {
@@ -372,7 +431,7 @@ class PlayerLogic extends CameraController {
 			return;
 
 		// Если игрок помер
-		if (state == Dead)
+		if (state == Dead || state == Reload)
 			return;
 
 		// Move
