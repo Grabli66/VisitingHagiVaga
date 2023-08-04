@@ -1,5 +1,6 @@
 package arm;
 
+import armory.trait.physics.bullet.RigidBody;
 import kha.math.Random;
 import iron.math.Vec3;
 import iron.Trait;
@@ -59,8 +60,8 @@ class PlayerLogic extends CameraController {
 	// Прицел для IK
 	var aimNode:Object;
 
-	// Нода что бы выпускать луч для взаимодействия с объектом
-	var grabNode:Object;
+	// Нода триггер для взаимодействия с предметами
+	var grabTrigger:RigidBody;
 
 	// Объект с которым произошёл контакт
 	var contactObject:ObjectWithActionTrait;
@@ -107,41 +108,35 @@ class PlayerLogic extends CameraController {
 	function processActionWithObject() {
 		var physics = PhysicsWorld.active;
 
-		var from = head.transform.world.getLoc();
-		var to = grabNode.transform.world.getLoc();
+		contactObject = null;
 
-		var hit = physics.rayCast(from, to);
-		var rb = (hit != null) ? hit.rb : null;
-		// Есть контакт
-		if (rb != null && rb.object != null) {
-			// Не задан объект контакта
-			if (contactObject == null) {
-				var actionTrait = rb.object.traits;
+		var contacts = physics.getContacts(grabTrigger);
+		if (contacts.length > 0) {
+			for (body in contacts) {
+				var actionTrait = body.object.traits;
 				if (actionTrait != null) {
 					for (t in actionTrait) {
 						if (t is ObjectWithActionTrait) {
 							contactObject = cast t;
-							var text = contactObject.getActionText();
-							canvas.setObjectActionText(text);
-							canvas.showObjectAction();
 							break;
 						}
 					}
 				}
 			}
-		} else {
-			if (contactObject != null) {
-				canvas.hideObjectAction();
-				contactObject = null;
-			}
 		}
 
 		if (contactObject != null) {
+			var text = contactObject.getActionText();
+			canvas.setObjectActionText(text);
+			canvas.showObjectAction();
+
 			var kb = Input.getKeyboard();
 			if (kb.started(Keyboard.keyCode(KeyCode.E))) {
 				contactObject.start();
 			}
-		}
+		} else {			
+			canvas.hideObjectAction();
+		}		
 	}
 
 	// Переходит в состояние Idle
@@ -251,16 +246,16 @@ class PlayerLogic extends CameraController {
 			target: this,
 			props: {fromValue: 1.0},
 			duration: 0.5,
-			tick: () -> {				
+			tick: () -> {
 				vec.x = getRand();
 				vec.y = getRand();
 				vec.z = getRand();
 				head.transform.loc.add(vec);
 				head.transform.buildMatrix();
 			},
-			done: () -> {				
+			done: () -> {
 				head.transform.loc.setFrom(last);
-				head.transform.buildMatrix();				
+				head.transform.buildMatrix();
 			}
 		});
 	}
@@ -294,7 +289,8 @@ class PlayerLogic extends CameraController {
 		notifyOnRemove(removed);
 
 		aimNode = object.getChild("Aim");
-		grabNode = object.getChild('Хватать');
+		grabTrigger = object.getChild('ХвататьТриггер').getTrait(RigidBody);
+
 		aimTargetNode = object.getChild("Цель");
 		armature = object.getChild("Policeman");
 		animations = findAnimation(armature);

@@ -839,15 +839,14 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 	}
 	processActionWithObject() {
 		let physics = armory_trait_physics_bullet_PhysicsWorld.active;
-		let _this = this.head.transform.world;
-		let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
-		let _this1 = this.grabNode.transform.world;
-		let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
-		let hit = physics.rayCast(from,to);
-		let rb = hit != null ? hit.rb : null;
-		if(rb != null && rb.object != null) {
-			if(this.contactObject == null) {
-				let actionTrait = rb.object.traits;
+		this.contactObject = null;
+		let contacts = physics.getContacts(this.grabTrigger);
+		if(contacts.length > 0) {
+			let _g = 0;
+			while(_g < contacts.length) {
+				let body = contacts[_g];
+				++_g;
+				let actionTrait = body.object.traits;
 				if(actionTrait != null) {
 					let _g = 0;
 					while(_g < actionTrait.length) {
@@ -855,23 +854,22 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 						++_g;
 						if(((t) instanceof common_ObjectWithActionTrait)) {
 							this.contactObject = t;
-							let text = this.contactObject.getActionText();
-							this.canvas.setObjectActionText(text);
-							this.canvas.showObjectAction();
 							break;
 						}
 					}
 				}
 			}
-		} else if(this.contactObject != null) {
-			this.canvas.hideObjectAction();
-			this.contactObject = null;
 		}
 		if(this.contactObject != null) {
+			let text = this.contactObject.getActionText();
+			this.canvas.setObjectActionText(text);
+			this.canvas.showObjectAction();
 			let kb = iron_system_Input.getKeyboard();
 			if(kb.started(iron_system_Keyboard.keyCode(69))) {
 				this.contactObject.start();
 			}
+		} else {
+			this.canvas.hideObjectAction();
 		}
 	}
 	startIdle() {
@@ -997,7 +995,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.notifyOnUpdate($bind(this,this.update));
 		this.notifyOnRemove($bind(this,this.removed));
 		this.aimNode = this.object.getChild("Aim");
-		this.grabNode = this.object.getChild("Хватать");
+		this.grabTrigger = this.object.getChild("ХвататьТриггер").getTrait(armory_trait_physics_bullet_RigidBody);
 		this.aimTargetNode = this.object.getChild("Цель");
 		this.armature = this.object.getChild("Policeman");
 		this.animations = this.findAnimation(this.armature);
@@ -1199,7 +1197,7 @@ Object.assign(arm_PlayerLogic.prototype, {
 	,armature: null
 	,animations: null
 	,aimNode: null
-	,grabNode: null
+	,grabTrigger: null
 	,contactObject: null
 	,aimTargetNode: null
 	,state: null
@@ -30274,14 +30272,27 @@ Object.assign(kha__$Assets_BlobList.prototype, {
 });
 class kha__$Assets_FontList {
 	constructor() {
-		this.names = ["font_default"];
+		this.names = ["Roboto_Regular","font_default"];
 		this.font_defaultSize = 1;
 		this.font_defaultDescription = { name : "font_default", file_sizes : [1], files : ["font_default.ttf"], type : "font"};
 		this.font_defaultName = "font_default";
 		this.font_default = null;
+		this.Roboto_RegularSize = 1;
+		this.Roboto_RegularDescription = { name : "Roboto_Regular", file_sizes : [1], files : ["Roboto-Regular.ttf"], type : "font"};
+		this.Roboto_RegularName = "Roboto_Regular";
+		this.Roboto_Regular = null;
 	}
 	get(name) {
 		return Reflect.field(this,name);
+	}
+	Roboto_RegularLoad(done,failure) {
+		kha_Assets.loadFont("Roboto_Regular",function(font) {
+			done();
+		},failure,{ fileName : "kha/internal/AssetsBuilder.hx", lineNumber : 155, className : "kha._Assets.FontList", methodName : "Roboto_RegularLoad"});
+	}
+	Roboto_RegularUnload() {
+		this.Roboto_Regular.unload();
+		this.Roboto_Regular = null;
 	}
 	font_defaultLoad(done,failure) {
 		kha_Assets.loadFont("font_default",function(font) {
@@ -30297,6 +30308,10 @@ $hxClasses["kha._Assets.FontList"] = kha__$Assets_FontList;
 kha__$Assets_FontList.__name__ = true;
 Object.assign(kha__$Assets_FontList.prototype, {
 	__class__: kha__$Assets_FontList
+	,Roboto_Regular: null
+	,Roboto_RegularName: null
+	,Roboto_RegularDescription: null
+	,Roboto_RegularSize: null
 	,font_default: null
 	,font_defaultName: null
 	,font_defaultDescription: null
