@@ -333,7 +333,7 @@ class PlayerLogic extends CameraController {
 
 	// Инициализирует
 	function init() {
-		Random.init(1000);
+		Random.init(Date.now().getUTCSeconds());
 
 		object.properties = new Map<String, Dynamic>();
 

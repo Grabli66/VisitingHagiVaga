@@ -565,7 +565,9 @@ class arm_GameMasterLogic extends iron_Trait {
 		});
 	}
 	spawnMonster() {
-		let spawnObject = iron_Scene.active.getChild("Возрождение2");
+		let col = iron_Scene.active.getGroup("МестаВозрожденияМонстра");
+		let ind = kha_math_Random.getIn(0,col.length - 1);
+		let spawnObject = col[ind];
 		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
 			iron_Scene.active.spawnObject("Монстр",null,function(o) {
 				let _this = o.transform.loc;
@@ -1054,7 +1056,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		});
 	}
 	init() {
-		kha_math_Random.init(1000);
+		kha_math_Random.init(new Date().getUTCSeconds());
 		this.object.properties = new haxe_ds_StringMap();
 		this.canvas = iron_Scene.active.getTrait(arm_GameCanvasLogic);
 		this.head = this.object.getChildOfType(iron_object_CameraObject);
