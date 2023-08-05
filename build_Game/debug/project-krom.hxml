@@ -26,8 +26,8 @@
 -D rp_antialiasing=SMAA
 -D rp_supersampling=1
 -D rp_ssgi=Off
--D rp_translucency
 -D rp_gbuffer_emission
+-D rp_translucency
 -D js-es=6
 -D arm_physics
 -D arm_bullet
@@ -62,32 +62,36 @@
 -D kha_version=1810
 -D kha_project_name=Game_1_0_0
 -js krom\krom.js.temp
-armory.trait.internal.UniformsManager
---macro keep('armory.trait.internal.UniformsManager')
-armory.trait.NavAgent
---macro keep('armory.trait.NavAgent')
-arm.node.BoneIK
---macro keep('arm.node.BoneIK')
-armory.trait.physics.bullet.PhysicsWorld
---macro keep('armory.trait.physics.bullet.PhysicsWorld')
+armory.trait.physics.bullet.RigidBody
+--macro keep('armory.trait.physics.bullet.RigidBody')
+arm.GameMasterLogic
+--macro keep('arm.GameMasterLogic')
 arm.node.FistLogic
 --macro keep('arm.node.FistLogic')
-armory.trait.NavMesh
---macro keep('armory.trait.NavMesh')
+arm.PickLogic
+--macro keep('arm.PickLogic')
+armory.trait.internal.UniformsManager
+--macro keep('armory.trait.internal.UniformsManager')
 armory.trait.internal.CanvasScript
 --macro keep('armory.trait.internal.CanvasScript')
 arm.DoorLogic
 --macro keep('arm.DoorLogic')
-armory.trait.physics.bullet.RigidBody
---macro keep('armory.trait.physics.bullet.RigidBody')
-arm.HuggyLogic
---macro keep('arm.HuggyLogic')
-arm.PlayerLogic
---macro keep('arm.PlayerLogic')
+armory.trait.NavAgent
+--macro keep('armory.trait.NavAgent')
+armory.trait.physics.bullet.PhysicsWorld
+--macro keep('armory.trait.physics.bullet.PhysicsWorld')
 armory.trait.navigation.Navigation
 --macro keep('armory.trait.navigation.Navigation')
+armory.trait.WalkNavigation
+--macro keep('armory.trait.WalkNavigation')
+arm.HuggyLogic
+--macro keep('arm.HuggyLogic')
+arm.node.BoneIK
+--macro keep('arm.node.BoneIK')
+arm.PlayerLogic
+--macro keep('arm.PlayerLogic')
 arm.GameCanvasLogic
 --macro keep('arm.GameCanvasLogic')
-arm.PickLogic
---macro keep('arm.PickLogic')
+armory.trait.NavMesh
+--macro keep('armory.trait.NavMesh')
 -main Main

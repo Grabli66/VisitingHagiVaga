@@ -178,7 +178,7 @@ class HuggyLogic extends iron.Trait {
 			object.properties = new Map<String, Dynamic>();
 			navTimerDuration = navTimerInterval;
 			var armature = object.getChild("Huggy");
-			animimations = findAnimation(armature);
+			animimations = findAnimation(armature);			
 			navAgent = object.getTrait(NavAgent);
 
 			currentHealth = maxHealth;
