@@ -25,6 +25,138 @@
 			"types": []
 		},
 		{
+			"name": "Medkit_mesh_frag",
+			"files": [
+				"Medkit_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				},
+				{
+					"name": "TBN",
+					"type": "mat3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "ImageTexture_002",
+					"type": "sampler2D"
+				},
+				{
+					"name": "ImageTexture",
+					"type": "sampler2D"
+				},
+				{
+					"name": "ImageTexture_001",
+					"type": "sampler2D"
+				}
+			],
+			"types": []
+		},
+		{
+			"name": "Medkit_mesh_vert",
+			"files": [
+				"Medkit_mesh.vert.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "pos",
+					"type": "vec4"
+				},
+				{
+					"name": "nor",
+					"type": "vec2"
+				},
+				{
+					"name": "tex",
+					"type": "vec2"
+				},
+				{
+					"name": "tang",
+					"type": "vec4"
+				},
+				{
+					"name": "gl_VertexID",
+					"type": "int"
+				},
+				{
+					"name": "gl_InstanceID",
+					"type": "int"
+				}
+			],
+			"outputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				},
+				{
+					"name": "TBN",
+					"type": "mat3"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "N",
+					"type": "mat3"
+				},
+				{
+					"name": "texUnpack",
+					"type": "float"
+				},
+				{
+					"name": "WVP",
+					"type": "mat4"
+				}
+			],
+			"types": [
+				{
+					"name": "gl_PerVertex",
+					"members": [
+						{
+							"type": "vec4",
+							"name": "gl_Position"
+						},
+						{
+							"type": "float",
+							"name": "gl_PointSize"
+						},
+						{
+							"type": "float[]",
+							"name": "gl_ClipDistance"
+						},
+						{
+							"type": "float[]",
+							"name": "gl_CullDistance"
+						}
+					]
+				}
+			]
+		},
+		{
 			"name": "Roboto_Regular",
 			"files": [
 				"Roboto-Regular.ttf"
@@ -153,6 +285,85 @@
 				}
 			],
 			"types": []
+		},
+		{
+			"name": "________________mesh_vert",
+			"files": [
+				"________________mesh.vert.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "pos",
+					"type": "vec4"
+				},
+				{
+					"name": "nor",
+					"type": "vec2"
+				},
+				{
+					"name": "tex",
+					"type": "vec2"
+				},
+				{
+					"name": "gl_VertexID",
+					"type": "int"
+				},
+				{
+					"name": "gl_InstanceID",
+					"type": "int"
+				}
+			],
+			"outputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "N",
+					"type": "mat3"
+				},
+				{
+					"name": "texUnpack",
+					"type": "float"
+				},
+				{
+					"name": "WVP",
+					"type": "mat4"
+				}
+			],
+			"types": [
+				{
+					"name": "gl_PerVertex",
+					"members": [
+						{
+							"type": "vec4",
+							"name": "gl_Position"
+						},
+						{
+							"type": "float",
+							"name": "gl_PointSize"
+						},
+						{
+							"type": "float[]",
+							"name": "gl_ClipDistance"
+						},
+						{
+							"type": "float[]",
+							"name": "gl_CullDistance"
+						}
+					]
+				}
+			]
 		},
 		{
 			"name": "________________translucent_frag",
@@ -618,9 +829,9 @@
 			"types": []
 		},
 		{
-			"name": "ammo_body_mesh_frag",
+			"name": "ammo_body_001_mesh_frag",
 			"files": [
-				"ammo_body_mesh.frag.d3d11"
+				"ammo_body_001_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -663,9 +874,9 @@
 			"types": []
 		},
 		{
-			"name": "ammo_body_mesh_vert",
+			"name": "ammo_body_001_mesh_vert",
 			"files": [
-				"ammo_body_mesh.vert.d3d11"
+				"ammo_body_001_mesh.vert.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -841,9 +1052,9 @@
 			]
 		},
 		{
-			"name": "bullet_bottom_mesh_frag",
+			"name": "bullet_bottom_001_mesh_frag",
 			"files": [
-				"bullet_bottom_mesh.frag.d3d11"
+				"bullet_bottom_001_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -886,9 +1097,9 @@
 			"types": []
 		},
 		{
-			"name": "bullet_holder_mesh_frag",
+			"name": "bullet_holder_001_mesh_frag",
 			"files": [
-				"bullet_holder_mesh.frag.d3d11"
+				"bullet_holder_001_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -1213,9 +1424,9 @@
 			"types": []
 		},
 		{
-			"name": "material_mesh_frag",
+			"name": "material_001_mesh_frag",
 			"files": [
-				"material_mesh.frag.d3d11"
+				"material_001_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -1248,85 +1459,6 @@
 				}
 			],
 			"types": []
-		},
-		{
-			"name": "material_mesh_vert",
-			"files": [
-				"material_mesh.vert.d3d11"
-			],
-			"file_sizes": [
-				1
-			],
-			"type": "shader",
-			"inputs": [
-				{
-					"name": "pos",
-					"type": "vec4"
-				},
-				{
-					"name": "nor",
-					"type": "vec2"
-				},
-				{
-					"name": "tex",
-					"type": "vec2"
-				},
-				{
-					"name": "gl_VertexID",
-					"type": "int"
-				},
-				{
-					"name": "gl_InstanceID",
-					"type": "int"
-				}
-			],
-			"outputs": [
-				{
-					"name": "wnormal",
-					"type": "vec3"
-				},
-				{
-					"name": "texCoord",
-					"type": "vec2"
-				}
-			],
-			"uniforms": [
-				{
-					"name": "N",
-					"type": "mat3"
-				},
-				{
-					"name": "texUnpack",
-					"type": "float"
-				},
-				{
-					"name": "WVP",
-					"type": "mat4"
-				}
-			],
-			"types": [
-				{
-					"name": "gl_PerVertex",
-					"members": [
-						{
-							"type": "vec4",
-							"name": "gl_Position"
-						},
-						{
-							"type": "float",
-							"name": "gl_PointSize"
-						},
-						{
-							"type": "float[]",
-							"name": "gl_ClipDistance"
-						},
-						{
-							"type": "float[]",
-							"name": "gl_CullDistance"
-						}
-					]
-				}
-			]
 		},
 		{
 			"name": "painter_colored_frag",

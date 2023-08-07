@@ -322,6 +322,11 @@ class PlayerLogic extends CameraController {
 			currentAmmoPack += 1;
 			canvas.setAmmoPackCount(currentAmmoPack);
 		});
+
+		Event.add('pick_medkit', () -> {
+			currentHealth += 1;
+			canvas.setHealth(currentHealth);
+		});
 	}
 
 	// Конструктор

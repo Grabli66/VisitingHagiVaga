@@ -22,16 +22,31 @@ class GameMasterLogic extends iron.Trait {
 		});
 	}
 
+	// Создаёт произвольную вещь, в произвольном месте
+	function spawnRandomItem() {
+		var col = Scene.active.getGroup('МестаПоявленияВещей');
+		var ind = Random.getIn(0, col.length - 1);
+		var spawnObject = col[ind];
+
+		Data.getSceneRaw("SpawnScene", function(raw:TSceneFormat) {
+			var itemName = if (Random.getIn(0, 1) > 0) {
+				'ФизикаПатронов';
+			} else {
+				'ФизикаАптечки';
+			}
+
+			Scene.active.spawnObject(itemName, spawnObject, function(o:Object) {}, true, raw);
+		});
+	}
+
 	public function new() {
 		super();
 
 		notifyOnInit(function() {
 			spawnMonster();
+			spawnRandomItem();
 		});
 
 		notifyOnUpdate(function() {});
-
-		// notifyOnRemove(function() {
-		// });
 	}
 }

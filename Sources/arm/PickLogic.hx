@@ -10,23 +10,18 @@ class PickLogic extends ObjectWithActionTrait {
 	@prop
 	public var removeObject:Object;
 
+	// Событие которое порождается при подбирании
+	@prop
+	public var pickEvent:String = 'pick_ammo';
+
 	// Конструктор
 	public function new() {
 		super();
-
-		// notifyOnInit(function() {
-		// });
-
-		// notifyOnUpdate(function() {
-		// });
-
-		// notifyOnRemove(function() {
-		// });
 	}
 
 	// Запускает действие
 	public override function start() {
-		Event.send('pick_ammo');
+		Event.send(pickEvent);
 		if (removeObject != null) {
 			removeObject.remove();
 		} else {
