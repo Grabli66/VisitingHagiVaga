@@ -1,11 +1,13 @@
 package arm;
 
+import armory.trait.physics.RigidBody;
 import armory.system.Event;
 import iron.object.BoneAnimation;
 import armory.trait.NavAgent;
 import iron.math.Vec4;
 import armory.trait.navigation.Navigation;
 import iron.object.Object;
+import armory.trait.physics.PhysicsWorld;
 
 // Состояние работы логики Хаги
 enum HuggyState {
@@ -40,6 +42,9 @@ class HuggyLogic extends iron.Trait {
 
 	// Текущее здоровье
 	var currentHealth:Int;
+
+	// Физика монстра
+	var monsterBody:RigidBody;
 
 	// Объект игрока
 	@prop
@@ -143,6 +148,27 @@ class HuggyLogic extends iron.Trait {
 		});
 	}
 
+	// Проверяет контакт с триггером открытия двери
+	function checkOpenDoorTrigger() {
+		var physics = PhysicsWorld.active;
+
+		var contacts = physics.getContacts(monsterBody);
+		if (contacts.length > 0) {
+			for (body in contacts) {
+				var actionTrait = body.object.traits;
+				if (actionTrait != null) {
+					for (t in actionTrait) {
+						if (t is DoorOpenTrigger) {
+							var contactObject:DoorOpenTrigger = cast t;
+							contactObject.trigger();
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Обновляет логику
 	function update() {
 		if (state == Dead)
@@ -170,6 +196,7 @@ class HuggyLogic extends iron.Trait {
 				startAttack();
 			} else {
 				startNavigate(from, to);
+				checkOpenDoorTrigger();
 			}
 		}
 	}
@@ -181,8 +208,9 @@ class HuggyLogic extends iron.Trait {
 			object.properties = new Map<String, Dynamic>();
 			navTimerDuration = navTimerInterval;
 			var armature = object.getChild("Huggy");
-			animimations = findAnimation(armature);			
+			animimations = findAnimation(armature);
 			navAgent = object.getTrait(NavAgent);
+			monsterBody = object.getChild('Physics').getTrait(RigidBody);
 
 			currentHealth = maxHealth;
 

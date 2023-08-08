@@ -500,9 +500,35 @@ Object.assign(arm_DoorLogic.prototype, {
 	__class__: arm_DoorLogic
 	,body: null
 	,inAction: null
-	,isOpen: null
 	,fromValue: null
 	,toValue: null
+	,isOpen: null
+});
+class arm_DoorOpenTrigger extends iron_Trait {
+	constructor() {
+		super();
+		this.notifyOnInit(function() {
+		});
+	}
+	trigger() {
+		if(this.door == null) {
+			return;
+		}
+		let doorLogic = this.door.getTrait(arm_DoorLogic);
+		if(doorLogic == null) {
+			return;
+		}
+		if(!doorLogic.isOpen) {
+			doorLogic.start();
+		}
+	}
+}
+$hxClasses["arm.DoorOpenTrigger"] = arm_DoorOpenTrigger;
+arm_DoorOpenTrigger.__name__ = true;
+arm_DoorOpenTrigger.__super__ = iron_Trait;
+Object.assign(arm_DoorOpenTrigger.prototype, {
+	__class__: arm_DoorOpenTrigger
+	,door: null
 });
 class arm_GameCanvasLogic extends iron_Trait {
 	constructor() {
@@ -630,6 +656,7 @@ class arm_HuggyLogic extends iron_Trait {
 			let armature = _gthis.object.getChild("Huggy");
 			_gthis.animimations = _gthis.findAnimation(armature);
 			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
+			_gthis.monsterBody = _gthis.object.getChild("Physics").getTrait(armory_trait_physics_bullet_RigidBody);
 			_gthis.currentHealth = _gthis.maxHealth;
 			_gthis.startWalking();
 		});
@@ -712,6 +739,30 @@ class arm_HuggyLogic extends iron_Trait {
 			agent.setPath(path);
 		});
 	}
+	checkOpenDoorTrigger() {
+		let physics = armory_trait_physics_bullet_PhysicsWorld.active;
+		let contacts = physics.getContacts(this.monsterBody);
+		if(contacts.length > 0) {
+			let _g = 0;
+			while(_g < contacts.length) {
+				let body = contacts[_g];
+				++_g;
+				let actionTrait = body.object.traits;
+				if(actionTrait != null) {
+					let _g = 0;
+					while(_g < actionTrait.length) {
+						let t = actionTrait[_g];
+						++_g;
+						if(((t) instanceof arm_DoorOpenTrigger)) {
+							let contactObject = t;
+							contactObject.trigger();
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
 	update() {
 		if(this.state == arm_HuggyState.Dead) {
 			return;
@@ -738,6 +789,7 @@ class arm_HuggyLogic extends iron_Trait {
 				this.startAttack();
 			} else {
 				this.startNavigate(from,to);
+				this.checkOpenDoorTrigger();
 			}
 		}
 	}
@@ -752,6 +804,7 @@ Object.assign(arm_HuggyLogic.prototype, {
 	,animimations: null
 	,navAgent: null
 	,currentHealth: null
+	,monsterBody: null
 	,playerObject: null
 	,speed: null
 	,attackDistance: null
@@ -59730,6 +59783,7 @@ Main.projectVersion = "1.0.0";
 Main.projectPackage = "arm";
 iron_Trait._hx_skip_constructor = false;
 arm_DoorLogic.openValue = 0.07;
+arm_DoorOpenTrigger.__meta__ = { fields : { door : { prop : null}}};
 arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}, maxHealth : { prop : null}}};
 arm_HuggyLogic.navTimerInterval = 0.5;
 arm_PickLogic.__meta__ = { fields : { removeObject : { prop : null}, pickEvent : { prop : null}}};

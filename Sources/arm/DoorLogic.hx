@@ -15,12 +15,12 @@ class DoorLogic extends ObjectWithActionTrait {
 
 	// Признак что происходит действие
 	var inAction:Bool;
-
-	// Признак что открыто
-	var isOpen:Bool;
-
+	
 	var fromValue = new Quat();
 	var toValue = new Quat();
+
+	// Признак что открыто
+	public var isOpen:Bool;
 
 	public function new() {
 		super();
