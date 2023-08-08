@@ -1,5 +1,6 @@
 package arm;
 
+import armory.system.Event;
 import iron.object.BoneAnimation;
 import armory.trait.NavAgent;
 import iron.math.Vec4;
@@ -80,6 +81,8 @@ class HuggyLogic extends iron.Trait {
 		animimations.play("Die_Huggy", () -> {
 			object.remove();
 		}, 0.2, 1.0, false);
+
+		Event.send('huggy_dead');
 	}
 
 	// Начинает повреждение

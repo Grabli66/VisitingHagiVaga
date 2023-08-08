@@ -72,4 +72,9 @@ class GameCanvasLogic extends iron.Trait {
 	public function setAmmoPackCount(val:Int) {
 		canvas.getElement("AmmoBoxCount").text = '${val}';
 	}
+
+	// Устанавливает количество смертей Хагги
+	public function setHuggyKill(val:Int) {
+		canvas.getElement("HuggyKill").text = '${val}';
+	}
 }

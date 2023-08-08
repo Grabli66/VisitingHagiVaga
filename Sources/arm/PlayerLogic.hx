@@ -85,6 +85,9 @@ class PlayerLogic extends CameraController {
 	// Текущее количество жизни
 	var currentHealth = 3;
 
+	// Количество убийств Хагги
+	var currentHuggyKill = 0;
+
 	// Скорость поворота
 	@prop
 	public var rotationSpeed = 2.0;
@@ -326,6 +329,11 @@ class PlayerLogic extends CameraController {
 		Event.add('pick_medkit', () -> {
 			currentHealth += 1;
 			canvas.setHealth(currentHealth);
+		});
+
+		Event.add('huggy_dead', () -> {
+			currentHuggyKill += 1;
+			canvas.setHuggyKill(currentHuggyKill);
 		});
 	}
 

@@ -546,6 +546,9 @@ class arm_GameCanvasLogic extends iron_Trait {
 	setAmmoPackCount(val) {
 		this.canvas.getElement("AmmoBoxCount").text = "" + val;
 	}
+	setHuggyKill(val) {
+		this.canvas.getElement("HuggyKill").text = "" + val;
+	}
 }
 $hxClasses["arm.GameCanvasLogic"] = arm_GameCanvasLogic;
 arm_GameCanvasLogic.__name__ = true;
@@ -586,7 +589,7 @@ class arm_GameMasterLogic extends iron_Trait {
 		let ind = kha_math_Random.getIn(0,col.length - 1);
 		let spawnObject = col[ind];
 		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
-			let itemName = kha_math_Random.getIn(0,1) > 0 ? "ФизикаАптечки" : "ФизикаАптечки";
+			let itemName = kha_math_Random.getIn(0,1) > 0 ? "ФизикаПатронов" : "ФизикаАптечки";
 			iron_Scene.active.spawnObject(itemName,spawnObject,function(o) {
 			},true,raw);
 		});
@@ -660,6 +663,7 @@ class arm_HuggyLogic extends iron_Trait {
 		this.animimations.play("Die_Huggy",function() {
 			_gthis.object.remove();
 		},0.2,1.0,false);
+		armory_system_Event.send("huggy_dead");
 	}
 	startHit() {
 		this.currentHealth -= 1;
@@ -863,6 +867,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.dir = new iron_math_Vec4();
 		this.speed = 3;
 		this.rotationSpeed = 2.0;
+		this.currentHuggyKill = 0;
 		this.currentHealth = 3;
 		this.currentAmmo = 15;
 		this.currentAmmoPack = 2;
@@ -1076,6 +1081,10 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		armory_system_Event.add("pick_medkit",function() {
 			_gthis.currentHealth += 1;
 			_gthis.canvas.setHealth(_gthis.currentHealth);
+		});
+		armory_system_Event.add("huggy_dead",function() {
+			_gthis.currentHuggyKill += 1;
+			_gthis.canvas.setHuggyKill(_gthis.currentHuggyKill);
 		});
 	}
 	init() {
@@ -1298,6 +1307,7 @@ Object.assign(arm_PlayerLogic.prototype, {
 	,currentAmmoPack: null
 	,currentAmmo: null
 	,currentHealth: null
+	,currentHuggyKill: null
 	,rotationSpeed: null
 	,speed: null
 	,dir: null
