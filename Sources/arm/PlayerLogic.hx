@@ -79,11 +79,14 @@ class PlayerLogic extends CameraController {
 	// Максимальное количество патрон
 	public static inline var maxAmmo = 15;
 
+	// Максимальное количество жизней
+	public static inline var maxHealth = 3;
+
 	// Текущее количество патрон
 	var currentAmmo = maxAmmo;
 
 	// Текущее количество жизни
-	var currentHealth = 3;
+	var currentHealth = maxHealth;
 
 	// Количество убийств Хагги
 	var currentHuggyKill = 0;
@@ -327,6 +330,9 @@ class PlayerLogic extends CameraController {
 		});
 
 		Event.add('pick_medkit', () -> {
+			if (currentHealth >= maxHealth)
+				return;
+			
 			currentHealth += 1;
 			canvas.setHealth(currentHealth);
 		});

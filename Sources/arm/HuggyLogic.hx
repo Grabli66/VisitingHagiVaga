@@ -1,5 +1,6 @@
 package arm;
 
+import iron.Scene;
 import armory.trait.physics.RigidBody;
 import armory.system.Event;
 import iron.object.BoneAnimation;
@@ -87,7 +88,9 @@ class HuggyLogic extends iron.Trait {
 			object.remove();
 		}, 0.2, 1.0, false);
 
+		Scene.global.properties['huggy_dead_pos'] = object.transform.loc;
 		Event.send('huggy_dead');
+		Scene.global.properties['huggy_dead_pos'] = null;		
 	}
 
 	// Начинает повреждение
