@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="GameOver.svg"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.4778115"
+     inkscape:cx="464.53827"
+     inkscape:cy="364.72852"
+     inkscape:window-width="1671"
+     inkscape:window-height="1360"
+     inkscape:window-x="663"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#f9f9f9;stroke:#03033d;stroke-width:1.2;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1"
+       width="134.95053"
+       height="65.736351"
+       x="44.393242"
+       y="45.659218"
+       ry="0"
+       inkscape:export-filename="story.png"
+       inkscape:export-xdpi="187.05243"
+       inkscape:export-ydpi="187.05243" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.25129px;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#241f1c;stroke:#000000;stroke-width:3.34136;stroke-dasharray:none;stroke-opacity:1"
+       x="80.38916"
+       y="69.427605"
+       id="text1"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.25129px;font-family:Bahnschrift;-inkscape-font-specification:Bahnschrift;fill:#241f1c;stroke:none;stroke-width:3.34136"
+         x="80.38916"
+         y="69.427605"
+         id="tspan6">ЗЛО ПОБЕДИЛО</tspan></text>
+  </g>
+</svg>

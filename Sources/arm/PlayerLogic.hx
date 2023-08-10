@@ -117,8 +117,8 @@ class PlayerLogic extends CameraController {
 
 		contactObject = null;
 
-		var contacts = physics.getContacts(grabTrigger);
-		if (contacts.length > 0) {
+		var contacts = physics.getContacts(grabTrigger);		
+		if (contacts != null && contacts.length > 0) {
 			for (body in contacts) {
 				var actionTrait = body.object.traits;
 				if (actionTrait != null) {
@@ -292,7 +292,11 @@ class PlayerLogic extends CameraController {
 			return;
 
 		state = Dead;
-		animations.play('Die', () -> {}, 0.2, 1.0, false);
+		animations.play('Die', () -> {			
+			var mouse = Input.getMouse();
+			mouse.unlock();
+			canvas.showGameOver();
+		}, 0.2, 1.0, false);
 	}
 
 	// Запускает тряску камеры
@@ -340,6 +344,10 @@ class PlayerLogic extends CameraController {
 		Event.add('huggy_dead', () -> {
 			currentHuggyKill += 1;
 			canvas.setHuggyKill(currentHuggyKill);
+		});
+
+		Event.add('restart_game', () -> {
+			iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});
 		});
 	}
 

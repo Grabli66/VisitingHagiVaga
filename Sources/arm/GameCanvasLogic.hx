@@ -77,4 +77,10 @@ class GameCanvasLogic extends iron.Trait {
 	public function setHuggyKill(val:Int) {
 		canvas.getElement("HuggyKill").text = '${val}';
 	}
+
+	// Отображает Game Over
+	public function showGameOver() {
+		canvas.getElement('GameOver').visible = true;
+		canvas.getElement('RestartButton').visible = true;
+	}
 }

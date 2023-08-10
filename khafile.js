@@ -49,6 +49,7 @@ project.addShaders("build_Game/compiled/Shaders/*.glsl", { noembed: false});
 project.addShaders("build_Game/compiled/Hlsl/*.glsl", { noprocessing: true, noembed: false });
 project.addAssets("build_Game/compiled/Assets/**", { notinlist: true });
 project.addAssets("build_Game/compiled/Shaders/*.arm", { notinlist: true });
+project.addAssets("Art/GameOver.png", { notinlist: true });
 project.addAssets("Art/Huggy/HuggyPhoto.png", { notinlist: true });
 project.addAssets("Art/Policeman/Aim.png", { notinlist: true });
 project.addAssets("Art/Policeman/Ammo.png", { notinlist: true });

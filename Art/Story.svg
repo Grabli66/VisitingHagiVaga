@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.4778115"
-     inkscape:cx="457.09483"
-     inkscape:cy="372.17196"
+     inkscape:cx="465.89162"
+     inkscape:cy="524.42412"
      inkscape:window-width="1671"
      inkscape:window-height="1360"
      inkscape:window-x="663"
@@ -45,7 +45,10 @@
        height="143.7542"
        x="44.593483"
        y="45.859459"
-       ry="0" />
+       ry="0"
+       inkscape:export-filename="story.png"
+       inkscape:export-xdpi="187.05243"
+       inkscape:export-ydpi="187.05243" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.35024px;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#241f1c;stroke:#000000;stroke-width:2.16658;stroke-dasharray:none;stroke-opacity:1"
@@ -87,24 +90,5 @@
          x="51.182865"
          y="104.68191"
          id="tspan6" /></text>
-    <rect
-       style="fill:#f9f9f9;stroke:#03033d;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
-       id="rect2"
-       width="41.878151"
-       height="13.959384"
-       x="129.79578"
-       y="169.84769"
-       ry="0" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:Cambria;-inkscape-font-specification:Cambria;fill:#241f1c;stroke:#000000;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
-       x="134.27524"
-       y="178.38794"
-       id="text4"><tspan
-         sodipodi:role="line"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:Bahnschrift;-inkscape-font-specification:Bahnschrift;fill:#241f1c;stroke:none;stroke-width:2"
-         x="134.27524"
-         y="178.38794"
-         id="tspan4">ПРОДОЛЖИТЬ</tspan></text>
   </g>
 </svg>
