@@ -1,9 +1,66 @@
 {
 	"files": [
 		{
+			"name": "Background_mesh_frag",
+			"files": [
+				"Background_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "ImageTexture",
+					"type": "sampler2D"
+				}
+			],
+			"types": []
+		},
+		{
 			"name": "HuggyHair_Inst_007_armskin_mesh_frag",
 			"files": [
 				"HuggyHair_Inst_007_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
+			"name": "HuggyHair_Inst_armskin_mesh_frag",
+			"files": [
+				"HuggyHair_Inst_armskin_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -388,12 +445,16 @@
 					"type": "vec2"
 				},
 				{
-					"name": "wposition",
-					"type": "vec3"
-				},
-				{
 					"name": "gl_FragCoord",
 					"type": "vec4"
+				},
+				{
+					"name": "wvpposition",
+					"type": "vec4"
+				},
+				{
+					"name": "wposition",
+					"type": "vec3"
 				}
 			],
 			"outputs": [
@@ -436,12 +497,20 @@
 					"type": "vec3"
 				},
 				{
-					"name": "pointPos",
-					"type": "vec3"
+					"name": "cameraProj",
+					"type": "vec2"
 				},
 				{
-					"name": "pointCol",
-					"type": "vec3"
+					"name": "cameraPlane",
+					"type": "vec2"
+				},
+				{
+					"name": "clustersData",
+					"type": "sampler2D"
+				},
+				{
+					"name": "lightsArray",
+					"type": "vec4[]"
 				}
 			],
 			"types": []
@@ -493,6 +562,10 @@
 				{
 					"name": "eyeDir",
 					"type": "vec3"
+				},
+				{
+					"name": "wvpposition",
+					"type": "vec4"
 				}
 			],
 			"uniforms": [
@@ -1220,12 +1293,16 @@
 					"type": "vec3"
 				},
 				{
-					"name": "pointPos",
-					"type": "vec3"
+					"name": "cameraPlane",
+					"type": "vec2"
 				},
 				{
-					"name": "pointCol",
-					"type": "vec3"
+					"name": "clustersData",
+					"type": "sampler2D"
+				},
+				{
+					"name": "lightsArray",
+					"type": "vec4[]"
 				}
 			],
 			"types": []
@@ -1244,6 +1321,30 @@
 			"name": "huggy_MAT_Inst_007_armskin_mesh_frag",
 			"files": [
 				"huggy_MAT_Inst_007_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
+			"name": "huggy_MAT_Inst_armskin_mesh_frag",
+			"files": [
+				"huggy_MAT_Inst_armskin_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -1289,6 +1390,30 @@
 			"types": []
 		},
 		{
+			"name": "huggy_MAT_Lips_armskin_mesh_frag",
+			"files": [
+				"huggy_MAT_Lips_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
 			"name": "lambert2_007_armskin_mesh_frag",
 			"files": [
 				"lambert2_007_armskin_mesh.frag.d3d11"
@@ -1313,9 +1438,57 @@
 			"types": []
 		},
 		{
+			"name": "lambert2_armskin_mesh_frag",
+			"files": [
+				"lambert2_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
 			"name": "lambert3_007_armskin_mesh_frag",
 			"files": [
 				"lambert3_007_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
+			"name": "lambert3_armskin_mesh_frag",
+			"files": [
+				"lambert3_armskin_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1
@@ -1947,6 +2120,30 @@
 			"types": []
 		},
 		{
+			"name": "pasted__mouth_MAT_armskin_mesh_frag",
+			"files": [
+				"pasted__mouth_MAT_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
 			"name": "pasted__saliva_MAT_007_armskin_mesh_frag",
 			"files": [
 				"pasted__saliva_MAT_007_armskin_mesh.frag.d3d11"
@@ -1971,9 +2168,57 @@
 			"types": []
 		},
 		{
+			"name": "pasted__saliva_MAT_armskin_mesh_frag",
+			"files": [
+				"pasted__saliva_MAT_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
 			"name": "pasted__teeth_MAT_007_armskin_mesh_frag",
 			"files": [
 				"pasted__teeth_MAT_007_armskin_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
+			"name": "pasted__teeth_MAT_armskin_mesh_frag",
+			"files": [
+				"pasted__teeth_MAT_armskin_mesh.frag.d3d11"
 			],
 			"file_sizes": [
 				1

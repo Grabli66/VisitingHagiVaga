@@ -7,7 +7,7 @@ class Main {
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = 65;armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;
         armory.system.Starter.main(
-            'GameScene',
+            'MenuScene',
             0,
             false,
             true,

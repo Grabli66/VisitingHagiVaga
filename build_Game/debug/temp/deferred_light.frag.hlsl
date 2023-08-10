@@ -18,8 +18,10 @@ Texture2D<float4> gbufferEmission : register(t5);
 SamplerState _gbufferEmission_sampler : register(s5);
 uniform float3 sunDir;
 uniform float3 sunCol;
-uniform float3 pointPos;
-uniform float3 pointCol;
+uniform float2 cameraPlane;
+Texture2D<float4> clustersData : register(t6);
+SamplerState _clustersData_sampler : register(s6);
+uniform float4 lightsArray[12];
 
 static float2 texCoord;
 static float3 viewRay;
@@ -127,6 +129,30 @@ float3 specularBRDF(float3 f0, float roughness, float nl, float nh, float nv, fl
     return (f_schlick(f0, vh) * (d_ggx(nh, a) * g2_approx(nl, nv, a))) / max(4.0f * nv, 9.9999997473787516355514526367188e-06f).xxx;
 }
 
+float linearize(float depth, float2 cameraProj_1)
+{
+    return cameraProj_1.y / (depth - cameraProj_1.x);
+}
+
+int getClusterI(float2 tc, float viewz, float2 cameraPlane_1)
+{
+    int sliceZ = 0;
+    float cnear = 3.0f + cameraPlane_1.x;
+    if (viewz >= cnear)
+    {
+        float z = log((viewz - cnear) + 1.0f) / log((cameraPlane_1.y - cnear) + 1.0f);
+        sliceZ = int(z * 15.0f) + 1;
+    }
+    else
+    {
+        if (viewz >= cameraPlane_1.x)
+        {
+            sliceZ = 1;
+        }
+    }
+    return (int(tc.x * 16.0f) + int(float(int(tc.y * 16.0f)) * 16.0f)) + int((float(sliceZ) * 16.0f) * 16.0f);
+}
+
 float attenuate(float dist)
 {
     return 1.0f / (dist * dist);
@@ -151,16 +177,16 @@ void frag_main()
     float4 g0 = gbuffer0.SampleLevel(_gbuffer0_sampler, texCoord, 0.0f);
     float3 n;
     n.z = (1.0f - abs(g0.x)) - abs(g0.y);
-    float2 _461;
+    float2 _538;
     if (n.z >= 0.0f)
     {
-        _461 = g0.xy;
+        _538 = g0.xy;
     }
     else
     {
-        _461 = octahedronWrap(g0.xy);
+        _538 = octahedronWrap(g0.xy);
     }
-    n = float3(_461.x, _461.y, n.z);
+    n = float3(_538.x, _538.y, n.z);
     n = normalize(n);
     float roughness = g0.z;
     float param;
@@ -187,18 +213,30 @@ void frag_main()
     envl *= (envmapStrength * occspec.x);
     fragColor = float4(envl.x, envl.y, envl.z, fragColor.w);
     float3 emission = gbufferEmission.SampleLevel(_gbufferEmission_sampler, texCoord, 0.0f).xyz;
-    float3 _628 = fragColor.xyz + emission;
-    fragColor = float4(_628.x, _628.y, _628.z, fragColor.w);
+    float3 _705 = fragColor.xyz + emission;
+    fragColor = float4(_705.x, _705.y, _705.z, fragColor.w);
     float3 sh = normalize(v + sunDir);
     float sdotNH = max(0.0f, dot(n, sh));
     float sdotVH = max(0.0f, dot(v, sh));
     float sdotNL = max(0.0f, dot(n, sunDir));
     float svisibility = 1.0f;
     float3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y);
-    float3 _676 = fragColor.xyz + ((sdirect * svisibility) * sunCol);
-    fragColor = float4(_676.x, _676.y, _676.z, fragColor.w);
-    float3 _695 = fragColor.xyz + sampleLight(p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0);
-    fragColor = float4(_695.x, _695.y, _695.z, fragColor.w);
+    float3 _753 = fragColor.xyz + ((sdirect * svisibility) * sunCol);
+    fragColor = float4(_753.x, _753.y, _753.z, fragColor.w);
+    float2 param_2 = cameraProj;
+    float viewz = linearize((depth * 0.5f) + 0.5f, param_2);
+    float2 param_3 = texCoord;
+    float param_4 = viewz;
+    float2 param_5 = cameraPlane;
+    int clusterI = getClusterI(param_3, param_4, param_5);
+    int numLights = int(clustersData.Load(int3(int2(clusterI, 0), 0)).x * 255.0f);
+    viewz += (clustersData.SampleLevel(_clustersData_sampler, 0.0f.xx, 0.0f).x * 9.999999717180685365747194737196e-10f);
+    for (int i = 0; i < min(numLights, 4); i++)
+    {
+        int li = int(clustersData.Load(int3(int2(clusterI, i + 1), 0)).x * 255.0f);
+        float3 _838 = fragColor.xyz + sampleLight(p, n, v, dotNV, lightsArray[li * 3].xyz, lightsArray[(li * 3) + 1].xyz, albedo, roughness, occspec.y, f0);
+        fragColor = float4(_838.x, _838.y, _838.z, fragColor.w);
+    }
     fragColor.w = 1.0f;
 }
 
