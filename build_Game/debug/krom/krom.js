@@ -854,6 +854,11 @@ class arm_MenuCanvasLogic extends iron_Trait {
 		this.notifyOnInit(function() {
 			_gthis.canvas = iron_Scene.active.getTrait(armory_trait_internal_CanvasScript);
 			armory_system_Event.add("start_game",function() {
+				_gthis.canvas.getElement("StartButton").visible = false;
+				_gthis.canvas.getElement("StoryImage").visible = true;
+				_gthis.canvas.getElement("NextButton").visible = true;
+			});
+			armory_system_Event.add("story_next",function() {
 				iron_Scene.setActive("GameScene",function(o) {
 				});
 			});

@@ -27,7 +27,15 @@ class MenuCanvasLogic extends iron.Trait {
 
 		notifyOnInit(function() {
 			canvas = Scene.active.getTrait(CanvasScript);
+
 			Event.add('start_game', () -> {
+				canvas.getElement('StartButton').visible = false;
+
+				canvas.getElement('StoryImage').visible = true;
+				canvas.getElement('NextButton').visible = true;
+			});
+
+			Event.add('story_next', () -> {
 				iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});
 			});
 
