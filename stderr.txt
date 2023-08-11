@@ -1,9 +1,0 @@
-TypeError: Cannot read property 'bytes' of undefined
-    at new kha_graphics4_FragmentShader (<anonymous>:49662:55)
-    at Function.init (<anonymous>:31143:54)
-    at Function.init (<anonymous>:31686:15)
-    at Function.start (<anonymous>:31366:18)
-    at start (<anonymous>:2976:15)
-    at Function.main (<anonymous>:3009:3)
-    at Function.main (<anonymous>:79:25)
-    at <anonymous>:58638:6
