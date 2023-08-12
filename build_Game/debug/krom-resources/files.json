@@ -34,6 +34,85 @@
 			"types": []
 		},
 		{
+			"name": "Background_mesh_vert",
+			"files": [
+				"Background_mesh.vert.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "pos",
+					"type": "vec4"
+				},
+				{
+					"name": "nor",
+					"type": "vec2"
+				},
+				{
+					"name": "tex",
+					"type": "vec2"
+				},
+				{
+					"name": "gl_VertexID",
+					"type": "int"
+				},
+				{
+					"name": "gl_InstanceID",
+					"type": "int"
+				}
+			],
+			"outputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "N",
+					"type": "mat3"
+				},
+				{
+					"name": "texUnpack",
+					"type": "float"
+				},
+				{
+					"name": "WVP",
+					"type": "mat4"
+				}
+			],
+			"types": [
+				{
+					"name": "gl_PerVertex",
+					"members": [
+						{
+							"type": "vec4",
+							"name": "gl_Position"
+						},
+						{
+							"type": "float",
+							"name": "gl_PointSize"
+						},
+						{
+							"type": "float[]",
+							"name": "gl_ClipDistance"
+						},
+						{
+							"type": "float[]",
+							"name": "gl_CullDistance"
+						}
+					]
+				}
+			]
+		},
+		{
 			"name": "HuggyHair_Inst_007_armskin_mesh_frag",
 			"files": [
 				"HuggyHair_Inst_007_armskin_mesh.frag.d3d11"
@@ -311,6 +390,72 @@
 			]
 		},
 		{
+			"name": "_______1_mesh_frag",
+			"files": [
+				"_______1_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "ImageTexture",
+					"type": "sampler2D"
+				}
+			],
+			"types": []
+		},
+		{
+			"name": "________1_mesh_frag",
+			"files": [
+				"________1_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "ImageTexture",
+					"type": "sampler2D"
+				}
+			],
+			"types": []
+		},
+		{
 			"name": "________________mesh_frag",
 			"files": [
 				"________________mesh.frag.d3d11"
@@ -342,85 +487,6 @@
 				}
 			],
 			"types": []
-		},
-		{
-			"name": "________________mesh_vert",
-			"files": [
-				"________________mesh.vert.d3d11"
-			],
-			"file_sizes": [
-				1
-			],
-			"type": "shader",
-			"inputs": [
-				{
-					"name": "pos",
-					"type": "vec4"
-				},
-				{
-					"name": "nor",
-					"type": "vec2"
-				},
-				{
-					"name": "tex",
-					"type": "vec2"
-				},
-				{
-					"name": "gl_VertexID",
-					"type": "int"
-				},
-				{
-					"name": "gl_InstanceID",
-					"type": "int"
-				}
-			],
-			"outputs": [
-				{
-					"name": "wnormal",
-					"type": "vec3"
-				},
-				{
-					"name": "texCoord",
-					"type": "vec2"
-				}
-			],
-			"uniforms": [
-				{
-					"name": "N",
-					"type": "mat3"
-				},
-				{
-					"name": "texUnpack",
-					"type": "float"
-				},
-				{
-					"name": "WVP",
-					"type": "mat4"
-				}
-			],
-			"types": [
-				{
-					"name": "gl_PerVertex",
-					"members": [
-						{
-							"type": "vec4",
-							"name": "gl_Position"
-						},
-						{
-							"type": "float",
-							"name": "gl_PointSize"
-						},
-						{
-							"type": "float[]",
-							"name": "gl_ClipDistance"
-						},
-						{
-							"type": "float[]",
-							"name": "gl_CullDistance"
-						}
-					]
-				}
-			]
 		},
 		{
 			"name": "________________translucent_frag",
