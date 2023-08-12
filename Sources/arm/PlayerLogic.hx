@@ -242,8 +242,16 @@ class PlayerLogic extends CameraController {
 		var from = aimNode.transform.world.getLoc();
 		var to = aimTargetNode.transform.world.getLoc();
 
-		var hit = physics.rayCast(from, to);
+		// Группа коллизии
+		var group = 3;
+		// Маска коллизии
+		var mask = 2;
+
+		var hit = physics.rayCast(from, to, group, mask);
 		var rb = (hit != null) ? hit.rb : null;
+		if (rb != null)
+			trace(rb.object.name);
+
 		if (rb != null && rb.object.name == 'Physics') {
 			var parent = rb.object.parent;
 			if (parent.name == "Монстр") {
@@ -251,6 +259,7 @@ class PlayerLogic extends CameraController {
 			}
 		}
 
+		// Эмулирует отдачу от выстрела
 		Tween.to({
 			target: this,
 			props: {fromValue: 1.0},

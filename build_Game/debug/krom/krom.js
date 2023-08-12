@@ -1134,8 +1134,13 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
 		let _this1 = this.aimTargetNode.transform.world;
 		let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
-		let hit = physics.rayCast(from,to);
+		let group = 3;
+		let mask = 2;
+		let hit = physics.rayCast(from,to,group,mask);
 		let rb = hit != null ? hit.rb : null;
+		if(rb != null) {
+			haxe_Log.trace(rb.object.name,{ fileName : "arm/PlayerLogic.hx", lineNumber : 253, className : "arm.PlayerLogic", methodName : "startShooting"});
+		}
 		if(rb != null && rb.object.name == "Physics") {
 			let parent = rb.object.parent;
 			if(parent.name == "Монстр") {
