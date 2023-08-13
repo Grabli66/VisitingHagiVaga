@@ -1265,6 +1265,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		}
 		let mouse = iron_system_Input.getMouse();
 		let kb = iron_system_Input.getKeyboard();
+		let mouseLocked = mouse.locked;
 		if(mouse.started() && !mouse.locked) {
 			mouse.lock();
 		} else if(kb.started("escape") && mouse.locked) {
@@ -1282,7 +1283,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			let d = -mouse.movementY / 250;
 			this.aimNode.transform.translate(0,0,d);
 		}
-		if(mouse.started()) {
+		if(mouse.started() && mouseLocked) {
 			this.startShooting();
 		}
 		if(this.object.properties.h["is_hit"]) {

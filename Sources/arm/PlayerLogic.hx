@@ -220,7 +220,7 @@ class PlayerLogic extends CameraController {
 	}
 
 	// Производит анимацию стрельбы
-	function startShooting() {
+	function startShooting() {		
 		if (currentAmmo < 1)
 			return;
 
@@ -404,6 +404,9 @@ class PlayerLogic extends CameraController {
 		var mouse = Input.getMouse();
 		var kb = Input.getKeyboard();
 
+		// Признак что мышка захвачена
+		var mouseLocked = mouse.locked;
+
 		if (mouse.started() && !mouse.locked)
 			mouse.lock();
 		else if (kb.started("escape") && mouse.locked)
@@ -429,7 +432,7 @@ class PlayerLogic extends CameraController {
 		}
 
 		// Обрабатывает выстрел
-		if (mouse.started()) {
+		if (mouse.started() && mouseLocked) {
 			startShooting();
 		}
 
