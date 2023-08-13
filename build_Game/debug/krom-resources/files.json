@@ -870,6 +870,39 @@
 			"types": []
 		},
 		{
+			"name": "________mesh_frag",
+			"files": [
+				"________mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "ImageTexture",
+					"type": "sampler2D"
+				}
+			],
+			"types": []
+		},
+		{
 			"name": "______armskin_mesh_frag",
 			"files": [
 				"______armskin_mesh.frag.d3d11"
@@ -1010,51 +1043,6 @@
 			"types": []
 		},
 		{
-			"name": "ammo_body_001_mesh_frag",
-			"files": [
-				"ammo_body_001_mesh.frag.d3d11"
-			],
-			"file_sizes": [
-				1
-			],
-			"type": "shader",
-			"inputs": [
-				{
-					"name": "wnormal",
-					"type": "vec3"
-				},
-				{
-					"name": "texCoord",
-					"type": "vec2"
-				},
-				{
-					"name": "TBN",
-					"type": "mat3"
-				}
-			],
-			"outputs": [
-				{
-					"name": "fragColor",
-					"type": "vec4[]"
-				}
-			],
-			"uniforms": [
-				{
-					"name": "ImageTexture_002",
-					"type": "sampler2D"
-				},
-				{
-					"name": "ImageTexture",
-					"type": "sampler2D"
-				},
-				{
-					"name": "ImageTexture_001",
-					"type": "sampler2D"
-				}
-			],
-			"types": []
-		},
-		{
 			"name": "armdefault_mesh_frag",
 			"files": [
 				"armdefault_mesh.frag.d3d11"
@@ -1144,96 +1132,6 @@
 					]
 				}
 			]
-		},
-		{
-			"name": "bullet_bottom_001_mesh_frag",
-			"files": [
-				"bullet_bottom_001_mesh.frag.d3d11"
-			],
-			"file_sizes": [
-				1
-			],
-			"type": "shader",
-			"inputs": [
-				{
-					"name": "wnormal",
-					"type": "vec3"
-				},
-				{
-					"name": "texCoord",
-					"type": "vec2"
-				},
-				{
-					"name": "TBN",
-					"type": "mat3"
-				}
-			],
-			"outputs": [
-				{
-					"name": "fragColor",
-					"type": "vec4[]"
-				}
-			],
-			"uniforms": [
-				{
-					"name": "ImageTexture_002",
-					"type": "sampler2D"
-				},
-				{
-					"name": "ImageTexture",
-					"type": "sampler2D"
-				},
-				{
-					"name": "ImageTexture_001",
-					"type": "sampler2D"
-				}
-			],
-			"types": []
-		},
-		{
-			"name": "bullet_holder_001_mesh_frag",
-			"files": [
-				"bullet_holder_001_mesh.frag.d3d11"
-			],
-			"file_sizes": [
-				1
-			],
-			"type": "shader",
-			"inputs": [
-				{
-					"name": "wnormal",
-					"type": "vec3"
-				},
-				{
-					"name": "texCoord",
-					"type": "vec2"
-				},
-				{
-					"name": "TBN",
-					"type": "mat3"
-				}
-			],
-			"outputs": [
-				{
-					"name": "fragColor",
-					"type": "vec4[]"
-				}
-			],
-			"uniforms": [
-				{
-					"name": "ImageTexture_002",
-					"type": "sampler2D"
-				},
-				{
-					"name": "ImageTexture",
-					"type": "sampler2D"
-				},
-				{
-					"name": "ImageTexture_001",
-					"type": "sampler2D"
-				}
-			],
-			"types": []
 		},
 		{
 			"name": "compositor_pass_frag",
@@ -1495,43 +1393,6 @@
 				}
 			],
 			"uniforms": [],
-			"types": []
-		},
-		{
-			"name": "material_001_mesh_frag",
-			"files": [
-				"material_001_mesh.frag.d3d11"
-			],
-			"file_sizes": [
-				1
-			],
-			"type": "shader",
-			"inputs": [
-				{
-					"name": "wnormal",
-					"type": "vec3"
-				},
-				{
-					"name": "texCoord",
-					"type": "vec2"
-				}
-			],
-			"outputs": [
-				{
-					"name": "fragColor",
-					"type": "vec4[]"
-				}
-			],
-			"uniforms": [
-				{
-					"name": "ImageTexture_001",
-					"type": "sampler2D"
-				},
-				{
-					"name": "ImageTexture",
-					"type": "sampler2D"
-				}
-			],
 			"types": []
 		},
 		{
