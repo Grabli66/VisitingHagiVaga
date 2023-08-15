@@ -1,14 +1,22 @@
 package arm;
 
-import iron.object.BoneAnimation;
+import iron.system.Input;
 import iron.object.Object;
 import armory.system.Event;
 import iron.Scene;
 import armory.trait.internal.CanvasScript;
 
+// Состояние меню
+enum MenuCanvasLogicState {
+	Init;
+	Start;
+}
+
 class MenuCanvasLogic extends iron.Trait {
 	// UI
 	var canvas:CanvasScript;
+
+	var state = MenuCanvasLogicState.Init;
 
 	public function new() {
 		super();
@@ -27,8 +35,18 @@ class MenuCanvasLogic extends iron.Trait {
 			});			
 		});
 
-		// notifyOnUpdate(function() {
-		// });
+		 notifyOnUpdate(function() {
+			var mouse = Input.getMouse();
+			if (mouse.started()) {
+				switch (state) {
+					case Init:
+						state = Start;
+						Event.send("start_game");
+					case Start:
+						Event.send("story_next");
+				}
+			}
+		 });
 
 		// notifyOnRemove(function() {
 		// });

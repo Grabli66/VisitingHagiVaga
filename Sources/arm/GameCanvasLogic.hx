@@ -8,13 +8,16 @@ import armory.trait.internal.CanvasScript;
 // Логика работы UI
 class GameCanvasLogic extends iron.Trait {
 	// UI
-	var canvas:CanvasScript;
+	var canvas:CanvasScript;	
+
+	var isCanvasReady = false;
 
 	public function new() {
 		super();
 
 		notifyOnInit(function() {
 			canvas = Scene.active.getTrait(CanvasScript);
+			isCanvasReady = true;
 		});
 
 		// notifyOnUpdate(function() {
@@ -22,6 +25,11 @@ class GameCanvasLogic extends iron.Trait {
 
 		// notifyOnRemove(function() {
 		// });
+	}
+
+	// Признак что логика готова
+	public function isReady() {
+		return isCanvasReady;
 	}
 
 	// Устанавливает здоровье
@@ -54,7 +62,7 @@ class GameCanvasLogic extends iron.Trait {
 	}
 
 	// Скрывает текст взаимодейтсвия с объектом
-	public function hideObjectAction() {
+	public function hideObjectAction() {		
 		canvas.getElement("ActionText").visible = false;
 	}
 

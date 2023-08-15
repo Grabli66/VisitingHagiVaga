@@ -1,5 +1,6 @@
 package arm;
 
+import armory.trait.internal.CanvasScript;
 import armory.trait.physics.bullet.RigidBody;
 import kha.math.Random;
 import kha.input.KeyCode;
@@ -112,7 +113,10 @@ class PlayerLogic extends CameraController {
 	}
 
 	// Обрабатывает взаимодействие с объектом
-	function processActionWithObject() {
+	function processActionWithObject() {	
+		if (!canvas.isReady())
+			return;
+		
 		var physics = PhysicsWorld.active;
 
 		contactObject = null;
@@ -248,9 +252,7 @@ class PlayerLogic extends CameraController {
 		var mask = 2;
 
 		var hit = physics.rayCast(from, to, group, mask);
-		var rb = (hit != null) ? hit.rb : null;
-		if (rb != null)
-			trace(rb.object.name);
+		var rb = (hit != null) ? hit.rb : null;		
 
 		if (rb != null && rb.object.name == 'Physics') {
 			var parent = rb.object.parent;

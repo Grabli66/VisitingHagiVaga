@@ -532,11 +532,22 @@ Object.assign(arm_DoorOpenTrigger.prototype, {
 });
 class arm_GameCanvasLogic extends iron_Trait {
 	constructor() {
+		iron_Trait._hx_skip_constructor = true;
 		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.isCanvasReady = false;
+		super._hx_constructor();
 		let _gthis = this;
 		this.notifyOnInit(function() {
 			_gthis.canvas = iron_Scene.active.getTrait(armory_trait_internal_CanvasScript);
+			_gthis.isCanvasReady = true;
 		});
+	}
+	isReady() {
+		return this.isCanvasReady;
 	}
 	setHealth(val) {
 		let full = "heart-full.png";
@@ -586,6 +597,7 @@ arm_GameCanvasLogic.__super__ = iron_Trait;
 Object.assign(arm_GameCanvasLogic.prototype, {
 	__class__: arm_GameCanvasLogic
 	,canvas: null
+	,isCanvasReady: null
 });
 class arm_GameMasterLogic extends iron_Trait {
 	constructor() {
@@ -851,9 +863,21 @@ Object.assign(arm_HuggyLogic.prototype, {
 	,attackDistance: null
 	,maxHealth: null
 });
+var arm_MenuCanvasLogicState = $hxEnums["arm.MenuCanvasLogicState"] = { __ename__:true,__constructs__:null
+	,Init: {_hx_name:"Init",_hx_index:0,__enum__:"arm.MenuCanvasLogicState",toString:$estr}
+	,Start: {_hx_name:"Start",_hx_index:1,__enum__:"arm.MenuCanvasLogicState",toString:$estr}
+};
+arm_MenuCanvasLogicState.__constructs__ = [arm_MenuCanvasLogicState.Init,arm_MenuCanvasLogicState.Start];
 class arm_MenuCanvasLogic extends iron_Trait {
 	constructor() {
+		iron_Trait._hx_skip_constructor = true;
 		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.state = arm_MenuCanvasLogicState.Init;
+		super._hx_constructor();
 		let _gthis = this;
 		this.notifyOnInit(function() {
 			_gthis.canvas = iron_Scene.active.getTrait(armory_trait_internal_CanvasScript);
@@ -866,6 +890,20 @@ class arm_MenuCanvasLogic extends iron_Trait {
 				});
 			});
 		});
+		this.notifyOnUpdate(function() {
+			let mouse = iron_system_Input.getMouse();
+			if(mouse.started()) {
+				switch(_gthis.state._hx_index) {
+				case 0:
+					_gthis.state = arm_MenuCanvasLogicState.Start;
+					armory_system_Event.send("start_game");
+					break;
+				case 1:
+					armory_system_Event.send("story_next");
+					break;
+				}
+			}
+		});
 	}
 }
 $hxClasses["arm.MenuCanvasLogic"] = arm_MenuCanvasLogic;
@@ -874,6 +912,7 @@ arm_MenuCanvasLogic.__super__ = iron_Trait;
 Object.assign(arm_MenuCanvasLogic.prototype, {
 	__class__: arm_MenuCanvasLogic
 	,canvas: null
+	,state: null
 });
 class arm_PickLogic extends common_ObjectWithActionTrait {
 	constructor() {
@@ -1013,6 +1052,9 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		return null;
 	}
 	processActionWithObject() {
+		if(!this.canvas.isReady()) {
+			return;
+		}
 		let physics = armory_trait_physics_bullet_PhysicsWorld.active;
 		this.contactObject = null;
 		let contacts = physics.getContacts(this.grabTrigger);
@@ -1119,9 +1161,6 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		let mask = 2;
 		let hit = physics.rayCast(from,to,group,mask);
 		let rb = hit != null ? hit.rb : null;
-		if(rb != null) {
-			haxe_Log.trace(rb.object.name,{ fileName : "arm/PlayerLogic.hx", lineNumber : 253, className : "arm.PlayerLogic", methodName : "startShooting"});
-		}
 		if(rb != null && rb.object.name == "Physics") {
 			let parent = rb.object.parent;
 			if(parent.name == "Монстр") {
@@ -33024,30 +33063,30 @@ class kha_Shaders {
 		blobs1.push(kha_internal_BytesBlob.fromBytes(bytes1));
 		kha_Shaders.Background_mesh_frag = new kha_graphics4_FragmentShader(blobs1,["Background_mesh.frag.d3d11"]);
 		let blobs2 = [];
-		let data2 = Reflect.field(kha_Shaders,"Background_mesh_vertData" + 0);
+		let data2 = Reflect.field(kha_Shaders,"Black1_armskin_mesh_fragData" + 0);
 		let bytes2 = haxe_Unserializer.run(data2);
 		blobs2.push(kha_internal_BytesBlob.fromBytes(bytes2));
-		kha_Shaders.Background_mesh_vert = new kha_graphics4_VertexShader(blobs2,["Background_mesh.vert.d3d11"]);
+		kha_Shaders.Black1_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs2,["Black1_armskin_mesh.frag.d3d11"]);
 		let blobs3 = [];
-		let data3 = Reflect.field(kha_Shaders,"Black1_armskin_mesh_fragData" + 0);
+		let data3 = Reflect.field(kha_Shaders,"Black1_mesh_fragData" + 0);
 		let bytes3 = haxe_Unserializer.run(data3);
 		blobs3.push(kha_internal_BytesBlob.fromBytes(bytes3));
-		kha_Shaders.Black1_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs3,["Black1_armskin_mesh.frag.d3d11"]);
+		kha_Shaders.Black1_mesh_frag = new kha_graphics4_FragmentShader(blobs3,["Black1_mesh.frag.d3d11"]);
 		let blobs4 = [];
-		let data4 = Reflect.field(kha_Shaders,"Black1_mesh_fragData" + 0);
+		let data4 = Reflect.field(kha_Shaders,"Blue1_armskin_mesh_fragData" + 0);
 		let bytes4 = haxe_Unserializer.run(data4);
 		blobs4.push(kha_internal_BytesBlob.fromBytes(bytes4));
-		kha_Shaders.Black1_mesh_frag = new kha_graphics4_FragmentShader(blobs4,["Black1_mesh.frag.d3d11"]);
+		kha_Shaders.Blue1_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs4,["Blue1_armskin_mesh.frag.d3d11"]);
 		let blobs5 = [];
-		let data5 = Reflect.field(kha_Shaders,"Blue1_armskin_mesh_fragData" + 0);
+		let data5 = Reflect.field(kha_Shaders,"Blue2_armskin_mesh_fragData" + 0);
 		let bytes5 = haxe_Unserializer.run(data5);
 		blobs5.push(kha_internal_BytesBlob.fromBytes(bytes5));
-		kha_Shaders.Blue1_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs5,["Blue1_armskin_mesh.frag.d3d11"]);
+		kha_Shaders.Blue2_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs5,["Blue2_armskin_mesh.frag.d3d11"]);
 		let blobs6 = [];
-		let data6 = Reflect.field(kha_Shaders,"Blue2_armskin_mesh_fragData" + 0);
+		let data6 = Reflect.field(kha_Shaders,"Blue2_mesh_fragData" + 0);
 		let bytes6 = haxe_Unserializer.run(data6);
 		blobs6.push(kha_internal_BytesBlob.fromBytes(bytes6));
-		kha_Shaders.Blue2_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs6,["Blue2_armskin_mesh.frag.d3d11"]);
+		kha_Shaders.Blue2_mesh_frag = new kha_graphics4_FragmentShader(blobs6,["Blue2_mesh.frag.d3d11"]);
 		let blobs7 = [];
 		let data7 = Reflect.field(kha_Shaders,"Brick1_mesh_fragData" + 0);
 		let bytes7 = haxe_Unserializer.run(data7);
@@ -33064,215 +33103,235 @@ class kha_Shaders {
 		blobs9.push(kha_internal_BytesBlob.fromBytes(bytes9));
 		kha_Shaders.Green1_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs9,["Green1_armskin_mesh.frag.d3d11"]);
 		let blobs10 = [];
-		let data10 = Reflect.field(kha_Shaders,"GunFire_mesh_fragData" + 0);
+		let data10 = Reflect.field(kha_Shaders,"Green1_mesh_fragData" + 0);
 		let bytes10 = haxe_Unserializer.run(data10);
 		blobs10.push(kha_internal_BytesBlob.fromBytes(bytes10));
-		kha_Shaders.GunFire_mesh_frag = new kha_graphics4_FragmentShader(blobs10,["GunFire_mesh.frag.d3d11"]);
+		kha_Shaders.Green1_mesh_frag = new kha_graphics4_FragmentShader(blobs10,["Green1_mesh.frag.d3d11"]);
 		let blobs11 = [];
-		let data11 = Reflect.field(kha_Shaders,"GunFire_translucent_fragData" + 0);
+		let data11 = Reflect.field(kha_Shaders,"GunFire_mesh_fragData" + 0);
 		let bytes11 = haxe_Unserializer.run(data11);
 		blobs11.push(kha_internal_BytesBlob.fromBytes(bytes11));
-		kha_Shaders.GunFire_translucent_frag = new kha_graphics4_FragmentShader(blobs11,["GunFire_translucent.frag.d3d11"]);
+		kha_Shaders.GunFire_mesh_frag = new kha_graphics4_FragmentShader(blobs11,["GunFire_mesh.frag.d3d11"]);
 		let blobs12 = [];
-		let data12 = Reflect.field(kha_Shaders,"GunFire_translucent_vertData" + 0);
+		let data12 = Reflect.field(kha_Shaders,"GunFire_translucent_fragData" + 0);
 		let bytes12 = haxe_Unserializer.run(data12);
 		blobs12.push(kha_internal_BytesBlob.fromBytes(bytes12));
-		kha_Shaders.GunFire_translucent_vert = new kha_graphics4_VertexShader(blobs12,["GunFire_translucent.vert.d3d11"]);
+		kha_Shaders.GunFire_translucent_frag = new kha_graphics4_FragmentShader(blobs12,["GunFire_translucent.frag.d3d11"]);
 		let blobs13 = [];
-		let data13 = Reflect.field(kha_Shaders,"Medkit_mesh_fragData" + 0);
+		let data13 = Reflect.field(kha_Shaders,"GunFire_translucent_vertData" + 0);
 		let bytes13 = haxe_Unserializer.run(data13);
 		blobs13.push(kha_internal_BytesBlob.fromBytes(bytes13));
-		kha_Shaders.Medkit_mesh_frag = new kha_graphics4_FragmentShader(blobs13,["Medkit_mesh.frag.d3d11"]);
+		kha_Shaders.GunFire_translucent_vert = new kha_graphics4_VertexShader(blobs13,["GunFire_translucent.vert.d3d11"]);
 		let blobs14 = [];
-		let data14 = Reflect.field(kha_Shaders,"PlayerSkin_armskin_mesh_fragData" + 0);
+		let data14 = Reflect.field(kha_Shaders,"Medkit_mesh_fragData" + 0);
 		let bytes14 = haxe_Unserializer.run(data14);
 		blobs14.push(kha_internal_BytesBlob.fromBytes(bytes14));
-		kha_Shaders.PlayerSkin_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs14,["PlayerSkin_armskin_mesh.frag.d3d11"]);
+		kha_Shaders.Medkit_mesh_frag = new kha_graphics4_FragmentShader(blobs14,["Medkit_mesh.frag.d3d11"]);
 		let blobs15 = [];
-		let data15 = Reflect.field(kha_Shaders,"Red1_armskin_mesh_fragData" + 0);
+		let data15 = Reflect.field(kha_Shaders,"Palette_001_mesh_fragData" + 0);
 		let bytes15 = haxe_Unserializer.run(data15);
 		blobs15.push(kha_internal_BytesBlob.fromBytes(bytes15));
-		kha_Shaders.Red1_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs15,["Red1_armskin_mesh.frag.d3d11"]);
+		kha_Shaders.Palette_001_mesh_frag = new kha_graphics4_FragmentShader(blobs15,["Palette_001_mesh.frag.d3d11"]);
 		let blobs16 = [];
-		let data16 = Reflect.field(kha_Shaders,"Red2_armskin_mesh_fragData" + 0);
+		let data16 = Reflect.field(kha_Shaders,"PlayerSkin_armskin_mesh_fragData" + 0);
 		let bytes16 = haxe_Unserializer.run(data16);
 		blobs16.push(kha_internal_BytesBlob.fromBytes(bytes16));
-		kha_Shaders.Red2_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs16,["Red2_armskin_mesh.frag.d3d11"]);
+		kha_Shaders.PlayerSkin_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs16,["PlayerSkin_armskin_mesh.frag.d3d11"]);
 		let blobs17 = [];
-		let data17 = Reflect.field(kha_Shaders,"Stone1_mesh_fragData" + 0);
+		let data17 = Reflect.field(kha_Shaders,"Red1_armskin_mesh_fragData" + 0);
 		let bytes17 = haxe_Unserializer.run(data17);
 		blobs17.push(kha_internal_BytesBlob.fromBytes(bytes17));
-		kha_Shaders.Stone1_mesh_frag = new kha_graphics4_FragmentShader(blobs17,["Stone1_mesh.frag.d3d11"]);
+		kha_Shaders.Red1_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs17,["Red1_armskin_mesh.frag.d3d11"]);
 		let blobs18 = [];
-		let data18 = Reflect.field(kha_Shaders,"WallLevel1_mesh_fragData" + 0);
+		let data18 = Reflect.field(kha_Shaders,"Red1_mesh_fragData" + 0);
 		let bytes18 = haxe_Unserializer.run(data18);
 		blobs18.push(kha_internal_BytesBlob.fromBytes(bytes18));
-		kha_Shaders.WallLevel1_mesh_frag = new kha_graphics4_FragmentShader(blobs18,["WallLevel1_mesh.frag.d3d11"]);
+		kha_Shaders.Red1_mesh_frag = new kha_graphics4_FragmentShader(blobs18,["Red1_mesh.frag.d3d11"]);
 		let blobs19 = [];
-		let data19 = Reflect.field(kha_Shaders,"WallLevel2_mesh_fragData" + 0);
+		let data19 = Reflect.field(kha_Shaders,"Red2_armskin_mesh_fragData" + 0);
 		let bytes19 = haxe_Unserializer.run(data19);
 		blobs19.push(kha_internal_BytesBlob.fromBytes(bytes19));
-		kha_Shaders.WallLevel2_mesh_frag = new kha_graphics4_FragmentShader(blobs19,["WallLevel2_mesh.frag.d3d11"]);
+		kha_Shaders.Red2_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs19,["Red2_armskin_mesh.frag.d3d11"]);
 		let blobs20 = [];
-		let data20 = Reflect.field(kha_Shaders,"White_armskin_mesh_fragData" + 0);
+		let data20 = Reflect.field(kha_Shaders,"Stone1_mesh_fragData" + 0);
 		let bytes20 = haxe_Unserializer.run(data20);
 		blobs20.push(kha_internal_BytesBlob.fromBytes(bytes20));
-		kha_Shaders.White_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs20,["White_armskin_mesh.frag.d3d11"]);
+		kha_Shaders.Stone1_mesh_frag = new kha_graphics4_FragmentShader(blobs20,["Stone1_mesh.frag.d3d11"]);
 		let blobs21 = [];
-		let data21 = Reflect.field(kha_Shaders,"Wood1_mesh_fragData" + 0);
+		let data21 = Reflect.field(kha_Shaders,"WallLevel1_mesh_fragData" + 0);
 		let bytes21 = haxe_Unserializer.run(data21);
 		blobs21.push(kha_internal_BytesBlob.fromBytes(bytes21));
-		kha_Shaders.Wood1_mesh_frag = new kha_graphics4_FragmentShader(blobs21,["Wood1_mesh.frag.d3d11"]);
+		kha_Shaders.WallLevel1_mesh_frag = new kha_graphics4_FragmentShader(blobs21,["WallLevel1_mesh.frag.d3d11"]);
 		let blobs22 = [];
-		let data22 = Reflect.field(kha_Shaders,"Wood2_mesh_fragData" + 0);
+		let data22 = Reflect.field(kha_Shaders,"WallLevel2_mesh_fragData" + 0);
 		let bytes22 = haxe_Unserializer.run(data22);
 		blobs22.push(kha_internal_BytesBlob.fromBytes(bytes22));
-		kha_Shaders.Wood2_mesh_frag = new kha_graphics4_FragmentShader(blobs22,["Wood2_mesh.frag.d3d11"]);
+		kha_Shaders.WallLevel2_mesh_frag = new kha_graphics4_FragmentShader(blobs22,["WallLevel2_mesh.frag.d3d11"]);
 		let blobs23 = [];
-		let data23 = Reflect.field(kha_Shaders,"Wood3_mesh_fragData" + 0);
+		let data23 = Reflect.field(kha_Shaders,"White_armskin_mesh_fragData" + 0);
 		let bytes23 = haxe_Unserializer.run(data23);
 		blobs23.push(kha_internal_BytesBlob.fromBytes(bytes23));
-		kha_Shaders.Wood3_mesh_frag = new kha_graphics4_FragmentShader(blobs23,["Wood3_mesh.frag.d3d11"]);
+		kha_Shaders.White_armskin_mesh_frag = new kha_graphics4_FragmentShader(blobs23,["White_armskin_mesh.frag.d3d11"]);
 		let blobs24 = [];
-		let data24 = Reflect.field(kha_Shaders,"Wood4_mesh_fragData" + 0);
+		let data24 = Reflect.field(kha_Shaders,"White_mesh_fragData" + 0);
 		let bytes24 = haxe_Unserializer.run(data24);
 		blobs24.push(kha_internal_BytesBlob.fromBytes(bytes24));
-		kha_Shaders.Wood4_mesh_frag = new kha_graphics4_FragmentShader(blobs24,["Wood4_mesh.frag.d3d11"]);
+		kha_Shaders.White_mesh_frag = new kha_graphics4_FragmentShader(blobs24,["White_mesh.frag.d3d11"]);
 		let blobs25 = [];
-		let data25 = Reflect.field(kha_Shaders,"World_World_fragData" + 0);
+		let data25 = Reflect.field(kha_Shaders,"Wood1_mesh_fragData" + 0);
 		let bytes25 = haxe_Unserializer.run(data25);
 		blobs25.push(kha_internal_BytesBlob.fromBytes(bytes25));
-		kha_Shaders.World_World_frag = new kha_graphics4_FragmentShader(blobs25,["World_World.frag.d3d11"]);
+		kha_Shaders.Wood1_mesh_frag = new kha_graphics4_FragmentShader(blobs25,["Wood1_mesh.frag.d3d11"]);
 		let blobs26 = [];
-		let data26 = Reflect.field(kha_Shaders,"World_World_vertData" + 0);
+		let data26 = Reflect.field(kha_Shaders,"Wood2_mesh_fragData" + 0);
 		let bytes26 = haxe_Unserializer.run(data26);
 		blobs26.push(kha_internal_BytesBlob.fromBytes(bytes26));
-		kha_Shaders.World_World_vert = new kha_graphics4_VertexShader(blobs26,["World_World.vert.d3d11"]);
+		kha_Shaders.Wood2_mesh_frag = new kha_graphics4_FragmentShader(blobs26,["Wood2_mesh.frag.d3d11"]);
 		let blobs27 = [];
-		let data27 = Reflect.field(kha_Shaders,"armdefault_mesh_fragData" + 0);
+		let data27 = Reflect.field(kha_Shaders,"Wood3_mesh_fragData" + 0);
 		let bytes27 = haxe_Unserializer.run(data27);
 		blobs27.push(kha_internal_BytesBlob.fromBytes(bytes27));
-		kha_Shaders.armdefault_mesh_frag = new kha_graphics4_FragmentShader(blobs27,["armdefault_mesh.frag.d3d11"]);
+		kha_Shaders.Wood3_mesh_frag = new kha_graphics4_FragmentShader(blobs27,["Wood3_mesh.frag.d3d11"]);
 		let blobs28 = [];
-		let data28 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 0);
+		let data28 = Reflect.field(kha_Shaders,"Wood4_mesh_fragData" + 0);
 		let bytes28 = haxe_Unserializer.run(data28);
 		blobs28.push(kha_internal_BytesBlob.fromBytes(bytes28));
-		kha_Shaders.armdefault_mesh_vert = new kha_graphics4_VertexShader(blobs28,["armdefault_mesh.vert.d3d11"]);
+		kha_Shaders.Wood4_mesh_frag = new kha_graphics4_FragmentShader(blobs28,["Wood4_mesh.frag.d3d11"]);
 		let blobs29 = [];
-		let data29 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_fragData" + 0);
+		let data29 = Reflect.field(kha_Shaders,"World_World_fragData" + 0);
 		let bytes29 = haxe_Unserializer.run(data29);
 		blobs29.push(kha_internal_BytesBlob.fromBytes(bytes29));
-		kha_Shaders.armdefaultskin_mesh_frag = new kha_graphics4_FragmentShader(blobs29,["armdefaultskin_mesh.frag.d3d11"]);
+		kha_Shaders.World_World_frag = new kha_graphics4_FragmentShader(blobs29,["World_World.frag.d3d11"]);
 		let blobs30 = [];
-		let data30 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_vertData" + 0);
+		let data30 = Reflect.field(kha_Shaders,"World_World_vertData" + 0);
 		let bytes30 = haxe_Unserializer.run(data30);
 		blobs30.push(kha_internal_BytesBlob.fromBytes(bytes30));
-		kha_Shaders.armdefaultskin_mesh_vert = new kha_graphics4_VertexShader(blobs30,["armdefaultskin_mesh.vert.d3d11"]);
+		kha_Shaders.World_World_vert = new kha_graphics4_VertexShader(blobs30,["World_World.vert.d3d11"]);
 		let blobs31 = [];
-		let data31 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 0);
+		let data31 = Reflect.field(kha_Shaders,"armdefault_mesh_fragData" + 0);
 		let bytes31 = haxe_Unserializer.run(data31);
 		blobs31.push(kha_internal_BytesBlob.fromBytes(bytes31));
-		kha_Shaders.compositor_pass_frag = new kha_graphics4_FragmentShader(blobs31,["compositor_pass.frag.d3d11"]);
+		kha_Shaders.armdefault_mesh_frag = new kha_graphics4_FragmentShader(blobs31,["armdefault_mesh.frag.d3d11"]);
 		let blobs32 = [];
-		let data32 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 0);
+		let data32 = Reflect.field(kha_Shaders,"armdefault_mesh_vertData" + 0);
 		let bytes32 = haxe_Unserializer.run(data32);
 		blobs32.push(kha_internal_BytesBlob.fromBytes(bytes32));
-		kha_Shaders.compositor_pass_vert = new kha_graphics4_VertexShader(blobs32,["compositor_pass.vert.d3d11"]);
+		kha_Shaders.armdefault_mesh_vert = new kha_graphics4_VertexShader(blobs32,["armdefault_mesh.vert.d3d11"]);
 		let blobs33 = [];
-		let data33 = Reflect.field(kha_Shaders,"deferred_light_fragData" + 0);
+		let data33 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_fragData" + 0);
 		let bytes33 = haxe_Unserializer.run(data33);
 		blobs33.push(kha_internal_BytesBlob.fromBytes(bytes33));
-		kha_Shaders.deferred_light_frag = new kha_graphics4_FragmentShader(blobs33,["deferred_light.frag.d3d11"]);
+		kha_Shaders.armdefaultskin_mesh_frag = new kha_graphics4_FragmentShader(blobs33,["armdefaultskin_mesh.frag.d3d11"]);
 		let blobs34 = [];
-		let data34 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 0);
+		let data34 = Reflect.field(kha_Shaders,"armdefaultskin_mesh_vertData" + 0);
 		let bytes34 = haxe_Unserializer.run(data34);
 		blobs34.push(kha_internal_BytesBlob.fromBytes(bytes34));
-		kha_Shaders.painter_colored_frag = new kha_graphics4_FragmentShader(blobs34,["painter-colored.frag.d3d11"]);
+		kha_Shaders.armdefaultskin_mesh_vert = new kha_graphics4_VertexShader(blobs34,["armdefaultskin_mesh.vert.d3d11"]);
 		let blobs35 = [];
-		let data35 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 0);
+		let data35 = Reflect.field(kha_Shaders,"compositor_pass_fragData" + 0);
 		let bytes35 = haxe_Unserializer.run(data35);
 		blobs35.push(kha_internal_BytesBlob.fromBytes(bytes35));
-		kha_Shaders.painter_colored_vert = new kha_graphics4_VertexShader(blobs35,["painter-colored.vert.d3d11"]);
+		kha_Shaders.compositor_pass_frag = new kha_graphics4_FragmentShader(blobs35,["compositor_pass.frag.d3d11"]);
 		let blobs36 = [];
-		let data36 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
+		let data36 = Reflect.field(kha_Shaders,"compositor_pass_vertData" + 0);
 		let bytes36 = haxe_Unserializer.run(data36);
 		blobs36.push(kha_internal_BytesBlob.fromBytes(bytes36));
-		kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs36,["painter-image.frag.d3d11"]);
+		kha_Shaders.compositor_pass_vert = new kha_graphics4_VertexShader(blobs36,["compositor_pass.vert.d3d11"]);
 		let blobs37 = [];
-		let data37 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
+		let data37 = Reflect.field(kha_Shaders,"deferred_light_fragData" + 0);
 		let bytes37 = haxe_Unserializer.run(data37);
 		blobs37.push(kha_internal_BytesBlob.fromBytes(bytes37));
-		kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs37,["painter-image.vert.d3d11"]);
+		kha_Shaders.deferred_light_frag = new kha_graphics4_FragmentShader(blobs37,["deferred_light.frag.d3d11"]);
 		let blobs38 = [];
-		let data38 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
+		let data38 = Reflect.field(kha_Shaders,"painter_colored_fragData" + 0);
 		let bytes38 = haxe_Unserializer.run(data38);
 		blobs38.push(kha_internal_BytesBlob.fromBytes(bytes38));
-		kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs38,["painter-text.frag.d3d11"]);
+		kha_Shaders.painter_colored_frag = new kha_graphics4_FragmentShader(blobs38,["painter-colored.frag.d3d11"]);
 		let blobs39 = [];
-		let data39 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
+		let data39 = Reflect.field(kha_Shaders,"painter_colored_vertData" + 0);
 		let bytes39 = haxe_Unserializer.run(data39);
 		blobs39.push(kha_internal_BytesBlob.fromBytes(bytes39));
-		kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs39,["painter-text.vert.d3d11"]);
+		kha_Shaders.painter_colored_vert = new kha_graphics4_VertexShader(blobs39,["painter-colored.vert.d3d11"]);
 		let blobs40 = [];
-		let data40 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
+		let data40 = Reflect.field(kha_Shaders,"painter_image_fragData" + 0);
 		let bytes40 = haxe_Unserializer.run(data40);
 		blobs40.push(kha_internal_BytesBlob.fromBytes(bytes40));
-		kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs40,["painter-video.frag.d3d11"]);
+		kha_Shaders.painter_image_frag = new kha_graphics4_FragmentShader(blobs40,["painter-image.frag.d3d11"]);
 		let blobs41 = [];
-		let data41 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
+		let data41 = Reflect.field(kha_Shaders,"painter_image_vertData" + 0);
 		let bytes41 = haxe_Unserializer.run(data41);
 		blobs41.push(kha_internal_BytesBlob.fromBytes(bytes41));
-		kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs41,["painter-video.vert.d3d11"]);
+		kha_Shaders.painter_image_vert = new kha_graphics4_VertexShader(blobs41,["painter-image.vert.d3d11"]);
 		let blobs42 = [];
-		let data42 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 0);
+		let data42 = Reflect.field(kha_Shaders,"painter_text_fragData" + 0);
 		let bytes42 = haxe_Unserializer.run(data42);
 		blobs42.push(kha_internal_BytesBlob.fromBytes(bytes42));
-		kha_Shaders.pass_copy_frag = new kha_graphics4_FragmentShader(blobs42,["pass_copy.frag.d3d11"]);
+		kha_Shaders.painter_text_frag = new kha_graphics4_FragmentShader(blobs42,["painter-text.frag.d3d11"]);
 		let blobs43 = [];
-		let data43 = Reflect.field(kha_Shaders,"pass_vertData" + 0);
+		let data43 = Reflect.field(kha_Shaders,"painter_text_vertData" + 0);
 		let bytes43 = haxe_Unserializer.run(data43);
 		blobs43.push(kha_internal_BytesBlob.fromBytes(bytes43));
-		kha_Shaders.pass_vert = new kha_graphics4_VertexShader(blobs43,["pass.vert.d3d11"]);
+		kha_Shaders.painter_text_vert = new kha_graphics4_VertexShader(blobs43,["painter-text.vert.d3d11"]);
 		let blobs44 = [];
-		let data44 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 0);
+		let data44 = Reflect.field(kha_Shaders,"painter_video_fragData" + 0);
 		let bytes44 = haxe_Unserializer.run(data44);
 		blobs44.push(kha_internal_BytesBlob.fromBytes(bytes44));
-		kha_Shaders.pass_viewray_vert = new kha_graphics4_VertexShader(blobs44,["pass_viewray.vert.d3d11"]);
+		kha_Shaders.painter_video_frag = new kha_graphics4_FragmentShader(blobs44,["painter-video.frag.d3d11"]);
 		let blobs45 = [];
-		let data45 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 0);
+		let data45 = Reflect.field(kha_Shaders,"painter_video_vertData" + 0);
 		let bytes45 = haxe_Unserializer.run(data45);
 		blobs45.push(kha_internal_BytesBlob.fromBytes(bytes45));
-		kha_Shaders.smaa_blend_weight_frag = new kha_graphics4_FragmentShader(blobs45,["smaa_blend_weight.frag.d3d11"]);
+		kha_Shaders.painter_video_vert = new kha_graphics4_VertexShader(blobs45,["painter-video.vert.d3d11"]);
 		let blobs46 = [];
-		let data46 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 0);
+		let data46 = Reflect.field(kha_Shaders,"pass_copy_fragData" + 0);
 		let bytes46 = haxe_Unserializer.run(data46);
 		blobs46.push(kha_internal_BytesBlob.fromBytes(bytes46));
-		kha_Shaders.smaa_blend_weight_vert = new kha_graphics4_VertexShader(blobs46,["smaa_blend_weight.vert.d3d11"]);
+		kha_Shaders.pass_copy_frag = new kha_graphics4_FragmentShader(blobs46,["pass_copy.frag.d3d11"]);
 		let blobs47 = [];
-		let data47 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 0);
+		let data47 = Reflect.field(kha_Shaders,"pass_vertData" + 0);
 		let bytes47 = haxe_Unserializer.run(data47);
 		blobs47.push(kha_internal_BytesBlob.fromBytes(bytes47));
-		kha_Shaders.smaa_edge_detect_frag = new kha_graphics4_FragmentShader(blobs47,["smaa_edge_detect.frag.d3d11"]);
+		kha_Shaders.pass_vert = new kha_graphics4_VertexShader(blobs47,["pass.vert.d3d11"]);
 		let blobs48 = [];
-		let data48 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 0);
+		let data48 = Reflect.field(kha_Shaders,"pass_viewray_vertData" + 0);
 		let bytes48 = haxe_Unserializer.run(data48);
 		blobs48.push(kha_internal_BytesBlob.fromBytes(bytes48));
-		kha_Shaders.smaa_edge_detect_vert = new kha_graphics4_VertexShader(blobs48,["smaa_edge_detect.vert.d3d11"]);
+		kha_Shaders.pass_viewray_vert = new kha_graphics4_VertexShader(blobs48,["pass_viewray.vert.d3d11"]);
 		let blobs49 = [];
-		let data49 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 0);
+		let data49 = Reflect.field(kha_Shaders,"smaa_blend_weight_fragData" + 0);
 		let bytes49 = haxe_Unserializer.run(data49);
 		blobs49.push(kha_internal_BytesBlob.fromBytes(bytes49));
-		kha_Shaders.smaa_neighborhood_blend_frag = new kha_graphics4_FragmentShader(blobs49,["smaa_neighborhood_blend.frag.d3d11"]);
+		kha_Shaders.smaa_blend_weight_frag = new kha_graphics4_FragmentShader(blobs49,["smaa_blend_weight.frag.d3d11"]);
 		let blobs50 = [];
-		let data50 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 0);
+		let data50 = Reflect.field(kha_Shaders,"smaa_blend_weight_vertData" + 0);
 		let bytes50 = haxe_Unserializer.run(data50);
 		blobs50.push(kha_internal_BytesBlob.fromBytes(bytes50));
-		kha_Shaders.smaa_neighborhood_blend_vert = new kha_graphics4_VertexShader(blobs50,["smaa_neighborhood_blend.vert.d3d11"]);
+		kha_Shaders.smaa_blend_weight_vert = new kha_graphics4_VertexShader(blobs50,["smaa_blend_weight.vert.d3d11"]);
 		let blobs51 = [];
-		let data51 = Reflect.field(kha_Shaders,"translucent_resolve_fragData" + 0);
+		let data51 = Reflect.field(kha_Shaders,"smaa_edge_detect_fragData" + 0);
 		let bytes51 = haxe_Unserializer.run(data51);
 		blobs51.push(kha_internal_BytesBlob.fromBytes(bytes51));
-		kha_Shaders.translucent_resolve_frag = new kha_graphics4_FragmentShader(blobs51,["translucent_resolve.frag.d3d11"]);
+		kha_Shaders.smaa_edge_detect_frag = new kha_graphics4_FragmentShader(blobs51,["smaa_edge_detect.frag.d3d11"]);
+		let blobs52 = [];
+		let data52 = Reflect.field(kha_Shaders,"smaa_edge_detect_vertData" + 0);
+		let bytes52 = haxe_Unserializer.run(data52);
+		blobs52.push(kha_internal_BytesBlob.fromBytes(bytes52));
+		kha_Shaders.smaa_edge_detect_vert = new kha_graphics4_VertexShader(blobs52,["smaa_edge_detect.vert.d3d11"]);
+		let blobs53 = [];
+		let data53 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_fragData" + 0);
+		let bytes53 = haxe_Unserializer.run(data53);
+		blobs53.push(kha_internal_BytesBlob.fromBytes(bytes53));
+		kha_Shaders.smaa_neighborhood_blend_frag = new kha_graphics4_FragmentShader(blobs53,["smaa_neighborhood_blend.frag.d3d11"]);
+		let blobs54 = [];
+		let data54 = Reflect.field(kha_Shaders,"smaa_neighborhood_blend_vertData" + 0);
+		let bytes54 = haxe_Unserializer.run(data54);
+		blobs54.push(kha_internal_BytesBlob.fromBytes(bytes54));
+		kha_Shaders.smaa_neighborhood_blend_vert = new kha_graphics4_VertexShader(blobs54,["smaa_neighborhood_blend.vert.d3d11"]);
+		let blobs55 = [];
+		let data55 = Reflect.field(kha_Shaders,"translucent_resolve_fragData" + 0);
+		let bytes55 = haxe_Unserializer.run(data55);
+		blobs55.push(kha_internal_BytesBlob.fromBytes(bytes55));
+		kha_Shaders.translucent_resolve_frag = new kha_graphics4_FragmentShader(blobs55,["translucent_resolve.frag.d3d11"]);
 	}
 }
 $hxClasses["kha.Shaders"] = kha_Shaders;
@@ -60496,25 +60555,29 @@ kha_Scheduler.maxframetime = 0.5;
 kha_Scheduler.startTime = 0;
 kha_Shaders.Ammo_mesh_fragData0 = "s1686:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkNogvSpwQJ%qh0B1OjM1SVOAQAAAMgEAAAFAAAANAAAAOQAAAAwAQAAlAEAAEwEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUrACAABAAAAArAAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAABFAAAJ8gAQAAAAAABGEBAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAATAAAAAwAAAAAAAAAFAAAADAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Background_mesh_fragData0 = "s1723:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkMqxEMMDmC7fUo%BLj668DKAQAAAOQEAAAFAAAANAAAAOQAAAAwAQAAlAEAAGgEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUswCAABAAAAAswAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAABFAAAJ8gAQAAAAAABGEBAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFcgAQAAAAAABGAhAAAAAAADYAAAVyIBAAAQAAAEYCEAAAAAAANgAABXIgEAACAAAARgIQAAAAAAA2AAAFgiAQAAEAAAABQAAAAIB:QzYAAAWCIBAAAgAAAAFAAAAAAAAAPgAAAVNUQVR0AAAAFQAAAAMAAAAAAAAABQAAAAwAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-kha_Shaders.Background_mesh_vertData0 = "s1806:A25vcgAAcG9zAAF0ZXgAAgEkR2xvYmFscwAAA04AAAAAACwAAAADA3RleFVucGFjawAsAAAABAAAAAEBV1ZQADAAAABAAAAABAREWEJD4LfxoJCvT7DER9R0vJiSMgEAAAAABQAABQAAADQAAABQAQAAtAEAACQCAACEBAAAUkRFRhQBAAABAAAASAAAAAEAAAAcAAAAAAT%:wABAADsAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAkR2xvYmFscwCrq6s8AAAAAwAAAGAAAABwAAAAAAAAAAAAAACoAAAAAAAAACwAAAACAAAArAAAAAAAAAC8AAAALAAAAAQAAAACAAAAyAAAAAAAAADYAAAAMAAAAEAAAAACAAAA3AAAAAAAAABOAKurAwADAAMAAwAAAAAAAAAAAHRleFVucGFjawCrqwAAAwABAAEAAAAAAAAAAABXVlAAAwADAAQABAAAAAAAAAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAADAwAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPDwAAUAAAAAIAAAAAAAAAAwAAAAIAAAADAwAAVEVYQ09PUkQAq6urT1NHTmgAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAAAwwAAFAAAAABAAAAAAAAAAMAAAABAAAABwgAAFkAAAAAAAAAAQAAAAMAAAACAAAADwAAAFRFWENPT1JEAFNWX1Bvc2l0aW9uAKurq1NIRFJYAgAAQAABAJYAAABZAAAERo4gAAAAAAAHAAAAXwAAAzIQEAAAAAAAXwAAA:IQEAABAAAAXwAAAzIQEAACAAAAZQAAAzIgEAAAAAAAZQAAA3IgEAABAAAAZwAABPIgEAACAAAAAQAAAGgAAAICAAAAOAAACDIgEAAAAAAARhAQAAIAAAD2jyAAAAAAAAIAAAA2AAAFMgAQAAAAAABGEBAAAAAAADYAAAVCABAAAAAAADoQEAABAAAAEAAACBIAEAABAAAARgIQAAAAAABGgiAAAAAAAAAAAAAQAAAIIgAQAAEAAABGAhAAAAAAAEaCIAAAAAAAAQAAABAAAAhCABAAAQAAAEYCEAAAAAAARoIgAAAAAAACAAAAEAAABxIAEAAAAAAARgIQAAEAAABGAhAAAQAAAEQAAAUSABAAAAAAAAoAEAAAAAAAOAAAB3IgEAABAAAABgAQAAAAAABGAhAAAQAAADYAAAVyABAAAAAAAEYSEAABAAAANgAABYIAEAAAAAAAAUAAAAAAgD8RAAAIEgAQAAEAAABGDhAAAAAAAEaOIAAAAAAABQAAABEAAAgiABAAAQAAAEYOEAAAAAAARo4gAAAAAAAGAAAAAAAABxIAEAABAAAAGgAQAAEAAAAKABAAAQAAADYAAAWCIBAAAgAAABoAEAABAAAAOAAAB0IgEAACAAAACgAQAAEAAAABQAAAAAAAPxEAAAgSIBAAAgAAAEYOEAAAAAAARo4gAAAAAAADAAAAEQAACCIgEAACAAAARg4QAAAAAABGjiAAAAAAAAQAAAA%AAABU1RBVHQAAAATAAAAAgAAAAAAAAAGAAAADQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Black1_armskin_mesh_fragData0 = "s1279:AAAARFhCQ3m2AnEtVFgo615UKPBE554BAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAAAAAAAAAAAAAAAAAAIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Black1_mesh_fragData0 = "s1279:AAAARFhCQ3m2AnEtVFgo615UKPBE554BAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAAAAAAAAAAAAAAAAAAIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Blue1_armskin_mesh_fragData0 = "s1279:AAAARFhCQxraAwVauaYZpu1ItvHr7w0BAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAmpmZPmZmZj9mZmY:AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Blue2_armskin_mesh_fragData0 = "s1279:AAAARFhCQ1NXjxO4OxDFifWKvnHl1goBAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAA2AAAI8iAQAAEAAAACQAAAjQL3O0B81zvIAmg%AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+kha_Shaders.Blue2_mesh_fragData0 = "s1279:AAAARFhCQ1NXjxO4OxDFifWKvnHl1goBAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAA2AAAI8iAQAAEAAAACQAAAjQL3O0B81zvIAmg%AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Brick1_mesh_fragData0 = "s1963:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkM%mVePeNQPPh9JiszjEE3bAQAAAJgFAAAFAAAANAAAAOQAAAAwAQAAlAEAABwFAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUoADAABAAAAA4AAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAAyAAAPMgAQAAAAAABGEBAAAAAAAAJAAAAAAIA:AACAvwAAAAAAAAAAAkAAAAAAAAAAAIA:AAAAAAAAAAAPAAAKQgAQAAAAAAACQAAALr07swAAgD8AAAAAAAAAAEYAEAAAAAAADwAAChIAEAAAAAAAAkAAAAAAgL8uvTuzAAAAAAAAAABGABAAAAAAADIAAApCABAAAQAAAAoAEIBBAAAAAAAAAAFAAAAAACBCAUAAAAAAgD84AAAHEgAQAAEAAAAqABAAAAAAAAFAAAAAACBCRQAACfIAEAAAAAAAhgAQAAEAAABGfhAAAAAAAABgEAAAAAAALwAABXIAEAAAAAAARgIQAAAAAAA4AAAKcgAQAAAAAABGAhAAAAAAAAJAAADNzAxAzcwMQM3MDEAAAAAAGQAABXIgEAABAAAARgIQAAAAAAA2AAAFgiAQAAEAAAABQAAAAIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAAGAAAAAMAAAAAAAAABQAAABEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Brick1_mesh_vertData0 = "s1806:A25vcgAAcG9zAAF0ZXgAAgEkR2xvYmFscwAAA04AAAAAACwAAAADA3RleFVucGFjawAsAAAABAAAAAEBV1ZQADAAAABAAAAABAREWEJD4LfxoJCvT7DER9R0vJiSMgEAAAAABQAABQAAADQAAABQAQAAtAEAACQCAACEBAAAUkRFRhQBAAABAAAASAAAAAEAAAAcAAAAAAT%:wABAADsAAAAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAkR2xvYmFscwCrq6s8AAAAAwAAAGAAAABwAAAAAAAAAAAAAACoAAAAAAAAACwAAAACAAAArAAAAAAAAAC8AAAALAAAAAQAAAACAAAAyAAAAAAAAADYAAAAMAAAAEAAAAACAAAA3AAAAAAAAABOAKurAwADAAMAAwAAAAAAAAAAAHRleFVucGFjawCrqwAAAwABAAEAAAAAAAAAAABXVlAAAwADAAQABAAAAAAAAAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAADAwAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPDwAAUAAAAAIAAAAAAAAAAwAAAAIAAAADAwAAVEVYQ09PUkQAq6urT1NHTmgAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAAAwwAAFAAAAABAAAAAAAAAAMAAAABAAAABwgAAFkAAAAAAAAAAQAAAAMAAAACAAAADwAAAFRFWENPT1JEAFNWX1Bvc2l0aW9uAKurq1NIRFJYAgAAQAABAJYAAABZAAAERo4gAAAAAAAHAAAAXwAAAzIQEAAAAAAAXwAAA:IQEAABAAAAXwAAAzIQEAACAAAAZQAAAzIgEAAAAAAAZQAAA3IgEAABAAAAZwAABPIgEAACAAAAAQAAAGgAAAICAAAAOAAACDIgEAAAAAAARhAQAAIAAAD2jyAAAAAAAAIAAAA2AAAFMgAQAAAAAABGEBAAAAAAADYAAAVCABAAAAAAADoQEAABAAAAEAAACBIAEAABAAAARgIQAAAAAABGgiAAAAAAAAAAAAAQAAAIIgAQAAEAAABGAhAAAAAAAEaCIAAAAAAAAQAAABAAAAhCABAAAQAAAEYCEAAAAAAARoIgAAAAAAACAAAAEAAABxIAEAAAAAAARgIQAAEAAABGAhAAAQAAAEQAAAUSABAAAAAAAAoAEAAAAAAAOAAAB3IgEAABAAAABgAQAAAAAABGAhAAAQAAADYAAAVyABAAAAAAAEYSEAABAAAANgAABYIAEAAAAAAAAUAAAAAAgD8RAAAIEgAQAAEAAABGDhAAAAAAAEaOIAAAAAAABQAAABEAAAgiABAAAQAAAEYOEAAAAAAARo4gAAAAAAAGAAAAAAAABxIAEAABAAAAGgAQAAEAAAAKABAAAQAAADYAAAWCIBAAAgAAABoAEAABAAAAOAAAB0IgEAACAAAACgAQAAEAAAABQAAAAAAAPxEAAAgSIBAAAgAAAEYOEAAAAAAARo4gAAAAAAADAAAAEQAACCIgEAACAAAARg4QAAAAAABGjiAAAAAAAAQAAAA%AAABU1RBVHQAAAATAAAAAgAAAAAAAAAGAAAADQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Green1_armskin_mesh_fragData0 = "s1279:AAAARFhCQ43:2FfcCN1070HmRJHFOy0BAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAmpmZPmZmZj%amZk%AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+kha_Shaders.Green1_mesh_fragData0 = "s1279:AAAARFhCQ43:2FfcCN1070HmRJHFOy0BAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAmpmZPmZmZj%amZk%AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.GunFire_mesh_fragData0 = "s1814:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkMqTF0f3Xg8oGbqRVeA6rFOAQAAACgFAAAFAAAANAAAAOQAAAAwAQAAlAEAAKwEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUhADAABAAAAAxAAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACBAAAAEUAAAnyABAAAAAAAEYQEAAAAAAARn4QAAAAAAAAYBAAAAAAAAAAAAeCABAAAAAAADoAEAAAAAAAAUAAABe3UbkxAAAHggAQAAAAAAA6ABAAAAAAAAFAAABy%X8:DQAEAzoAEAAAAAAAEAAAB4IAEAAAAAAARhIQAAEAAABGEhAAAQAAAEQAAAWCABAAAAAAADoAEAAAAAAAOAAAB3IAEAABAAAA9g8QAAAAAAAmGRAAAQAAAAAAAAmCABAAAAAAACoAEICBAAAAAQAAABoAEICBAAAAAQAAAAAAAAiCABAAAAAAAAoAEICBAAAAAQAAADoAEAAAAAAADgAAB3IAEAABAAAARgIQAAEAAAD2DxAAAAAAAAAAAAsyABAAAgAAAGYKEIDBAAAAAQAAAAJAAAAAAIA:AACAPwAAAAAAAAAAHQAACnIAEAADAAAARgIQAAEAAAACQAAAAAAAAAAAAAAAAAAAAAAAADcAAA%SABAAAQAAAFYJEAADAAAAAkAAAAAAgD8AAAAAAAAAAAAAgD8CQAAAAACAvwAAAAAAAAAAAACAvzgAAAeSABAAAQAAAAYMEAABAAAABgQQAAIAAAA3AAAJMiAQAAAAAAAGABAAAwAAAJYFEAABAAAAxgAQAAEAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFcgAQAAAAAABGAhAAAAAAADYAAAjCIBAAAAAAAAJAAAAAAAAAAAAAAAAAAD8AAAAANgAABXIgEAABAAAARgIQAAAAAAA2AAAFgiAQAAEAAAABQAAAAIB:QzYAAAVyIBAAAgAAAEYCEAAAAAAANgAABYIgEAACAAAAAUAAAAAAAAA%AAABU1RBVHQAAAAYAAAABAAAAAAAAAAFAAAADgAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.GunFire_translucent_fragData0 = "s11700:AAdfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAF9zZW52bWFwUmFkaWFuY2Vfc2FtcGxlcgACSW1hZ2VUZXh0dXJlAABzZW52bWFwQnJkZgABc2Vudm1hcFJhZGlhbmNlAAJjbHVzdGVyc0RhdGEAAyRHbG9iYWxzAAAIc2hpcnIAAAAAAHAAAAAEAWVudm1hcE51bU1pcG1hcHMAcAAAAAQAAAABAWVudm1hcFN0cmVuZ3RoAHQAAAAEAAAAAQFzdW5EaXIAgAAAAAwAAAADAXN1bkNvbACQAAAADAAAAAMBY2FtZXJhUHJvagCgAAAACAAAAAIBY2FtZXJhUGxhbmUAqAAAAAgAAAACAWxpZ2h0c0FycmF5ALAAAADAAAAABAFEWEJDrjMQK9j:RWrbdLuN2qvKIwEAAAAoIQAABQAAADQAAABoAwAAIAQAAGwEAACsIAAAUkRFRiwDAAABAAAAbAEAAAcAAAAcAAAAAAT::wABAAAEAwAA:AAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAAASAQAAAwAAAAAAAAAAAAAAAAAAAAIAAAABAAAAAQAAACsBAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAOAEAAAIAAAAFAAAABAAAAP::::8BAAAAAQAAAA0AAABEAQAAAgAAAAUAAAAEAAAA:::::wIAAAABAAAADQAAAFQBAAACAAAABQAAAAQAAAD:::::AwAAAAEAAAANAAAAYQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAABfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAX3NlbnZtYXBSYWRpYW5jZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBzZW52bWFwQnJkZgBzZW52bWFwUmFkaWFuY2UAY2x1c3RlcnNEYXRhACRHbG9iYWxzAKurYQEAAAgAAACEAQAAcAEAAAAAAAAAAAAARAIAAAAAAABwAAAAAgAAAEwCAAAAAAAAXAIAAHAAAAAEAAAAAgAAAHACAAAAAAAAgAIAAHQAAAAEAAAAAgAAAJACAAAAAAAAoAIAAIAAAAAMAAAAAgAAAKgCAAAAAAAAuAIAAJAAAAAMAAAAAgAAAKgCAAAAAAAAvwIAAKAAAAAIAAAAAgAAAMwCAAAAAAAA3AIAAKgAAAAIAAAAAgAAAMwCAAAAAAAA6AIAALAAAADAAAAAAgAAAPQCAAAAAAAAc2hpcnIAq6sBAAMAAQAEAAcAAAAAAAAAZW52bWFwTnVtTWlwbWFwcwCrq6sAAAIAAQABAAAAAAAAAAAAZW52bWFwU3RyZW5ndGgAqwAAAwABAAEAAAAAAAAAAABzdW5EaXIAqwEAAwABAAMAAAAAAAAAAABzdW5Db2wAY2FtZXJhUHJvagCrqwEAAwABAAIAAAAAAAAAAABjYW1lcmFQbGFuZQBsaWdodHNBcnJheQABAAMAAQAEAAwAAAAAAAAATWljcm9zb2Z0IChSKSBITFNMIFNoYWRlciBDb21waWxlciAxMC4xAElTR06wAAAABgAAAAgAAACYAAAAAAAAAAAAAAADAAAAAAAAAAcHAACYAAAAAQAAAAAAAAADAAAAAQAAAAMDAACYAAAAAgAAAAAAAAADAAAAAgAAAAcHAACYAAAAAwAAAAAAAAADAAAAAwAAAAcHAACYAAAABAAAAAAAAAADAAAABAAAAA8LAAChAAAAAAAAAAEAAAADAAAABQAAAA8EAABURVhDT09SRABTVl9Qb3NpdGlvbgCrq6tPU0dORAAAAAIAAAAIAAAAOAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAOAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUjgcAABAAAAADgcAAFkIAARGjiAAAAAAABcAAABaAAADAGAQAAAAAABaAAADAGAQAAIAAABYGAAEAHAQAAAAAABVVQAAWBgABABwEAABAAAAVVUAAFgYAAQAcBAAAgAAAFVVAABYGAAEAHAQAAMAAABVVQAAYhAAA3IQEAAAAAAAYhAAAzIQEAABAAAAYhAAA3IQEAACAAAAYhAAA3IQEAADAAAAYhAAA7IQEAAEAAAAZCAABEIQEAAFAAAAAQAAAGUAAAPyIBAAAAAAAGUAAAPyIBAAAQAAAGgAAAIKAAAARQAACfIAEAAAAAAARhAQAAEAAABGfhAAAAAAAABgEAAAAAAAAAAAB4IAEAAAAAAAOgAQAAAAAAABQAAAF7dRuRgAAAcSABAAAQAAADoAEAAAAAAAAUAAAAAAgD8NAAQDCgAQAAEAAAAQAAAHEgAQAAEAAABGEhAAAgAAAEYSEAACAAAARAAABRIAEAABAAAACgAQAAEAAAA4AAAHcgAQAAEAAAAGABAAAQAAAEYSEAACAAAAEAAAB4IAEAABAAAARhIQAAAAAABGEhAAAAAAAEQAAAWCABAAAQAAADoAEAABAAAAOAAAB3IAEAACAAAA9g8QAAEAAABGEhAAAAAAABAAAAeCABAAAgAAAEYCEAABAAAARgIQAAIAAAA0AAAHQgAQAAMAAAA6ABAAAgAAAAFAAAAAAAAALwAABXIAEAAAAAAARgIQAAAAAAA4AAAKcgAQAAAAAABGAhAAAAAAAAJAAADNzAxAzcwMQM3MDEAAAAAAGQAABXIAEAAAAAAARgIQAAAAAAA4AAAKUgAQAAQAAACmChAAAwAAAAJAAAAAAIBDAAAAAAAAgEAAAAAANgAABSIAEAAEAAAAAUAAAAAAAEMbAAAFMgAQAAUAAABGABAABAAAADYAAAjCABAABQAAAAJAAAAAAAAAAAAAAAAAAAAAAAAALQAAB:IAEAAFAAAARg4QAAUAAABGfhAAAQAAADgAAAuyABAABAAAAEaIIAAAAAAABgAAAAJAAACGq9s%hqvbPgAAAACGq9s%OAAAB8IAEAAFAAAApgIQAAEAAACmAhAAAQAAADIAAAqCABAAAgAAABoAEAABAAAAGgAQAAEAAAAqABCAQQAAAAUAAAA2AAAGMgAQAAYAAADmiiAAAAAAAAQAAAA2AAAGQgAQAAYAAAAKgCAAAAAAAAUAAAA4AAAHcgAQAAcAAAD2DxAABQAAAEYCEAAGAAAAOAAACnIAEAAHAAAARgIQAAcAAAACQAAAcT0%P3E9Pj9xPT4:AAAAADIAAAmyABAABAAAAEYMEAAEAAAA9g8QAAIAAABGCBAABwAAADIAAA2yABAABAAAAEaIIAAAAAAAAAAAAAJAAADG32I:xt9iPwAAAADG32I:RgwQAAQAAAAyAAANsgAQAAQAAABGCBCAQQAAAAYAAAACQAAAKqd9PiqnfT4AAAAAKqd9PkYMEAAEAAAAOAAACHIAEAAGAAAAVgUQAAEAAABGgiAAAAAAAAMAAAA4AAAKcgAQAAYAAABGAhAABgAAAAJAAACGq1s:hqtbP4arWz8AAAAAMgAACrIAEAAEAAAARggQAAYAAACmChCAQQAAAAEAAABGDBAABAAAADgAAAhyABAABgAAAFYFEAABAAAAlocgAAAAAAAFAAAAOAAAB3IAEAAGAAAABgAQAAEAAABGAhAABgAAADIAAAyyABAABAAAAEYIEAAGAAAAAkAAAIarWz%Gq1s:AAAAAIarWz9GDBAABAAAADgAAAkSABAABgAAACoAEIBBAAAAAQAAADqAIAAAAAAAAwAAADgAAAliABAABgAAAKYKEIBBAAAAAQAAAAaBIAAAAAAABAAAADgAAAdyABAABgAAAAYAEAABAAAARgIQAAYAAAAyAAAMsgAQAAQAAABGCBAABgAAAAJAAACGq1s:hqtbPwAAAACGq1s:RgwQAAQAAAA4AAAIcgAQAAYAAABWBRAAAQAAAJaHIAAAAAAAAgAAADIAAAyyABAABAAAAEYIEAAGAAAAAkAAAGn8gj9p:II:AAAAAGn8gj9GDBAABAAAADgAAAkSABAABgAAACoAEIBBAAAAAQAAADqAIAAAAAAAAAAAADgAAAliABAABgAAAKYKEIBBAAAAAQAAAAaBIAAAAAAAAQAAADIAAAyyABAABAAAAEYIEAAGAAAAAkAAAGn8gj9p:II:AAAAAGn8gj9GDBAABAAAADgAAAgyABAABgAAAAYAEAABAAAA5oogAAAAAAABAAAAOAAACEIAEAAGAAAACgAQAAEAAAAKgCAAAAAAAAIAAAAyAAAMsgAQAAQAAABGCBAABgAAAAJAAABp:II:afyCPwAAAABp:II:RgwQAAQAAAAQAAAIggAQAAIAAABGAhCAQQAAAAIAAABGAhAAAQAAAAAAAAeCABAAAgAAADoAEAACAAAAOgAQAAIAAAAyAAALcgAQAAYAAABmCBAAAQAAAPYPEIBBAAAAAgAAAGYIEIBBAAAAAgAAACsAAAaCABAAAgAAAAqAIAAAAAAABwAAADgAAAeCABAAAgAAADoAEAACAAAAAUAAAAAAAD8AAAAIggAQAAMAAAAKABCAwQAAAAYAAAABQAAAAACAP0sAAAWCABAAAwAAADoAEAADAAAAMgAACkIAEAAFAAAACgAQgIEAAAAGAAAAAUAAADBumbwBQAAAJxaYPTIAAApCABAABQAAACoAEAAFAAAACgAQgIEAAAAGAAAAAUAAAIQ0Wb4yAAAKQgAQAAUAAAAqABAABQAAAAoAEICBAAAABgAAAAFAAACkDck:OAAAB4IAEAAFAAAAOgAQAAMAAAAqABAABQAAADIAAAmCABAABQAAADoAEAAFAAAAAUAAAAAAAMABQAAA2w9JQDEAAAiSABAABgAAAAYIEAAGAAAABggQgEEAAAAGAAAAAQAAB4IAEAAFAAAAOgAQAAUAAAAKABAABgAAADIAAAmCABAAAwAAACoAEAAFAAAAOgAQAAMAAAA6ABAABQAAADMAAAlCABAABQAAACoAEICBAAAABgAAABoAEICBAAAABgAAADQAAAmCABAABQAAACoAEICBAAAABgAAABoAEICBAAAABgAAAA4AAAqCABAABQAAAAJAAAAAAIA:AACAPwAAgD8AAIA:OgAQAAUAAAA4AAAHQgAQAAUAAAA6ABAABQAAACoAEAAFAAAAOAAAB4IAEAAFAAAAKgAQAAUAAAAqABAABQAAADIAAAkSABAABgAAADoAEAAFAAAAAUAAAF%uqjwBQAAANlquvTIAAAkSABAABgAAADoAEAAFAAAACgAQAAYAAAABQAAA4nY4PjIAAAkSABAABgAAADoAEAAFAAAACgAQAAYAAAABQAAABB2pvjIAAAmCABAABQAAADoAEAAFAAAACgAQAAYAAAABQAAAOPd:PzgAAAcSABAABgAAADoAEAAFAAAAKgAQAAUAAAAxAAAJEgAQAAcAAAAqABCAgQAAAAYAAAAaABCAgQAAAAYAAAAyAAAJEgAQAAYAAAAKABAABgAAAAFAAAAAAADAAUAAANsPyT8BAAAHEgAQAAYAAAAKABAABwAAAAoAEAAGAAAAMgAACUIAEAAFAAAAKgAQAAUAAAA6ABAABQAAAAoAEAAGAAAAAQAAB4IAEAAFAAAAOgAQAAYAAAABQAAA2w9JwAAAAAdCABAABQAAADoAEAAFAAAAKgAQAAUAAAAzAAAIggAQAAUAAAAqABAABgAAABoAEIBBAAAABgAAADQAAAgSABAABgAAACoAEAAGAAAAGgAQgEEAAAAGAAAAMQAACIIAEAAFAAAAOgAQAAUAAAA6ABCAQQAAAAUAAAAdAAAIEgAQAAYAAAAKABAABgAAAAoAEIBBAAAABgAAAAEAAAeCABAABQAAADoAEAAFAAAACgAQAAYAAAA3AAAKQgAQAAUAAAA6ABAABQAAACoAEIBBAAAABQAAACoAEAAFAAAAAAAAB0IAEAAFAAAAKgAQAAUAAAABQAAA2w9JQDgAAAcSABAABgAAACoAEAAFAAAAAUAAAIP5Ij44AAAHIgAQAAYAAAA6ABAAAwAAAAFAAACD%aI%SAAAC:IAEAAGAAAARgAQAAYAAABGfhAAAgAAAABgEAACAAAAOgAQAAIAAAAyAAAJggAQAAIAAAAKABAABQAAAAFAAAAK1yM9GgAQAAUAAAA4AAAHcgAQAAUAAAD2DxAAAgAAAEYCEAAGAAAAOAAACnIAEAAFAAAARgIQAAUAAAACQAAAAADAPwAAwD8AAMA:AAAAADIAAAmyABAABAAAAEYMEAAEAAAARggQAAAAAABGCBAABQAAADIAAApyABAABQAAAEYSEAAAAAAA9g8QAAEAAABGgiAAAAAAAAgAAAAQAAAHggAQAAIAAABGAhAABQAAAEYCEAAFAAAARAAABYIAEAACAAAAOgAQAAIAAAA4AAAHcgAQAAUAAAD2DxAAAgAAAEYCEAAFAAAAEAAACCIAEAADAAAARgIQAAEAAABGgiAAAAAAAAgAAAAQAAAHggAQAAIAAABGAhAAAQAAAEYCEAAFAAAAEAAAB4IAEAADAAAARgIQAAIAAABGAhAABQAAADIAAAkSABAABQAAADoAEAADAAAAAUAAAFnAscABQAAADHbfwDgAAAeCABAAAwAAADoAEAADAAAACgAQAAUAAAAZAAAFggAQAAMAAAA6ABAAAwAAADIAAAmCABAAAwAAADoAEAADAAAAAUAAAI:CdT8BQAAACtcjPTgAAAeCABAAAgAAADoAEAACAAAAOgAQAAIAAAAyAAAJggAQAAIAAAA6ABAAAgAAAAFAAAAAAHC:AUAAAAAAgD84AAAHggAQAAIAAAA6ABAAAgAAADoAEAACAAAANAAAB4IAEAACAAAAOgAQAAIAAAABQAAAAACAOA4AAAeCABAAAgAAAAFAAACD%aI8OgAQAAIAAAAAAAAHMgAQAAUAAACWBRAAAwAAAJYFEAADAAAAMgAAD8IAEAAFAAAAVgkQAAMAAAACQAAAAAAAAAAAAAAAAOA:AADgPwJAAAAAAAAAAAAAAAAAgD4AAIA%DgAACsIAEAAFAAAAAkAAAAAAgD8AAIA:AACAPwAAgD%mDhAABQAAADgAAAcyABAABQAAAOYKEAAFAAAARgAQAAUAAAA4AAAHEgAQAAUAAAAaABAABQAAAAoAEAAFAAAANAAABxIAEAAFAAAACgAQAAUAAAABQAAAAAAAADgAAAeCABAAAgAAADoAEAACAAAACgAQAAUAAAA4AAAHggAQAAIAAAA6ABAAAgAAADoAEAADAAAANAAAB4IAEAADAAAAKgAQAAQAAAABQAAArMUnNw4AAAeCABAAAgAAADoAEAACAAAAOgAQAAMAAAA4AAAHggAQAAIAAAA6ABAAAgAAAAFAAAAAAAA:MgAACXIAEAAFAAAARgIQAAAAAABWBRAAAwAAAPYPEAACAAAAOAAACHIAEAAFAAAARgIQAAUAAABGgiAAAAAAAAkAAAAAAAAJggAQAAIAAAAqEBAABQAAAAqAIIBBAAAAAAAAAAoAAAAOAAAIggAQAAIAAAAagCAAAAAAAAoAAAA6ABAAAgAAAA4AAAcyABAABgAAAEYQEAAEAAAA9h8QAAQAAAAyAAAPMgAQAAYAAABGABAABgAAAAJAAAAAAAA:AAAAPwAAAAAAAAAAAkAAAAAAAD8AAAA:AAAAAAAAAAAAAAAIIgAQAAMAAAAqgCAAAAAAAAoAAAABQAAAAABAQB0AAAdCABAABAAAADoAEAACAAAAGgAQAAMAAAAAAAAIggAQAAUAAAA6ABAAAgAAABoAEIBBAAAAAwAAAAAAAAeCABAABQAAADoAEAAFAAAAAUAAAAAAgD8vAAAFggAQAAUAAAA6ABAABQAAADgAAAeCABAABQAAADoAEAAFAAAAAUAAABhyMT8AAAAJIgAQAAMAAAAaABCAQQAAAAMAAAA6gCAAAAAAAAoAAAAAAAAHIgAQAAMAAAAaABAAAwAAAAFAAAAAAIA:LwAABSIAEAADAAAAGgAQAAMAAAA4AAAHIgAQAAMAAAAaABAAAwAAAAFAAAAYcjE:DgAAByIAEAADAAAAOgAQAAUAAAAaABAAAwAAADgAAAciABAAAwAAABoAEAADAAAAAUAAAAAAcEEbAAAFIgAQAAMAAAAaABAAAwAAAB4AAAciABAAAwAAABoAEAADAAAAAUAAAAEAAAAdAAAIggAQAAIAAAA6ABAAAgAAACqAIAAAAAAACgAAAAEAAAeCABAAAgAAADoAEAACAAAAAUAAAAEAAAA3AAAJggAQAAIAAAAqABAABAAAABoAEAADAAAAOgAQAAIAAAA4AAAKMgAQAAYAAABGABAABgAAAAJAAAAAAIBBAACAQQAAAAAAAAAAGwAABSIAEAADAAAACgAQAAYAAABDAAAFQgAQAAQAAAAaABAABgAAADgAAAdCABAABAAAACoAEAAEAAAAAUAAAAAAgEEbAAAFQgAQAAQAAAAqABAABAAAAB4AAAciABAAAwAAABoAEAADAAAAKgAQAAQAAAArAAAFggAQAAIAAAA6ABAAAgAAADgAAAeCABAAAgAAADoAEAACAAAAAUAAAAAAgEMbAAAFggAQAAIAAAA6ABAAAgAAAB4AAAciABAABgAAADoAEAACAAAAGgAQAAMAAAA2AAAIwgAQAAYAAAACQAAAAAAAAAAAAAAAAAAAAAAAAC0AAAfyABAABwAAANYPEAAGAAAARn4QAAMAAAA4AAAHggAQAAIAAAAKABAABwAAAAFAAAAAAH9DGwAABYIAEAACAAAAOgAQAAIAAAAlAAAHggAQAAIAAAA6ABAAAgAAAAFAAAAEAAAANgAABXIAEAAHAAAARgIQAAUAAAA2AAAFEgAQAAYAAAABQAAAAAAAADAAAAEhAAAHIgAQAAMAAAAKABAABgAAADoAEAACAAAAAwAEAxoAEAADAAAAHgAABxIAEAAGAAAACgAQAAYAAAABQAAAAQAAAC0AAAfyABAACAAAABYOEAAGAAAARn4QAAMAAAA4AAAHIgAQAAMAAAAKABAACAAAAAFAAAAAAH9DGwAABSIAEAADAAAAGgAQAAMAAAAmAAAIANAAAEIAEAAEAAAAGgAQAAMAAAABQAAAAwAAACMAAAkiABAAAwAAABoAEAADAAAAAUAAAAMAAAABQAAAAQAAAAAAAAtyABAACAAAAEYSEIBBAAAAAwAAAEaCIAYAAAAACwAAACoAEAAEAAAAEAAAB4IAEAAFAAAARgIQAAgAAABGAhAACAAAAEQAAAWCABAABQAAADoAEAAFAAAAOAAAB3IAEAAIAAAA9g8QAAUAAABGAhAACAAAADIAAAlyABAACQAAAEYSEAAAAAAA9g8QAAEAAABGAhAACAAAABAAAAeCABAABQAAAEYCEAAJAAAARgIQAAkAAABEAAAFggAQAAUAAAA6ABAABQAAADgAAAdyABAACQAAAPYPEAAFAAAARgIQAAkAAAAQAAAHggAQAAUAAABGAhAAAQAAAEYCEAAJAAAANAAAB4IAEAAFAAAAOgAQAAUAAAABQAAAAAAAABAAAAeCABAABwAAAEYCEAACAAAARgIQAAkAAAA0AAAHggAQAAcAAAA6ABAABwAAAAFAAAAAAAAAEAAABxIAEAAIAAAARgIQAAEAAABGAhAACAAAADQAAAcSABAAAwAAAAoAEAAIAAAAAUAAAAAAAAAyAAAJEgAQAAgAAAA6ABAABwAAAAFAAABZwLHAAUAAAAx238A4AAAHggAQAAcAAAA6ABAABwAAAAoAEAAIAAAAGQAABYIAEAAHAAAAOgAQAAcAAAAyAAAJggAQAAcAAAA6ABAABwAAAAFAAACPwnU:AUAAAArXIz04AAAHggAQAAUAAAA6ABAABQAAADoAEAAFAAAAMgAACYIAEAAFAAAAOgAQAAUAAAABQAAAAABwvwFAAAAAAIA:OAAAB4IAEAAFAAAAOgAQAAUAAAA6ABAABQAAADQAAAeCABAABQAAADoAEAAFAAAAAUAAAAAAgDgOAAAHggAQAAUAAAABQAAAg:miPDoAEAAFAAAAAAAABzIAEAAIAAAAhgAQAAMAAACGABAAAwAAADIAAA:CABAACAAAAAYIEAADAAAAAkAAAAAAAAAAAAAAAADgPwAA4D8CQAAAAAAAAAAAAAAAAIA%AACAPg4AAArCABAACAAAAAJAAAAAAIA:AACAPwAAgD8AAIA:pg4QAAgAAAA4AAAHMgAQAAgAAADmChAACAAAAEYAEAAIAAAAOAAABxIAEAAIAAAAGgAQAAgAAAAKABAACAAAADgAAAeCABAABQAAADoAEAAFAAAACgAQAAgAAAA4AAAHggAQAAUAAAA6ABAABQAAADoAEAAHAAAADgAAB4IAEAAFAAAAOgAQAAUAAAA6ABAAAwAAADgAAAeCABAABQAAADoAEAAFAAAAAUAAAAAAAD8yAAAJcgAQAAgAAABGAhAAAAAAAAYAEAADAAAA9g8QAAUAAAAAAAALcgAQAAkAAABGEhAAAwAAAEaCIIZBAAAAAAAAAAsAAAAqABAABAAAABAAAAcSABAAAwAAAEYCEAAJAAAARgIQAAkAAAAOAAAKEgAQAAMAAAACQAAAAACAPwAAgD8AAIA:AACAPwoAEAADAAAAOAAAB3IAEAAIAAAABgAQAAMAAABGAhAACAAAADIAAAxyABAABwAAAEYCEAAIAAAARoIgBgAAAAALAAAAGgAQAAMAAABGAhAABwAAABYAAAEyAAAKcgAQAAAAAABGAxAABAAAAFaFIAAAAAAABwAAAEYCEAAAAAAAMgAADHIAEAAAAAAARgIQAAAAAAACQAAAAAAAPwAAAD8AAAA:AAAAAEYCEAAHAAAAOAAAB3IAEAAAAAAA9g8QAAAAAABGAhAAAAAAADgAAAcSABAAAQAAADoAEAAAAAAAAUAAAAAAIEEzAAAHEgAQAAEAAAAKABAAAQAAAAFAAAAAAIA:AAAABxIAEAABAAAACgAQAAEAAAABQAAACtcjPDgAAAciABAAAQAAAAoAEAABAAAACgAQAAEAAAA4AAAHEgAQAAEAAAAaABAAAQAAAAoAEAABAAAAOAAABxIAEAABAAAACgAQAAEAAAABQAAAILy%TDIAAAoiABAAAQAAACoQEIBBAAAABQAAAAFAAABmZmY:AUAAAAAAgD84AAAHQgAQAAEAAAAaABAAAQAAABoAEAABAAAAOAAAByIAEAABAAAAKgAQAAEAAAAaABAAAQAAADgAAAcSABAAAQAAABoAEAABAAAACgAQAAEAAAA0AAAHEgAQAAEAAAAKABAAAQAAAAFAAAAK1yM8MwAABxIAEAABAAAACgAQAAEAAAABQAAAAIA7RTgAAAdyIBAAAAAAAEYCEAAAAAAABgAQAAEAAAA4AAAHEiAQAAEAAAA6ABAAAAAAAAoAEAABAAAANgAABYIgEAAAAAAAOgAQAAAAAAA2AAAI4iAQAAEAAAACQAAAAAAAAAAAAAAAAAAAAACAPz4AAAFTVEFUdAAAAOQAAAAKAAAAAAAAAAgAAAC5AAAACAAAAAUAAAABAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAQAAAAAAAAAAAAAAAAAAAAJAAAAAgAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.GunFire_translucent_vertData0 = "s2310:A25vcgAAcG9zAAF0ZXgAAgEkR2xvYmFscwAABU4AAAAAACwAAAADA3RleFVucGFjawAsAAAABAAAAAEBVwAwAAAAQAAAAAQEV1ZQAHAAAABAAAAABARleWUAsAAAAAwAAAADAURYQkNb5bEUTnA7jaMv2Gi:eyl9AQAAAGAGAAAFAAAANAAAAJgBAAD8AQAAtAIAAOQFAABSREVGXAEAAAEAAABIAAAAAQAAABwAAAAABP7:AAEAADQBAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAACRHbG9iYWxzAKurqzwAAAAFAAAAYAAAAMAAAAAAAAAAAAAAANgAAAAAAAAALAAAAAIAAADcAAAAAAAAAOwAAAAsAAAABAAAAAIAAAD4AAAAAAAAAAgBAAAwAAAAQAAAAAIAAAAMAQAAAAAAABwBAABwAAAAQAAAAAIAAAAMAQAAAAAAACABAACwAAAADAAAAAIAAAAkAQAAAAAAAE4Aq6sDAAMAAwADAAAAAAAAAAAAdGV4VW5wYWNrAKurAAADAAEAAQAAAAAAAAAAAFcAq6sDAAMABAAEAAAAAAAAAAAAV1ZQAGV5ZQABAAMAAQADAAAAAAAAAAAATWljcm9zb2Z0IChSKSBITFNMIFNoYWRlciBDb21waWxlciAxMC4xAElTR05cAAAAAwAAAAgAAABQAAAAAAAAAAAAAAADAAAAAAAAAAMDAABQAAAAAQAAAAAAAAADAAAAAQAAAA8PAABQAAAAAgAAAAAAAAADAAAAAgAAAAMDAABURVhDT09SRACrq6tPU0dOsAAAAAYAAAAIAAAAmAAAAAAAAAAAAAAAAwAAAAAAAAAHCAAAmAAAAAEAAAAAAAAAAwAAAAEAAAADDAAAmAAAAAIAAAAAAAAAAwAAAAIAAAAHCAAAmAAAAAMAAAAAAAAAAwAAAAMAAAAHCAAAmAAAAAQAAAAAAAAAAwAAAAQAAAAPAAAAoQAAAAAAAAABAAAAAwAAAAUAAAAPAAAAVEVYQ09PUkQAU1ZfUG9zaXRpb24Aq6urU0hEUigDAABAAAEAygAAAFkAAARGjiAAAAAAAAwAAABfAAADMhAQAAAAAABfAAAD8hAQAAEAAABfAAADMhAQAAIAAABlAAADciAQAAAAAABlAAADMiAQAAEAAABlAAADciAQAAIAAABlAAADciAQAAMAAABlAAAD8iAQAAQAAABnAAAE8iAQAAUAAAABAAAAaAAAAgMAAAA2AAAFcgAQAAAAAABGEhAAAQAAADYAAAWCABAAAAAAAAFAAAAAAIA:EQAACBIAEAABAAAARg4QAAAAAABGjiAAAAAAAAMAAAARAAAIIgAQAAEAAABGDhAAAAAAAEaOIAAAAAAABAAAABEAAAhCABAAAQAAAEYOEAAAAAAARo4gAAAAAAAFAAAAAAAACXIgEAAAAAAARgIQgEEAAAABAAAARoIgAAAAAAALAAAANgAABXIgEAADAAAARgIQAAEAAAA4AAAIMiAQAAEAAABGEBAAAgAAAPaPIAAAAAAAAgAAADYAAAUyABAAAQAAAEYQEAAAAAAANgAABUIAEAABAAAAOhAQAAEAAAAQAAAIEgAQAAIAAABGAhAAAQAAAEaCIAAAAAAAAAAAABAAAAgiABAAAgAAAEYCEAABAAAARoIgAAAAAAABAAAAEAAACEIAEAACAAAARgIQAAEAAABGgiAAAAAAAAIAAAAQAAAHEgAQAAEAAABGAhAAAgAAAEYCEAACAAAARAAABRIAEAABAAAACgAQAAEAAAA4AAAHciAQAAIAAAAGABAAAQAAAEYCEAACAAAAEQAACBIAEAABAAAARg4QAAAAAABGjiAAAAAAAAcAAAARAAAIIgAQAAEAAABGDhAAAAAAAEaOIAAAAAAACAAAABEAAAhCABAAAQAAAEYOEAAAAAAARo4gAAAAAAAJAAAAEQAACIIAEAABAAAARg4QAAAAAABGjiAAAAAAAAoAAAA2AAAF8iAQAAQAAABGDhAAAQAAADYAAAWyIBAABQAAAEYMEAABAAAAAAAABxIAEAAAAAAAOgAQAAEAAAAqABAAAQAAADgAAAdCIBAABQAAAAoAEAAAAAAAAUAAAAAAAD8%AAABU1RBVHQAAAAZAAAAAwAAAAAAAAAJAAAAEQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Medkit_mesh_fragData0 = "s1686:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkNogvSpwQJ%qh0B1OjM1SVOAQAAAMgEAAAFAAAANAAAAOQAAAAwAQAAlAEAAEwEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUrACAABAAAAArAAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAABFAAAJ8gAQAAAAAABGEBAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAATAAAAAwAAAAAAAAAFAAAADAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+kha_Shaders.Palette_001_mesh_fragData0 = "s1279:AAAARFhCQyY3F3wvqL4UBfXhY099nRMBAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAA2AAAI8iAQAAEAAAACQAAAAACAPwAAgD8AAIA:AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.PlayerSkin_armskin_mesh_fragData0 = "s1279:AAAARFhCQ1ni8DGjgq0Xzd1LsaxUGecBAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAA2AAAI8iAQAAEAAAACQAAAzsxMP9z:1D6BAPk9AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Red1_armskin_mesh_fragData0 = "s1279:AAAARFhCQxZIpketBVYNFVLWD7nY8e0BAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAamZmP7YlqT22Jak9AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+kha_Shaders.Red1_mesh_fragData0 = "s1279:AAAARFhCQxZIpketBVYNFVLWD7nY8e0BAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAamZmP7YlqT22Jak9AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Red2_armskin_mesh_fragData0 = "s1279:AAAARFhCQ37W992f8RhR6:o4sCm6QQkBAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAZmZmP5qZmT6amZk%AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Stone1_mesh_fragData0 = "s1766:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkPDOBHdh3emW:dlmue7UJXPAQAAAAQFAAAFAAAANAAAAOQAAAAwAQAAlAEAAIgEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUuwCAABAAAAAuwAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAAyAAAPMgAQAAAAAABGEBAAAAAAAAJAAAAAAKBAAACgQAAAAAAAAAAAAkAAAAAAAAAAAIDAAAAAAAAAAABFAAAJ8gAQAAAAAABGABAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAAUAAAAAwAAAAAAAAAFAAAADQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.WallLevel1_mesh_fragData0 = "s1686:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkNogvSpwQJ%qh0B1OjM1SVOAQAAAMgEAAAFAAAANAAAAOQAAAAwAQAAlAEAAEwEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUrACAABAAAAArAAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAABFAAAJ8gAQAAAAAABGEBAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAATAAAAAwAAAAAAAAAFAAAADAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.WallLevel2_mesh_fragData0 = "s1766:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkNYvorrp%7:ZeuvGvZ3l5BLAQAAAAQFAAAFAAAANAAAAOQAAAAwAQAAlAEAAIgEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUuwCAABAAAAAuwAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAAyAAAPMgAQAAAAAABGEBAAAAAAAAJAAAAAAIA:AADgQAAAAAAAAAAAAkAAAAAAAAAAAMDAAAAAAAAAAABFAAAJ8gAQAAAAAABGABAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAAUAAAAAwAAAAAAAAAFAAAADQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.White_armskin_mesh_fragData0 = "s1279:AAAARFhCQ:3BDScRkInEljRO4YLR5ogBAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAAACAPwAAgD8AAIA:AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+kha_Shaders.White_mesh_fragData0 = "s1279:AAAARFhCQ:3BDScRkInEljRO4YLR5ogBAAAAvAMAAAUAAAA0AAAAgAAAALQAAAAYAQAAQAMAAFJERUZEAAAAAAAAAAAAAAAAAAAAHAAAAAAE::8AAQAAHAAAAE1pY3Jvc29mdCAoUikgSExTTCBTaGFkZXIgQ29tcGlsZXIgMTAuMQBJU0dOLAAAAAEAAAAIAAAAIAAAAAAAAAAAAAAAAwAAAAAAAAAHBwAAVEVYQ09PUkQAq6urT1NHTlwAAAADAAAACAAAAFAAAAAAAAAAAAAAAAMAAAAAAAAADwAAAFAAAAABAAAAAAAAAAMAAAABAAAADwAAAFAAAAACAAAAAAAAAAMAAAACAAAADwAAAFNWX1RhcmdldACrq1NIRFIgAgAAQAAAAIgAAABiEAADchAQAAAAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAAAAAAARhIQAAAAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAAAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwCAzEM2AAAI8iAQAAEAAAACQAAAAACAPwAAgD8AAIA:AIB:QzYAAAjyIBAAAgAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAPgAAAVNUQVR0AAAADwAAAAMAAAAAAAAABAAAAAkAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Wood1_mesh_fragData0 = "s1766:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkMAdjftACsqv9d5fgIQoUCfAQAAAAQFAAAFAAAANAAAAOQAAAAwAQAAlAEAAIgEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUuwCAABAAAAAuwAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAAyAAAPMgAQAAAAAABGEBAAAAAAAAJAAAAAACBBAAAgQQAAAAAAAAAAAkAAAAAAAAAAABDBAAAAAAAAAABFAAAJ8gAQAAAAAABGABAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAAUAAAAAwAAAAAAAAAFAAAADQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Wood2_mesh_fragData0 = "s1766:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkPDOBHdh3emW:dlmue7UJXPAQAAAAQFAAAFAAAANAAAAOQAAAAwAQAAlAEAAIgEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUuwCAABAAAAAuwAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAAyAAAPMgAQAAAAAABGEBAAAAAAAAJAAAAAAKBAAACgQAAAAAAAAAAAAkAAAAAAAAAAAIDAAAAAAAAAAABFAAAJ8gAQAAAAAABGABAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAAUAAAAAwAAAAAAAAAFAAAADQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 kha_Shaders.Wood3_mesh_fragData0 = "s1766:AAJfSW1hZ2VUZXh0dXJlX3NhbXBsZXIAAEltYWdlVGV4dHVyZQAAAERYQkN7vXmRT:7f4Uxdx:mxCDK1AQAAAAQFAAAFAAAANAAAAOQAAAAwAQAAlAEAAIgEAABSREVGqAAAAAAAAAAAAAAAAgAAABwAAAAABP::AAEAAH8AAABcAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAHIAAAACAAAABQAAAAQAAAD:::::AAAAAAEAAAANAAAAX0ltYWdlVGV4dHVyZV9zYW1wbGVyAEltYWdlVGV4dHVyZQBNaWNyb3NvZnQgKFIpIEhMU0wgU2hhZGVyIENvbXBpbGVyIDEwLjEAq0lTR05EAAAAAgAAAAgAAAA4AAAAAAAAAAAAAAADAAAAAAAAAAMDAAA4AAAAAQAAAAAAAAADAAAAAQAAAAcHAABURVhDT09SRACrq6tPU0dOXAAAAAMAAAAIAAAAUAAAAAAAAAAAAAAAAwAAAAAAAAAPAAAAUAAAAAEAAAAAAAAAAwAAAAEAAAAPAAAAUAAAAAIAAAAAAAAAAwAAAAIAAAAPAAAAU1ZfVGFyZ2V0AKurU0hEUuwCAABAAAAAuwAAAFoAAAMAYBAAAAAAAFgYAAQAcBAAAAAAAFVVAABiEAADMhAQAAAAAABiEAADchAQAAEAAABlAAAD8iAQAAAAAABlAAAD8iAQAAEAAABlAAAD8iAQAAIAAABoAAACAwAAABAAAAcSABAAAAAAAEYSEAABAAAARhIQAAEAAABEAAAFEgAQAAAAAAAKABAAAAAAADgAAAdyABAAAAAAAAYAEAAAAAAAJhkQAAEAAAAAAAAJggAQAAAAAAAqABCAgQAAAAAAAAAaABCAgQAAAAAAAAAAAAAIggAQAAAAAAAKABCAgQAAAAAAAAA6ABAAAAAAAA4AAAdyABAAAAAAAEYCEAAAAAAA9g8QAAAAAAAAAAALMgAQAAEAAABmChCAwQAAAAAAAAACQAAAAACAPwAAgD8AAAAAAAAAAB0AAApyABAAAgAAAEYCEAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA3AAAPkgAQAAAAAABWCRAAAgAAAAJAAAAAAIA:AAAAAAAAAAAAAIA:AkAAAAAAgL8AAAAAAAAAAAAAgL84AAAHkgAQAAAAAAAGDBAAAAAAAAYEEAABAAAANwAACTIgEAAAAAAABgAQAAIAAACWBRAAAAAAAMYAEAAAAAAANgAACMIgEAAAAAAAAkAAAAAAAAAAAAAAAAAAPwAAAAAyAAAPMgAQAAAAAABGEBAAAAAAAAJAAAAAAABBAAAAQQAAAAAAAAAAAkAAAAAAAAAAAODAAAAAAAAAAABFAAAJ8gAQAAAAAABGABAAAAAAAEZ%EAAAAAAAAGAQAAAAAAAvAAAFcgAQAAAAAABGAhAAAAAAADgAAApyABAAAAAAAEYCEAAAAAAAAkAAAM3MDEDNzAxAzcwMQAAAAAAZAAAFciAQAAEAAABGAhAAAAAAADYAAAWCIBAAAQAAAAFAAAAAgH9DNgAACPIgEAACAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAA%AAABU1RBVHQAAAAUAAAAAwAAAAAAAAAFAAAADQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
