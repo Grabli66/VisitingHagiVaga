@@ -10,6 +10,7 @@ import armory.trait.internal.CanvasScript;
 enum MenuCanvasLogicState {
 	Init;
 	Start;
+	Complete;
 }
 
 class MenuCanvasLogic extends iron.Trait {
@@ -36,14 +37,19 @@ class MenuCanvasLogic extends iron.Trait {
 		});
 
 		 notifyOnUpdate(function() {
+			if (state == Complete)
+				return;
+
 			var mouse = Input.getMouse();
 			if (mouse.started()) {
 				switch (state) {
 					case Init:
 						state = Start;
 						Event.send("start_game");
-					case Start:
+					case Start:		
+						state = Complete;				
 						Event.send("story_next");
+					default:						
 				}
 			}
 		 });

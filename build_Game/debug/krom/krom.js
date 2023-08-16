@@ -866,8 +866,9 @@ Object.assign(arm_HuggyLogic.prototype, {
 var arm_MenuCanvasLogicState = $hxEnums["arm.MenuCanvasLogicState"] = { __ename__:true,__constructs__:null
 	,Init: {_hx_name:"Init",_hx_index:0,__enum__:"arm.MenuCanvasLogicState",toString:$estr}
 	,Start: {_hx_name:"Start",_hx_index:1,__enum__:"arm.MenuCanvasLogicState",toString:$estr}
+	,Complete: {_hx_name:"Complete",_hx_index:2,__enum__:"arm.MenuCanvasLogicState",toString:$estr}
 };
-arm_MenuCanvasLogicState.__constructs__ = [arm_MenuCanvasLogicState.Init,arm_MenuCanvasLogicState.Start];
+arm_MenuCanvasLogicState.__constructs__ = [arm_MenuCanvasLogicState.Init,arm_MenuCanvasLogicState.Start,arm_MenuCanvasLogicState.Complete];
 class arm_MenuCanvasLogic extends iron_Trait {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
@@ -891,6 +892,9 @@ class arm_MenuCanvasLogic extends iron_Trait {
 			});
 		});
 		this.notifyOnUpdate(function() {
+			if(_gthis.state == arm_MenuCanvasLogicState.Complete) {
+				return;
+			}
 			let mouse = iron_system_Input.getMouse();
 			if(mouse.started()) {
 				switch(_gthis.state._hx_index) {
@@ -899,8 +903,10 @@ class arm_MenuCanvasLogic extends iron_Trait {
 					armory_system_Event.send("start_game");
 					break;
 				case 1:
+					_gthis.state = arm_MenuCanvasLogicState.Complete;
 					armory_system_Event.send("story_next");
 					break;
+				default:
 				}
 			}
 		});
@@ -1269,7 +1275,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.notifyOnUpdate($bind(this,this.update));
 		this.notifyOnRemove($bind(this,this.removed));
 		this.aimNode = this.object.getChild("Aim");
-		this.grabTrigger = this.object.getChild("ХвататьТриггер").getTrait(armory_trait_physics_bullet_RigidBody);
+		this.grabTrigger = iron_Scene.active.getChild("GrabTrigger").getTrait(armory_trait_physics_bullet_RigidBody);
 		this.aimTargetNode = this.object.getChild("Цель");
 		this.armature = this.object.getChild("Policeman");
 		this.animations = this.findAnimation(this.armature);
@@ -1485,6 +1491,54 @@ Object.assign(arm_PlayerLogic.prototype, {
 	,rotationSpeed: null
 	,speed: null
 	,dir: null
+});
+class arm_SyncWithParent extends iron_Trait {
+	constructor() {
+		super();
+		this.notifyOnInit(function() {
+		});
+		let _gthis = this;
+		this.notifyOnUpdate(function() {
+			let _this = _gthis.parent.transform.world;
+			let x = _this.self._30;
+			let y = _this.self._31;
+			let z = _this.self._32;
+			let w = _this.self._33;
+			if(w == null) {
+				w = 1.0;
+			}
+			if(z == null) {
+				z = 0.0;
+			}
+			if(y == null) {
+				y = 0.0;
+			}
+			if(x == null) {
+				x = 0.0;
+			}
+			let parentLoc_x = x;
+			let parentLoc_y = y;
+			let parentLoc_z = z;
+			let parentLoc_w = w;
+			let _this1 = _gthis.object.transform.loc;
+			_this1.x = parentLoc_x;
+			_this1.y = parentLoc_y;
+			_this1.z = parentLoc_z;
+			_this1.w = parentLoc_w;
+			_gthis.object.transform.buildMatrix();
+			let body = _gthis.object.getTrait(armory_trait_physics_bullet_RigidBody);
+			if(body != null) {
+				body.syncTransform();
+			}
+		});
+	}
+}
+$hxClasses["arm.SyncWithParent"] = arm_SyncWithParent;
+arm_SyncWithParent.__name__ = true;
+arm_SyncWithParent.__super__ = iron_Trait;
+Object.assign(arm_SyncWithParent.prototype, {
+	__class__: arm_SyncWithParent
+	,parent: null
 });
 class armory_logicnode_LogicTree extends iron_Trait {
 	constructor() {
@@ -60280,6 +60334,7 @@ armory_trait_internal_CameraController.keyStrafeDown = "q";
 arm_PlayerLogic.__meta__ = { fields : { rotationSpeed : { prop : null}, speed : { prop : null}}};
 arm_PlayerLogic.maxAmmo = 15;
 arm_PlayerLogic.maxHealth = 3;
+arm_SyncWithParent.__meta__ = { fields : { parent : { prop : null}}};
 armory_data_Config.configLoaded = false;
 armory_logicnode_LogicNode._hx_skip_constructor = false;
 armory_renderpath_Downsampler.currentMipLevel = 0;

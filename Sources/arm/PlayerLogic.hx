@@ -383,7 +383,8 @@ class PlayerLogic extends CameraController {
 		notifyOnRemove(removed);
 
 		aimNode = object.getChild("Aim");
-		grabTrigger = object.getChild('ХвататьТриггер').getTrait(RigidBody);
+		//grabTrigger = object.getChild('GrabTrigger').getTrait(RigidBody);
+		grabTrigger = Scene.active.getChild('GrabTrigger').getTrait(RigidBody);
 
 		aimTargetNode = object.getChild("Цель");
 		armature = object.getChild("Policeman");

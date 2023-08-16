@@ -63,40 +63,42 @@
 -D kha_version=1810
 -D kha_project_name=Game_1_0_0
 -js krom\krom.js.temp
-armory.trait.WalkNavigation
---macro keep('armory.trait.WalkNavigation')
-armory.trait.internal.CanvasScript
---macro keep('armory.trait.internal.CanvasScript')
-armory.trait.navigation.Navigation
---macro keep('armory.trait.navigation.Navigation')
-arm.PickLogic
---macro keep('arm.PickLogic')
-armory.trait.NavAgent
---macro keep('armory.trait.NavAgent')
+armory.trait.internal.UniformsManager
+--macro keep('armory.trait.internal.UniformsManager')
 armory.trait.NavMesh
 --macro keep('armory.trait.NavMesh')
+armory.trait.WalkNavigation
+--macro keep('armory.trait.WalkNavigation')
 arm.PlayerLogic
 --macro keep('arm.PlayerLogic')
 arm.GameMasterLogic
 --macro keep('arm.GameMasterLogic')
-arm.DoorOpenTrigger
---macro keep('arm.DoorOpenTrigger')
-arm.node.FistLogic
---macro keep('arm.node.FistLogic')
-arm.GameCanvasLogic
---macro keep('arm.GameCanvasLogic')
-arm.node.BoneIK
---macro keep('arm.node.BoneIK')
-armory.trait.physics.bullet.PhysicsWorld
---macro keep('armory.trait.physics.bullet.PhysicsWorld')
+arm.PickLogic
+--macro keep('arm.PickLogic')
 arm.MenuCanvasLogic
 --macro keep('arm.MenuCanvasLogic')
-arm.HuggyLogic
---macro keep('arm.HuggyLogic')
-armory.trait.internal.UniformsManager
---macro keep('armory.trait.internal.UniformsManager')
-armory.trait.physics.bullet.RigidBody
---macro keep('armory.trait.physics.bullet.RigidBody')
+arm.DoorOpenTrigger
+--macro keep('arm.DoorOpenTrigger')
 arm.DoorLogic
 --macro keep('arm.DoorLogic')
+arm.node.FistLogic
+--macro keep('arm.node.FistLogic')
+arm.HuggyLogic
+--macro keep('arm.HuggyLogic')
+armory.trait.NavAgent
+--macro keep('armory.trait.NavAgent')
+armory.trait.navigation.Navigation
+--macro keep('armory.trait.navigation.Navigation')
+armory.trait.physics.bullet.PhysicsWorld
+--macro keep('armory.trait.physics.bullet.PhysicsWorld')
+arm.node.BoneIK
+--macro keep('arm.node.BoneIK')
+armory.trait.physics.bullet.RigidBody
+--macro keep('armory.trait.physics.bullet.RigidBody')
+arm.SyncWithParent
+--macro keep('arm.SyncWithParent')
+arm.GameCanvasLogic
+--macro keep('arm.GameCanvasLogic')
+armory.trait.internal.CanvasScript
+--macro keep('armory.trait.internal.CanvasScript')
 -main Main
