@@ -25,8 +25,5 @@ class SyncWithParent extends iron.Trait {
 				body.syncTransform();
 			}
 		});
-
-		// notifyOnRemove(function() {
-		// });
 	}
 }

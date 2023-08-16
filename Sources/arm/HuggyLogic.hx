@@ -1,5 +1,6 @@
 package arm;
 
+import common.TickTimer;
 import iron.Scene;
 import armory.trait.physics.RigidBody;
 import armory.system.Event;
@@ -27,10 +28,11 @@ enum HuggyState {
 
 // Логика Хагги
 class HuggyLogic extends iron.Trait {
+	// Интервал таймера
 	static final navTimerInterval = 0.5;
 
 	// Счетчик таймера навигации
-	var navTimerDuration = 0.0;
+	var navTimer:TickTimer;
 
 	// Состояние
 	var state = HuggyState.None;
@@ -90,7 +92,7 @@ class HuggyLogic extends iron.Trait {
 
 		Scene.global.properties['huggy_dead_pos'] = object.transform.loc;
 		Event.send('huggy_dead');
-		Scene.global.properties['huggy_dead_pos'] = null;		
+		Scene.global.properties['huggy_dead_pos'] = null;
 	}
 
 	// Начинает повреждение
@@ -185,23 +187,7 @@ class HuggyLogic extends iron.Trait {
 		if (state == Attack || state == Hit || state == Dead)
 			return;
 
-		navTimerDuration -= iron.system.Time.delta;
-
-		if (navTimerDuration <= 0.0) {
-			navTimerDuration = navTimerInterval;
-
-			var from = object.transform.world.getLoc();
-			var to = playerObject.transform.world.getLoc();
-
-			var distance = Vec4.distance(from, to);
-			if (distance <= attackDistance) {
-				// Хаги приблизился к игроку
-				startAttack();
-			} else {
-				startNavigate(from, to);
-				checkOpenDoorTrigger();
-			}
-		}
+		navTimer.update();
 	}
 
 	public function new() {
@@ -209,7 +195,6 @@ class HuggyLogic extends iron.Trait {
 
 		notifyOnInit(function() {
 			object.properties = new Map<String, Dynamic>();
-			navTimerDuration = navTimerInterval;
 			var armature = object.getChild("Huggy");
 			animimations = findAnimation(armature);
 			navAgent = object.getTrait(NavAgent);
@@ -217,14 +202,26 @@ class HuggyLogic extends iron.Trait {
 
 			currentHealth = maxHealth;
 
+			// Таймер навигации
+			navTimer = new TickTimer(navTimerInterval, () -> {
+				var from = object.transform.world.getLoc();
+				var to = playerObject.transform.world.getLoc();
+
+				var distance = Vec4.distance(from, to);
+				if (distance <= attackDistance) {
+					// Хаги приблизился к игроку
+					startAttack();
+				} else {
+					startNavigate(from, to);
+					checkOpenDoorTrigger();
+				}
+			});
+
 			startWalking();
 		});
 
 		notifyOnUpdate(function() {
 			update();
 		});
-
-		// notifyOnRemove(function() {
-		// });
 	}
 }

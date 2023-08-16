@@ -17,8 +17,10 @@ class MenuCanvasLogic extends iron.Trait {
 	// UI
 	var canvas:CanvasScript;
 
+	// Состояние
 	var state = MenuCanvasLogicState.Init;
 
+	// Конструктор
 	public function new() {
 		super();
 
@@ -33,10 +35,10 @@ class MenuCanvasLogic extends iron.Trait {
 
 			Event.add('story_next', () -> {
 				iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});
-			});			
+			});
 		});
 
-		 notifyOnUpdate(function() {
+		notifyOnUpdate(function() {
 			if (state == Complete)
 				return;
 
@@ -46,15 +48,12 @@ class MenuCanvasLogic extends iron.Trait {
 					case Init:
 						state = Start;
 						Event.send("start_game");
-					case Start:		
-						state = Complete;				
+					case Start:
+						state = Complete;
 						Event.send("story_next");
-					default:						
+					default:
 				}
 			}
-		 });
-
-		// notifyOnRemove(function() {
-		// });
+		});
 	}
 }

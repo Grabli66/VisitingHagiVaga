@@ -113,15 +113,15 @@ class PlayerLogic extends CameraController {
 	}
 
 	// Обрабатывает взаимодействие с объектом
-	function processActionWithObject() {	
+	function processActionWithObject() {
 		if (!canvas.isReady())
 			return;
-		
+
 		var physics = PhysicsWorld.active;
 
 		contactObject = null;
 
-		var contacts = physics.getContacts(grabTrigger);		
+		var contacts = physics.getContacts(grabTrigger);
 		if (contacts != null && contacts.length > 0) {
 			for (body in contacts) {
 				var actionTrait = body.object.traits;
@@ -151,7 +151,7 @@ class PlayerLogic extends CameraController {
 	}
 
 	// Обрабатывает перезарядку
-	function processReload() {		
+	function processReload() {
 		var kb = Input.getKeyboard();
 
 		if (currentAmmo < 1 && contactObject == null) {
@@ -166,7 +166,7 @@ class PlayerLogic extends CameraController {
 	}
 
 	// Запускает перезарядку
-	function startReload() {		
+	function startReload() {
 		if (currentAmmo == maxAmmo)
 			return;
 
@@ -224,7 +224,7 @@ class PlayerLogic extends CameraController {
 	}
 
 	// Производит анимацию стрельбы
-	function startShooting() {		
+	function startShooting() {
 		if (currentAmmo < 1)
 			return;
 
@@ -238,7 +238,7 @@ class PlayerLogic extends CameraController {
 		if (currentAmmo < 0)
 			currentAmmo = 0;
 
-		canvas.setAmmoCount(currentAmmo);		
+		canvas.setAmmoCount(currentAmmo);
 
 		// Кидает луч для определения попадания
 		var physics = PhysicsWorld.active;
@@ -252,7 +252,7 @@ class PlayerLogic extends CameraController {
 		var mask = 2;
 
 		var hit = physics.rayCast(from, to, group, mask);
-		var rb = (hit != null) ? hit.rb : null;		
+		var rb = (hit != null) ? hit.rb : null;
 
 		if (rb != null && rb.object.name == 'Physics') {
 			var parent = rb.object.parent;
@@ -303,7 +303,7 @@ class PlayerLogic extends CameraController {
 			return;
 
 		state = Dead;
-		animations.play('Die', () -> {			
+		animations.play('Die', () -> {
 			var mouse = Input.getMouse();
 			mouse.unlock();
 			canvas.showGameOver();
@@ -347,7 +347,7 @@ class PlayerLogic extends CameraController {
 		Event.add('pick_medkit', () -> {
 			if (currentHealth >= maxHealth)
 				return;
-			
+
 			currentHealth += 1;
 			canvas.setHealth(currentHealth);
 		});
@@ -383,7 +383,6 @@ class PlayerLogic extends CameraController {
 		notifyOnRemove(removed);
 
 		aimNode = object.getChild("Aim");
-		//grabTrigger = object.getChild('GrabTrigger').getTrait(RigidBody);
 		grabTrigger = Scene.active.getChild('GrabTrigger').getTrait(RigidBody);
 
 		aimTargetNode = object.getChild("Цель");
@@ -410,10 +409,11 @@ class PlayerLogic extends CameraController {
 		// Признак что мышка захвачена
 		var mouseLocked = mouse.locked;
 
-		if (mouse.started() && !mouse.locked)
+		if (mouse.started() && !mouseLocked) {
 			mouse.lock();
-		else if (kb.started("escape") && mouse.locked)
+		} else if (kb.started("escape") && mouse.locked) {
 			mouse.unlock();
+		}
 
 		if (!mouse.locked)
 			return;

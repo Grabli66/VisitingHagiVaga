@@ -696,17 +696,31 @@ class arm_HuggyLogic extends iron_Trait {
 		this.attackDistance = 2.0;
 		this.speed = 1.0;
 		this.state = arm_HuggyState.None;
-		this.navTimerDuration = 0.0;
 		super._hx_constructor();
 		let _gthis = this;
 		this.notifyOnInit(function() {
 			_gthis.object.properties = new haxe_ds_StringMap();
-			_gthis.navTimerDuration = arm_HuggyLogic.navTimerInterval;
 			let armature = _gthis.object.getChild("Huggy");
 			_gthis.animimations = _gthis.findAnimation(armature);
 			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
 			_gthis.monsterBody = _gthis.object.getChild("Physics").getTrait(armory_trait_physics_bullet_RigidBody);
 			_gthis.currentHealth = _gthis.maxHealth;
+			_gthis.navTimer = new common_TickTimer(arm_HuggyLogic.navTimerInterval,function() {
+				let _this = _gthis.object.transform.world;
+				let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
+				let _this1 = _gthis.playerObject.transform.world;
+				let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
+				let vx = from.x - to.x;
+				let vy = from.y - to.y;
+				let vz = from.z - to.z;
+				let distance = Math.sqrt(vx * vx + vy * vy + vz * vz);
+				if(distance <= _gthis.attackDistance) {
+					_gthis.startAttack();
+				} else {
+					_gthis.startNavigate(from,to);
+					_gthis.checkOpenDoorTrigger();
+				}
+			});
 			_gthis.startWalking();
 		});
 		this.notifyOnUpdate(function() {
@@ -827,24 +841,7 @@ class arm_HuggyLogic extends iron_Trait {
 		if(this.state == arm_HuggyState.Attack || this.state == arm_HuggyState.Hit || this.state == arm_HuggyState.Dead) {
 			return;
 		}
-		this.navTimerDuration -= iron_system_Time.get_delta();
-		if(this.navTimerDuration <= 0.0) {
-			this.navTimerDuration = arm_HuggyLogic.navTimerInterval;
-			let _this = this.object.transform.world;
-			let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
-			let _this1 = this.playerObject.transform.world;
-			let to = new iron_math_Vec4(_this1.self._30,_this1.self._31,_this1.self._32,_this1.self._33);
-			let vx = from.x - to.x;
-			let vy = from.y - to.y;
-			let vz = from.z - to.z;
-			let distance = Math.sqrt(vx * vx + vy * vy + vz * vz);
-			if(distance <= this.attackDistance) {
-				this.startAttack();
-			} else {
-				this.startNavigate(from,to);
-				this.checkOpenDoorTrigger();
-			}
-		}
+		this.navTimer.update();
 	}
 }
 $hxClasses["arm.HuggyLogic"] = arm_HuggyLogic;
@@ -852,7 +849,7 @@ arm_HuggyLogic.__name__ = true;
 arm_HuggyLogic.__super__ = iron_Trait;
 Object.assign(arm_HuggyLogic.prototype, {
 	__class__: arm_HuggyLogic
-	,navTimerDuration: null
+	,navTimer: null
 	,state: null
 	,animimations: null
 	,navAgent: null
@@ -904,6 +901,7 @@ class arm_MenuCanvasLogic extends iron_Trait {
 					break;
 				case 1:
 					_gthis.state = arm_MenuCanvasLogicState.Complete;
+					mouse.reset();
 					armory_system_Event.send("story_next");
 					break;
 				default:
@@ -1292,7 +1290,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		let mouse = iron_system_Input.getMouse();
 		let kb = iron_system_Input.getKeyboard();
 		let mouseLocked = mouse.locked;
-		if(mouse.started() && !mouse.locked) {
+		if(mouse.started() && !mouseLocked) {
 			mouse.lock();
 		} else if(kb.started("escape") && mouse.locked) {
 			mouse.unlock();
@@ -11207,6 +11205,27 @@ class bullet_BulletString {
 		return haxe_io_Bytes.ofData(heap.buffer).getString(heapOffset,end - heapOffset,haxe_io_Encoding.UTF8);
 	}
 }
+class common_TickTimer {
+	constructor(intervalMs,onTimer) {
+		this.intervalMs = intervalMs;
+		this.onTimer = onTimer;
+	}
+	update() {
+		this.delta += iron_system_Time.get_delta();
+		if(this.delta >= this.intervalMs) {
+			this.delta = 0;
+			this.onTimer();
+		}
+	}
+}
+$hxClasses["common.TickTimer"] = common_TickTimer;
+common_TickTimer.__name__ = true;
+Object.assign(common_TickTimer.prototype, {
+	__class__: common_TickTimer
+	,intervalMs: null
+	,onTimer: null
+	,delta: null
+});
 class haxe_Log {
 	static formatOutput(v,infos) {
 		let str = Std.string(v);
