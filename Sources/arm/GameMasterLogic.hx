@@ -1,5 +1,6 @@
 package arm;
 
+import common.TickTimer;
 import armory.trait.physics.RigidBody;
 import iron.math.Vec4;
 import armory.system.Event;
@@ -11,11 +12,18 @@ import iron.Scene;
 
 // Логика управляющего игрой
 class GameMasterLogic extends iron.Trait {
+	// Время перед возрождением монстра
+	var respawnTimeSec = 6;
+
+	var respawnTimer:TickTimer;
+
 	// Добавляет обработчики событий
 	function addEventHandlers() {
 		Event.add('huggy_dead', () -> {
 			var deadPos = Scene.global.properties['huggy_dead_pos'];
 			spawnRandomItemAtPos(deadPos);
+			
+			respawnTimer.enabled = true;			
 		});
 	}
 
@@ -78,8 +86,15 @@ class GameMasterLogic extends iron.Trait {
 			spawnRandomItem();
 
 			addEventHandlers();
+
+			respawnTimer = new TickTimer(respawnTimeSec, () -> {
+				respawnTimer.enabled = false;
+				//spawnMonster();				
+			});
 		});
 
-		notifyOnUpdate(function() {});
+		notifyOnUpdate(function() {
+			respawnTimer.update();
+		});
 	}
 }

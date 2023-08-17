@@ -67,6 +67,9 @@ class HuggyLogic extends iron.Trait {
 
 	// Ищет анимации
 	function findAnimation(o:Object):BoneAnimation {
+		if (o == null)
+			return null;
+
 		if (o.animation != null)
 			return cast o.animation;
 		for (c in o.children) {
@@ -193,10 +196,12 @@ class HuggyLogic extends iron.Trait {
 	public function new() {
 		super();
 
-		notifyOnInit(function() {
+		notifyOnInit(function() {			
 			object.properties = new Map<String, Dynamic>();
 			var armature = object.getChild("Huggy");
-			animimations = findAnimation(armature);
+			animimations = findAnimation(armature);			
+
+			trace(animimations == null);
 			navAgent = object.getTrait(NavAgent);
 			monsterBody = object.getChild('Physics').getTrait(RigidBody);
 
@@ -216,6 +221,7 @@ class HuggyLogic extends iron.Trait {
 					checkOpenDoorTrigger();
 				}
 			});
+			navTimer.enabled = true;
 
 			startWalking();
 		});

@@ -139,6 +139,30 @@
 			"types": []
 		},
 		{
+			"name": "Blue1_mesh_frag",
+			"files": [
+				"Blue1_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
 			"name": "Blue2_armskin_mesh_frag",
 			"files": [
 				"Blue2_armskin_mesh.frag.d3d11"

@@ -18,13 +18,7 @@ class GameCanvasLogic extends iron.Trait {
 		notifyOnInit(function() {
 			canvas = Scene.active.getTrait(CanvasScript);
 			isCanvasReady = true;
-		});
-
-		// notifyOnUpdate(function() {
-		// });
-
-		// notifyOnRemove(function() {
-		// });
+		});	
 	}
 
 	// Признак что логика готова
