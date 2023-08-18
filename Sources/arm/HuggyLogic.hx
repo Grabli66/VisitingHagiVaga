@@ -198,12 +198,10 @@ class HuggyLogic extends iron.Trait {
 	public function new() {
 		super();
 
-		notifyOnInit(function() {			
+		notifyOnInit(function() {
 			object.properties = new Map<String, Dynamic>();
-			var armature = object.getChild("Huggy");
-			animimations = findAnimation(armature);			
-
-			trace(animimations == null);
+			animimations = findAnimation(object);
+			
 			navAgent = object.getTrait(NavAgent);
 			monsterBody = object.getChild('Physics').getTrait(RigidBody);
 
@@ -211,7 +209,6 @@ class HuggyLogic extends iron.Trait {
 
 			// Таймер навигации
 			navTimer = new TickTimer(navTimerInterval, () -> {
-				trace('FUCK');
 				var from = object.transform.world.getLoc();
 				var to = playerObject.transform.world.getLoc();
 

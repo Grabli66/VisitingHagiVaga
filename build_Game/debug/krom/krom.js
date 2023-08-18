@@ -632,6 +632,25 @@ class arm_GameMasterLogic extends iron_Trait {
 			_gthis.respawnTimer.set_enabled(true);
 		});
 	}
+	findAnimation(o) {
+		if(o == null) {
+			return null;
+		}
+		if(o.animation != null) {
+			return o.animation;
+		}
+		let _g = 0;
+		let _g1 = o.children;
+		while(_g < _g1.length) {
+			let c = _g1[_g];
+			++_g;
+			let co = this.findAnimation(c);
+			if(co != null) {
+				return co;
+			}
+		}
+		return null;
+	}
 	spawnMonster() {
 		let col = iron_Scene.active.getGroup("МестаВозрожденияМонстра");
 		let ind = kha_math_Random.getIn(0,col.length - 1);
@@ -645,6 +664,9 @@ class arm_GameMasterLogic extends iron_Trait {
 				_this.z = v.z;
 				_this.w = v.w;
 				o.transform.buildMatrix();
+				let trait = new arm_HuggyLogic();
+				trait.playerObject = iron_Scene.active.getChild("Игрок");
+				o.addTrait(trait);
 			},true,raw);
 		});
 	}
@@ -715,14 +737,11 @@ class arm_HuggyLogic extends iron_Trait {
 		let _gthis = this;
 		this.notifyOnInit(function() {
 			_gthis.object.properties = new haxe_ds_StringMap();
-			let armature = _gthis.object.getChild("Huggy");
-			_gthis.animimations = _gthis.findAnimation(armature);
-			haxe_Log.trace(_gthis.animimations == null,{ fileName : "arm/HuggyLogic.hx", lineNumber : 206, className : "arm.HuggyLogic", methodName : "new"});
+			_gthis.animimations = _gthis.findAnimation(_gthis.object);
 			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
 			_gthis.monsterBody = _gthis.object.getChild("Physics").getTrait(armory_trait_physics_bullet_RigidBody);
 			_gthis.currentHealth = _gthis.maxHealth;
 			_gthis.navTimer = new common_TickTimer(arm_HuggyLogic.navTimerInterval,function() {
-				haxe_Log.trace("FUCK",{ fileName : "arm/HuggyLogic.hx", lineNumber : 214, className : "arm.HuggyLogic", methodName : "new"});
 				let _this = _gthis.object.transform.world;
 				let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
 				let _this1 = _gthis.playerObject.transform.world;

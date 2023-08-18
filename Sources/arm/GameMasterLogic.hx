@@ -1,5 +1,6 @@
 package arm;
 
+import iron.object.BoneAnimation;
 import common.TickTimer;
 import armory.trait.physics.RigidBody;
 import iron.math.Vec4;
@@ -27,6 +28,21 @@ class GameMasterLogic extends iron.Trait {
 		});
 	}
 
+	// Ищет анимации
+	function findAnimation(o:Object):BoneAnimation {
+		if (o == null)
+			return null;
+
+		if (o.animation != null)
+			return cast o.animation;
+		for (c in o.children) {
+			var co = findAnimation(c);
+			if (co != null)
+				return co;
+		}
+		return null;
+	}
+
 	// Создаёт монстра
 	function spawnMonster() {
 		var col = Scene.active.getGroup('МестаВозрожденияМонстра');
@@ -37,6 +53,9 @@ class GameMasterLogic extends iron.Trait {
 			Scene.active.spawnObject('Monster', null, function(o:Object) {
 				o.transform.loc.setFrom(spawnObject.transform.loc);
 				o.transform.buildMatrix();
+				var trait = new HuggyLogic();
+				trait.playerObject = Scene.active.getChild('Игрок');
+				o.addTrait(trait);
 			}, true, raw);
 		});
 	}
