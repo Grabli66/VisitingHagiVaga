@@ -22,8 +22,8 @@ class GameMasterLogic extends iron.Trait {
 		Event.add('huggy_dead', () -> {
 			var deadPos = Scene.global.properties['huggy_dead_pos'];
 			spawnRandomItemAtPos(deadPos);
-			
-			respawnTimer.enabled = true;			
+
+			respawnTimer.enabled = true;
 		});
 	}
 
@@ -34,7 +34,7 @@ class GameMasterLogic extends iron.Trait {
 		var spawnObject = col[ind];
 
 		Data.getSceneRaw("SpawnScene", function(raw:TSceneFormat) {
-			Scene.active.spawnObject('Монстр', null, function(o:Object) {
+			Scene.active.spawnObject('Monster', null, function(o:Object) {
 				o.transform.loc.setFrom(spawnObject.transform.loc);
 				o.transform.buildMatrix();
 			}, true, raw);
@@ -58,7 +58,7 @@ class GameMasterLogic extends iron.Trait {
 			Scene.active.spawnObject(itemName, null, function(o:Object) {
 				o.transform.loc = o.transform.loc.setFrom(pos);
 				o.transform.buildMatrix();
-				o.getTrait(RigidBody).syncTransform();				
+				o.getTrait(RigidBody).syncTransform();
 			}, true, raw);
 		});
 	}
@@ -89,7 +89,7 @@ class GameMasterLogic extends iron.Trait {
 
 			respawnTimer = new TickTimer(respawnTimeSec, () -> {
 				respawnTimer.enabled = false;
-				//spawnMonster();				
+				spawnMonster();
 			});
 		});
 

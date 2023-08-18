@@ -85,6 +85,8 @@ class HuggyLogic extends iron.Trait {
 		if (state == Dead)
 			return;
 
+		navTimer.enabled = false;
+
 		state = Dead;
 
 		navAgent.stop();
@@ -209,6 +211,7 @@ class HuggyLogic extends iron.Trait {
 
 			// Таймер навигации
 			navTimer = new TickTimer(navTimerInterval, () -> {
+				trace('FUCK');
 				var from = object.transform.world.getLoc();
 				var to = playerObject.transform.world.getLoc();
 

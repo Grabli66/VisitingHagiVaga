@@ -617,6 +617,7 @@ class arm_GameMasterLogic extends iron_Trait {
 			_gthis.addEventHandlers();
 			_gthis.respawnTimer = new common_TickTimer(_gthis.respawnTimeSec,function() {
 				_gthis.respawnTimer.set_enabled(false);
+				_gthis.spawnMonster();
 			});
 		});
 		this.notifyOnUpdate(function() {
@@ -636,7 +637,7 @@ class arm_GameMasterLogic extends iron_Trait {
 		let ind = kha_math_Random.getIn(0,col.length - 1);
 		let spawnObject = col[ind];
 		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
-			iron_Scene.active.spawnObject("Монстр",null,function(o) {
+			iron_Scene.active.spawnObject("Monster",null,function(o) {
 				let _this = o.transform.loc;
 				let v = spawnObject.transform.loc;
 				_this.x = v.x;
@@ -716,11 +717,12 @@ class arm_HuggyLogic extends iron_Trait {
 			_gthis.object.properties = new haxe_ds_StringMap();
 			let armature = _gthis.object.getChild("Huggy");
 			_gthis.animimations = _gthis.findAnimation(armature);
-			haxe_Log.trace(_gthis.animimations == null,{ fileName : "arm/HuggyLogic.hx", lineNumber : 204, className : "arm.HuggyLogic", methodName : "new"});
+			haxe_Log.trace(_gthis.animimations == null,{ fileName : "arm/HuggyLogic.hx", lineNumber : 206, className : "arm.HuggyLogic", methodName : "new"});
 			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
 			_gthis.monsterBody = _gthis.object.getChild("Physics").getTrait(armory_trait_physics_bullet_RigidBody);
 			_gthis.currentHealth = _gthis.maxHealth;
 			_gthis.navTimer = new common_TickTimer(arm_HuggyLogic.navTimerInterval,function() {
+				haxe_Log.trace("FUCK",{ fileName : "arm/HuggyLogic.hx", lineNumber : 214, className : "arm.HuggyLogic", methodName : "new"});
 				let _this = _gthis.object.transform.world;
 				let from = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
 				let _this1 = _gthis.playerObject.transform.world;
@@ -766,6 +768,7 @@ class arm_HuggyLogic extends iron_Trait {
 		if(this.state == arm_HuggyState.Dead) {
 			return;
 		}
+		this.navTimer.set_enabled(false);
 		this.state = arm_HuggyState.Dead;
 		this.navAgent.stop();
 		let _gthis = this;
@@ -1185,7 +1188,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		let rb = hit != null ? hit.rb : null;
 		if(rb != null && rb.object.name == "Physics") {
 			let parent = rb.object.parent;
-			if(parent.name == "Монстр") {
+			if(parent.name == "Monster") {
 				parent.properties.h["is_hit"] = true;
 			}
 		}

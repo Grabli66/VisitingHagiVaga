@@ -256,7 +256,7 @@ class PlayerLogic extends CameraController {
 
 		if (rb != null && rb.object.name == 'Physics') {
 			var parent = rb.object.parent;
-			if (parent.name == "Монстр") {
+			if (parent.name == "Monster") {
 				parent.properties['is_hit'] = true;
 			}
 		}
