@@ -70,6 +70,7 @@ project.addAssets("C:/Downloads/128x128/Brick/Brick_08-128x128.png", { notinlist
 project.addAssets("C:/Downloads/128x128/Plaster/Plaster_01-128x128.png", { notinlist: true });
 project.addAssets("C:/Downloads/128x128/Wood/Wood_01-128x128.png", { notinlist: true });
 project.addAssets("C:/Downloads/128x128/Wood/Wood_19-128x128.png", { notinlist: true });
+project.addAssets("C:/Workspace/VisitingHagiVaga/Art/Metal_12-128x128.png", { notinlist: true });
 project.addAssets("C:/Workspace/VisitingHagiVaga/Art/Policeman/AmmoTex.png", { notinlist: true });
 project.addAssets("C:/Workspace/VisitingHagiVaga/Art/Policeman/MedkitTex.png", { notinlist: true });
 project.addAssets("C:/Workspace/VisitingHagiVaga/Art/Policeman/MuzzleFlash.png", { notinlist: true });
