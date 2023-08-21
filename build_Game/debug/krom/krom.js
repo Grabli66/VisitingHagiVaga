@@ -652,7 +652,22 @@ class arm_GameMasterLogic extends iron_Trait {
 		return null;
 	}
 	spawnMonster() {
-		let col = iron_Scene.active.getGroup("МестаВозрожденияМонстра");
+		let level = kha_math_Random.getIn(0,2);
+		let name;
+		switch(level) {
+		case 0:
+			name = "ПодвалВ";
+			break;
+		case 1:
+			name = "Этаж1В";
+			break;
+		case 2:
+			name = "Этаж2В";
+			break;
+		default:
+			name = "ПодвалВ";
+		}
+		let col = iron_Scene.active.getGroup(name);
 		let ind = kha_math_Random.getIn(0,col.length - 1);
 		let spawnObject = col[ind];
 		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
@@ -1300,6 +1315,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			_gthis.canvas.setHuggyKill(_gthis.currentHuggyKill);
 		});
 		armory_system_Event.add("restart_game",function() {
+			armory_system_Event.events.h = Object.create(null);
 			iron_Scene.setActive("GameScene",function(o) {
 			});
 		});

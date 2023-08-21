@@ -358,6 +358,7 @@ class PlayerLogic extends CameraController {
 		});
 
 		Event.add('restart_game', () -> {
+			Event.events.clear();
 			iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});
 		});
 	}

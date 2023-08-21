@@ -19,7 +19,7 @@ class GameMasterLogic extends iron.Trait {
 	var respawnTimer:TickTimer;
 
 	// Добавляет обработчики событий
-	function addEventHandlers() {
+	function addEventHandlers() {		
 		Event.add('huggy_dead', () -> {
 			var deadPos = Scene.global.properties['huggy_dead_pos'];
 			spawnRandomItemAtPos(deadPos);
@@ -45,7 +45,19 @@ class GameMasterLogic extends iron.Trait {
 
 	// Создаёт монстра
 	function spawnMonster() {
-		var col = Scene.active.getGroup('МестаВозрожденияМонстра');
+		var level = Random.getIn(0,2);
+		var name = switch level {
+			case 0:
+				'ПодвалВ';
+			case 1:
+				'Этаж1В';
+			case 2:
+				'Этаж2В';
+			default:
+				'ПодвалВ';
+		}
+
+		var col = Scene.active.getGroup(name);					
 		var ind = Random.getIn(0, col.length - 1);
 		var spawnObject = col[ind];
 

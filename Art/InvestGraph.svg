@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   sodipodi:docname="InvestGraph.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.0449705"
+     inkscape:cx="444.51014"
+     inkscape:cy="527.76608"
+     inkscape:window-width="1439"
+     inkscape:window-height="1331"
+     inkscape:window-x="1112"
+     inkscape:window-y="22"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <circle
+       style="fill:#ececec;stroke:#d40000;stroke-width:1.2"
+       id="path1"
+       cx="107.98849"
+       cy="124.44629"
+       r="60.387466" />
+    <path
+       style="fill:#ececec;stroke:#d40000;stroke-width:1.2"
+       d="M 108.87468,41.524295 V 206.1023"
+       id="path2" />
+    <path
+       style="fill:#ececec;stroke:#d40000;stroke-width:1.2"
+       d="M 34.941177,125.33248 H 190.65729"
+       id="path3" />
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-50.109737"
+       y="112.2091"
+       id="text3"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan3"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-50.109737"
+         y="112.2091">Высокий доллар</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-114.16856"
+       y="177.2807"
+       id="text4"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan4"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-114.16856"
+         y="177.2807">Высокая КС</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-198.73634"
+       y="112.2091"
+       id="text5"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan5"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-198.73634"
+         y="112.2091">Низкий доллар</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-114.16856"
+       y="15.487867"
+       id="text6"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan6"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-114.16856"
+         y="15.487867">Низкая КС</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-105.55986"
+       y="115.75385"
+       id="text7"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan7"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-105.55986"
+         y="115.75385">Рублёвые облигаци</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-106.06625"
+       y="59.290936"
+       id="text8"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan8"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-106.06625"
+         y="59.290936">Рублёвые акции</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-140.24783"
+       y="120.0582"
+       id="text9"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan9"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-140.24783"
+         y="120.0582">Замещающие </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-146.42146"
+         y="120.0582"
+         id="tspan10">облигации</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-147.33736"
+       y="61.316513"
+       id="text12"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan11"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-147.33736"
+         y="61.316513">Замещающие </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-153.51099"
+         y="61.316513"
+         id="tspan12">облигации</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-161.26318"
+       y="118.53902"
+       id="text14"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-161.26318"
+         y="118.53902"
+         id="tspan14">Золотые</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-167.43681"
+         y="118.53902"
+         id="tspan15">Облигации</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-164.30154"
+       y="79.799889"
+       id="text17"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-164.30154"
+         y="79.799889"
+         id="tspan16">Золотые</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-170.47517"
+         y="79.799889"
+         id="tspan17">Облигации</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:'Dusk Demon';-inkscape-font-specification:'Dusk Demon';text-align:justify;writing-mode:tb-rl;fill:#1a1a1a;stroke:#d40000;stroke-width:1.2"
+       x="-135.4371"
+       y="58.531345"
+       id="text18"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan18"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tahoma;-inkscape-font-specification:Tahoma;fill:#1a1a1a;stroke:none;stroke-width:1.2"
+         x="-135.4371"
+         y="58.531345">Рублёвые акции</tspan></text>
+  </g>
+</svg>
