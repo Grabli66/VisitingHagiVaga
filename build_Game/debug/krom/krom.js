@@ -656,16 +656,16 @@ class arm_GameMasterLogic extends iron_Trait {
 		let name;
 		switch(level) {
 		case 0:
-			name = "ПодвалВ";
+			name = "ПодвалХ";
 			break;
 		case 1:
-			name = "Этаж1В";
+			name = "Этаж1Х";
 			break;
 		case 2:
-			name = "Этаж2В";
+			name = "Этаж2Х";
 			break;
 		default:
-			name = "ПодвалВ";
+			name = "ПодвалХ";
 		}
 		let col = iron_Scene.active.getGroup(name);
 		let ind = kha_math_Random.getIn(0,col.length - 1);
@@ -709,7 +709,22 @@ class arm_GameMasterLogic extends iron_Trait {
 		});
 	}
 	spawnRandomItem() {
-		let col = iron_Scene.active.getGroup("МестаПоявленияВещей");
+		let level = kha_math_Random.getIn(0,2);
+		let name;
+		switch(level) {
+		case 0:
+			name = "ПодвалВ";
+			break;
+		case 1:
+			name = "Этаж1В";
+			break;
+		case 2:
+			name = "Этаж2В";
+			break;
+		default:
+			name = "ПодвалВ";
+		}
+		let col = iron_Scene.active.getGroup(name);
 		let ind = kha_math_Random.getIn(0,col.length - 1);
 		let spawnObject = col[ind];
 		let _gthis = this;

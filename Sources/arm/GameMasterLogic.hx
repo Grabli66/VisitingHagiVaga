@@ -48,13 +48,13 @@ class GameMasterLogic extends iron.Trait {
 		var level = Random.getIn(0,2);
 		var name = switch level {
 			case 0:
-				'ПодвалВ';
+				'ПодвалХ';
 			case 1:
-				'Этаж1В';
+				'Этаж1Х';
 			case 2:
-				'Этаж2В';
+				'Этаж2Х';
 			default:
-				'ПодвалВ';
+				'ПодвалХ';
 		}
 
 		var col = Scene.active.getGroup(name);					
@@ -96,9 +96,21 @@ class GameMasterLogic extends iron.Trait {
 
 	// Создаёт произвольную вещь, в произвольном месте
 	function spawnRandomItem() {
-		var col = Scene.active.getGroup('МестаПоявленияВещей');
+		var level = Random.getIn(0,2);
+		var name = switch level {
+			case 0:
+				'ПодвалВ';
+			case 1:
+				'Этаж1В';
+			case 2:
+				'Этаж2В';
+			default:
+				'ПодвалВ';
+		}
+
+		var col = Scene.active.getGroup(name);		
 		var ind = Random.getIn(0, col.length - 1);
-		var spawnObject = col[ind];
+		var spawnObject = col[ind];		
 
 		Data.getSceneRaw("SpawnScene", function(raw:TSceneFormat) {
 			var itemName = getRandomItemName();
