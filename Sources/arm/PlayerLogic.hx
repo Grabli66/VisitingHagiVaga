@@ -73,24 +73,24 @@ class PlayerLogic extends CameraController {
 
 	// Данные анимации стрельбы
 	var shootingAnimData:ShootAnimData;
-
-	// Текущее количество коробок с патронами
-	var currentAmmoPack = 2;
-
+	
 	// Максимальное количество патрон
 	public static inline var maxAmmo = 15;
 
 	// Максимальное количество жизней
 	public static inline var maxHealth = 3;
 
+	// Текущее количество коробок с патронами
+	public var currentAmmoPack = 1;
+
 	// Текущее количество патрон
-	var currentAmmo = maxAmmo;
+	public var currentAmmo = maxAmmo;
 
 	// Текущее количество жизни
-	var currentHealth = maxHealth;
+	public var currentHealth = maxHealth;
 
 	// Количество убийств Хагги
-	var currentHuggyKill = 0;
+	public var currentHuggyKill = 0;
 
 	// Скорость поворота
 	@prop
@@ -376,7 +376,8 @@ class PlayerLogic extends CameraController {
 
 		object.properties = new Map<String, Dynamic>();
 
-		canvas = Scene.active.getTrait(GameCanvasLogic);
+		canvas = Scene.active.getTrait(GameCanvasLogic);		
+
 		head = object.getChildOfType(CameraObject);
 
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);

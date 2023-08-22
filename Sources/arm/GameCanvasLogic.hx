@@ -18,6 +18,12 @@ class GameCanvasLogic extends iron.Trait {
 		notifyOnInit(function() {
 			canvas = Scene.active.getTrait(CanvasScript);
 			isCanvasReady = true;
+
+			var player = Scene.active.getChild('Игрок').getTrait(PlayerLogic);
+
+			setAmmoPackCount(player.currentAmmoPack);
+		 	setAmmoCount(player.currentAmmo);
+		 	setHealth(player.currentHealth);
 		});	
 	}
 

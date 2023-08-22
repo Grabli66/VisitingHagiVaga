@@ -544,6 +544,10 @@ class arm_GameCanvasLogic extends iron_Trait {
 		this.notifyOnInit(function() {
 			_gthis.canvas = iron_Scene.active.getTrait(armory_trait_internal_CanvasScript);
 			_gthis.isCanvasReady = true;
+			let player = iron_Scene.active.getChild("Игрок").getTrait(arm_PlayerLogic);
+			_gthis.setAmmoPackCount(player.currentAmmoPack);
+			_gthis.setAmmoCount(player.currentAmmo);
+			_gthis.setHealth(player.currentHealth);
 		});
 	}
 	isReady() {
@@ -599,6 +603,11 @@ Object.assign(arm_GameCanvasLogic.prototype, {
 	,canvas: null
 	,isCanvasReady: null
 });
+var arm_PickUpType = $hxEnums["arm.PickUpType"] = { __ename__:true,__constructs__:null
+	,Ammo: {_hx_name:"Ammo",_hx_index:0,__enum__:"arm.PickUpType",toString:$estr}
+	,Medkit: {_hx_name:"Medkit",_hx_index:1,__enum__:"arm.PickUpType",toString:$estr}
+};
+arm_PickUpType.__constructs__ = [arm_PickUpType.Ammo,arm_PickUpType.Medkit];
 class arm_GameMasterLogic extends iron_Trait {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
@@ -607,29 +616,66 @@ class arm_GameMasterLogic extends iron_Trait {
 		this._hx_constructor();
 	}
 	_hx_constructor() {
+		this.spawnedHealth = 0;
+		this.spawnedAmmo = 0;
+		this.spawnedMonster = 0;
+		this.maxSpawnedMonster = 3;
+		this.liveIntervalSec = 6;
 		this.respawnTimeSec = 6;
+		this.spawnTimePeriodSec = 10;
 		super._hx_constructor();
 		let _gthis = this;
 		this.notifyOnInit(function() {
 			iron_Scene.global.properties = new haxe_ds_StringMap();
+			_gthis.spawnItemAtRandomPlace(arm_PickUpType.Ammo);
+			_gthis.spawnItemAtRandomPlace(arm_PickUpType.Medkit);
 			_gthis.spawnMonster();
-			_gthis.spawnRandomItem();
 			_gthis.addEventHandlers();
-			_gthis.respawnTimer = new common_TickTimer(_gthis.respawnTimeSec,function() {
-				_gthis.respawnTimer.set_enabled(false);
+			_gthis.respawnAfterDeathTimer = new common_TickTimer(_gthis.respawnTimeSec,function() {
+				_gthis.respawnAfterDeathTimer.set_enabled(false);
 				_gthis.spawnMonster();
 			});
+			_gthis.itemSpawnTimer = new common_TickTimer(_gthis.spawnTimePeriodSec,function() {
+				if(_gthis.player.currentAmmoPack < 1 && _gthis.spawnedAmmo < 2) {
+					_gthis.spawnItemAtRandomPlace(arm_PickUpType.Ammo);
+				}
+				if(_gthis.player.currentHealth < 3 && _gthis.spawnedHealth < 2) {
+					_gthis.spawnItemAtRandomPlace(arm_PickUpType.Medkit);
+				}
+			});
+			_gthis.itemSpawnTimer.set_enabled(true);
+			_gthis.respawnOnLiveTimer = new common_TickTimer(_gthis.liveIntervalSec,function() {
+				if(_gthis.spawnedMonster < _gthis.maxSpawnedMonster) {
+					_gthis.spawnMonster();
+				}
+			});
+			_gthis.respawnOnLiveTimer.set_enabled(true);
+			_gthis.player = iron_Scene.active.getChild("Игрок").getTrait(arm_PlayerLogic);
 		});
 		this.notifyOnUpdate(function() {
-			_gthis.respawnTimer.update();
+			_gthis.respawnAfterDeathTimer.update();
+			_gthis.itemSpawnTimer.update();
+			_gthis.respawnOnLiveTimer.update();
 		});
 	}
 	addEventHandlers() {
 		let _gthis = this;
 		armory_system_Event.add("huggy_dead",function() {
 			let deadPos = iron_Scene.global.properties.h["huggy_dead_pos"];
-			_gthis.spawnRandomItemAtPos(deadPos);
-			_gthis.respawnTimer.set_enabled(true);
+			if(kha_math_Random.getIn(0,100) >= 90) {
+				_gthis.spawnRandomItemAtPos(deadPos);
+			}
+			_gthis.respawnAfterDeathTimer.set_enabled(true);
+			_gthis.respawnOnLiveTimer.reset();
+		});
+		armory_system_Event.add("pick_ammo",function() {
+			_gthis.spawnedAmmo -= 1;
+		});
+		armory_system_Event.add("pick_medkit",function() {
+			_gthis.spawnedHealth -= 1;
+		});
+		armory_system_Event.add("huggy_dead",function() {
+			_gthis.spawnedMonster -= 1;
 		});
 	}
 	findAnimation(o) {
@@ -670,6 +716,7 @@ class arm_GameMasterLogic extends iron_Trait {
 		let col = iron_Scene.active.getGroup(name);
 		let ind = kha_math_Random.getIn(0,col.length - 1);
 		let spawnObject = col[ind];
+		let _gthis = this;
 		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
 			iron_Scene.active.spawnObject("Monster",null,function(o) {
 				let _this = o.transform.loc;
@@ -682,6 +729,8 @@ class arm_GameMasterLogic extends iron_Trait {
 				let trait = new arm_HuggyLogic();
 				trait.playerObject = iron_Scene.active.getChild("Игрок");
 				o.addTrait(trait);
+				_gthis.spawnedMonster += 1;
+				haxe_Log.trace("Monster spawned",{ fileName : "arm/GameMasterLogic.hx", lineNumber : 126, className : "arm.GameMasterLogic", methodName : "spawnMonster"});
 			},true,raw);
 		});
 	}
@@ -689,6 +738,14 @@ class arm_GameMasterLogic extends iron_Trait {
 		if(kha_math_Random.getIn(0,1) > 0) {
 			return "ФизикаПатронов";
 		} else {
+			return "ФизикаАптечки";
+		}
+	}
+	getItemName(item) {
+		switch(item._hx_index) {
+		case 0:
+			return "ФизикаПатронов";
+		case 1:
 			return "ФизикаАптечки";
 		}
 	}
@@ -708,7 +765,25 @@ class arm_GameMasterLogic extends iron_Trait {
 			},true,raw);
 		});
 	}
-	spawnRandomItem() {
+	spawnItemAtRandomPlace(item) {
+		let _gthis = this;
+		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
+			let spawnObject = _gthis.getItemRandomSpawnObject();
+			let itemName = _gthis.getItemName(item);
+			switch(item._hx_index) {
+			case 0:
+				_gthis.spawnedAmmo += 1;
+				break;
+			case 1:
+				_gthis.spawnedHealth += 1;
+				break;
+			}
+			iron_Scene.active.spawnObject(itemName,spawnObject,function(o) {
+				haxe_Log.trace("" + itemName,{ fileName : "arm/GameMasterLogic.hx", lineNumber : 177, className : "arm.GameMasterLogic", methodName : "spawnItemAtRandomPlace"});
+			},true,raw);
+		});
+	}
+	getItemRandomSpawnObject() {
 		let level = kha_math_Random.getIn(0,2);
 		let name;
 		switch(level) {
@@ -727,6 +802,10 @@ class arm_GameMasterLogic extends iron_Trait {
 		let col = iron_Scene.active.getGroup(name);
 		let ind = kha_math_Random.getIn(0,col.length - 1);
 		let spawnObject = col[ind];
+		return spawnObject;
+	}
+	spawnRandomItem() {
+		let spawnObject = this.getItemRandomSpawnObject();
 		let _gthis = this;
 		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
 			let itemName = _gthis.getRandomItemName();
@@ -740,8 +819,17 @@ arm_GameMasterLogic.__name__ = true;
 arm_GameMasterLogic.__super__ = iron_Trait;
 Object.assign(arm_GameMasterLogic.prototype, {
 	__class__: arm_GameMasterLogic
+	,spawnTimePeriodSec: null
 	,respawnTimeSec: null
-	,respawnTimer: null
+	,respawnAfterDeathTimer: null
+	,liveIntervalSec: null
+	,maxSpawnedMonster: null
+	,respawnOnLiveTimer: null
+	,itemSpawnTimer: null
+	,player: null
+	,spawnedMonster: null
+	,spawnedAmmo: null
+	,spawnedHealth: null
 });
 var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
 	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
@@ -1101,7 +1189,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.currentHuggyKill = 0;
 		this.currentHealth = 3;
 		this.currentAmmo = 15;
-		this.currentAmmoPack = 2;
+		this.currentAmmoPack = 1;
 		this.state = arm_PlayerState.None;
 		this.zVec = new iron_math_Vec4(0.0,0.0,1.0);
 		this.yVec = new iron_math_Vec4(0.0,1.0,0.0);
@@ -11301,6 +11389,9 @@ class common_TickTimer {
 			this.delta = 0;
 			this.onTimer();
 		}
+	}
+	reset() {
+		this.delta = 0;
 	}
 }
 $hxClasses["common.TickTimer"] = common_TickTimer;

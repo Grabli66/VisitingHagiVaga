@@ -45,4 +45,9 @@ class TickTimer {
 			onTimer();
 		}
 	}
+
+	// Сбрасывает таймер
+	public function reset() {
+		delta = 0;
+	}
 }

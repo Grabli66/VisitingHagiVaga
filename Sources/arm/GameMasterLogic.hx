@@ -11,20 +11,74 @@ import iron.data.SceneFormat.TSceneFormat;
 import iron.data.Data;
 import iron.Scene;
 
+// Тип поднимаемой вещи
+enum PickUpType {
+	// Патроны
+	Ammo;
+	// Аптечка
+	Medkit;
+}
+
 // Логика управляющего игрой
 class GameMasterLogic extends iron.Trait {
+	// Период работы логики появления вещей
+	var spawnTimePeriodSec = 10;
+
 	// Время перед возрождением монстра
 	var respawnTimeSec = 6;
 
-	var respawnTimer:TickTimer;
+	// Таймер возрождения монстра после смерти
+	var respawnAfterDeathTimer:TickTimer;
+
+	// Время жизни монстра после которого появляется ещё монстр
+	var liveIntervalSec = 30;
+
+	// Максимальное количество монстров на сцене
+	var maxSpawnedMonster = 3;
+
+	// Таймер возрождения монстра из-за его долгой жизни. Если монстра долго не убивают
+	var respawnOnLiveTimer:TickTimer;
+
+	// Таймер логики появления вещей
+	var itemSpawnTimer:TickTimer;
+
+	// Логика игрока
+	var player:PlayerLogic;
+
+	// Количество монстров
+	var spawnedMonster = 0;
+
+	// Количество помещённых патронов
+	var spawnedAmmo = 0;
+
+	// Количество помещённых аптечек
+	var spawnedHealth = 0;
 
 	// Добавляет обработчики событий
-	function addEventHandlers() {		
+	function addEventHandlers() {
 		Event.add('huggy_dead', () -> {
 			var deadPos = Scene.global.properties['huggy_dead_pos'];
-			spawnRandomItemAtPos(deadPos);
+			// Случайным образом создаёт вещь
+			if (Random.getIn(0, 100) >= 90) {
+				spawnRandomItemAtPos(deadPos);
+			}
 
-			respawnTimer.enabled = true;
+			respawnAfterDeathTimer.enabled = true;
+
+			// Сбрасывает таймер возрождения долгой жизни
+			respawnOnLiveTimer.reset();
+		});
+
+		Event.add('pick_ammo', () -> {
+			spawnedAmmo -= 1;
+		});
+
+		Event.add('pick_medkit', () -> {
+			spawnedHealth -= 1;
+		});
+
+		Event.add('huggy_dead', () -> {
+			spawnedMonster -= 1;
 		});
 	}
 
@@ -45,7 +99,7 @@ class GameMasterLogic extends iron.Trait {
 
 	// Создаёт монстра
 	function spawnMonster() {
-		var level = Random.getIn(0,2);
+		var level = Random.getIn(0, 2);
 		var name = switch level {
 			case 0:
 				'ПодвалХ';
@@ -57,7 +111,7 @@ class GameMasterLogic extends iron.Trait {
 				'ПодвалХ';
 		}
 
-		var col = Scene.active.getGroup(name);					
+		var col = Scene.active.getGroup(name);
 		var ind = Random.getIn(0, col.length - 1);
 		var spawnObject = col[ind];
 
@@ -68,6 +122,8 @@ class GameMasterLogic extends iron.Trait {
 				var trait = new HuggyLogic();
 				trait.playerObject = Scene.active.getChild('Игрок');
 				o.addTrait(trait);
+				spawnedMonster += 1;
+				trace('Monster spawned');
 			}, true, raw);
 		});
 	}
@@ -78,6 +134,16 @@ class GameMasterLogic extends iron.Trait {
 			'ФизикаПатронов';
 		} else {
 			'ФизикаАптечки';
+		}
+	}
+
+	// Возвращает имя объекта
+	function getItemName(item:PickUpType) {
+		return switch (item) {
+			case Ammo:
+				'ФизикаПатронов';
+			case Medkit:
+				'ФизикаАптечки';
 		}
 	}
 
@@ -94,9 +160,28 @@ class GameMasterLogic extends iron.Trait {
 		});
 	}
 
-	// Создаёт произвольную вещь, в произвольном месте
-	function spawnRandomItem() {
-		var level = Random.getIn(0,2);
+	// Создаёт вещь в произвольном месте
+	function spawnItemAtRandomPlace(item:PickUpType) {
+		Data.getSceneRaw("SpawnScene", function(raw:TSceneFormat) {
+			var spawnObject = getItemRandomSpawnObject();
+			var itemName = getItemName(item);
+
+			switch item {
+				case Ammo:
+					spawnedAmmo += 1;
+				case Medkit:
+					spawnedHealth += 1;
+			}
+
+			Scene.active.spawnObject(itemName, spawnObject, function(o:Object) {
+				trace('${itemName}');
+			}, true, raw);
+		});
+	}
+
+	// Возвращает
+	function getItemRandomSpawnObject():Object {
+		var level = Random.getIn(0, 2);
 		var name = switch level {
 			case 0:
 				'ПодвалВ';
@@ -108,9 +193,15 @@ class GameMasterLogic extends iron.Trait {
 				'ПодвалВ';
 		}
 
-		var col = Scene.active.getGroup(name);		
+		var col = Scene.active.getGroup(name);
 		var ind = Random.getIn(0, col.length - 1);
-		var spawnObject = col[ind];		
+		var spawnObject = col[ind];
+		return spawnObject;
+	}
+
+	// Создаёт произвольную вещь, в произвольном месте
+	function spawnRandomItem() {
+		var spawnObject = getItemRandomSpawnObject();
 
 		Data.getSceneRaw("SpawnScene", function(raw:TSceneFormat) {
 			var itemName = getRandomItemName();
@@ -125,19 +216,49 @@ class GameMasterLogic extends iron.Trait {
 		notifyOnInit(function() {
 			Scene.global.properties = new Map<String, Dynamic>();
 
+			// Располагает вещи: патроны и аптечку
+			spawnItemAtRandomPlace(Ammo);
+			spawnItemAtRandomPlace(Medkit);
+
+			// Располагает монстра
 			spawnMonster();
-			spawnRandomItem();
 
 			addEventHandlers();
 
-			respawnTimer = new TickTimer(respawnTimeSec, () -> {
-				respawnTimer.enabled = false;
+			respawnAfterDeathTimer = new TickTimer(respawnTimeSec, () -> {
+				respawnAfterDeathTimer.enabled = false;
 				spawnMonster();
 			});
+
+			itemSpawnTimer = new TickTimer(spawnTimePeriodSec, () -> {
+				// Если количество патрон меньше 1 то появляются патроны
+				if (player.currentAmmoPack < 1 && spawnedAmmo < 2) {
+					for (i in 0...spawnedMonster)
+						spawnItemAtRandomPlace(Ammo);
+				}
+
+				// Если количество патрон меньше 1 то появляются патроны
+				if (player.currentHealth < PlayerLogic.maxHealth && spawnedHealth < 2) {
+					spawnItemAtRandomPlace(Medkit);
+				}
+			});
+			itemSpawnTimer.enabled = true;
+
+			respawnOnLiveTimer = new TickTimer(liveIntervalSec, () -> {
+				if (spawnedMonster < maxSpawnedMonster) {
+					spawnMonster();
+				}
+			});
+
+			respawnOnLiveTimer.enabled = true;
+
+			player = Scene.active.getChild('Игрок').getTrait(PlayerLogic);
 		});
 
 		notifyOnUpdate(function() {
-			respawnTimer.update();
+			respawnAfterDeathTimer.update();
+			itemSpawnTimer.update();
+			respawnOnLiveTimer.update();
 		});
 	}
 }
