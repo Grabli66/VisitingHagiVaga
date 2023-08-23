@@ -596,6 +596,30 @@
 			]
 		},
 		{
+			"name": "LightAlt_mesh_frag",
+			"files": [
+				"LightAlt_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [],
+			"types": []
+		},
+		{
 			"name": "Medkit_mesh_frag",
 			"files": [
 				"Medkit_mesh.frag.d3d11"
