@@ -17,6 +17,8 @@ enum PickUpType {
 	Ammo;
 	// Аптечка
 	Medkit;
+	// Ключ
+	Key;
 }
 
 // Логика управляющего игрой
@@ -56,6 +58,10 @@ class GameMasterLogic extends iron.Trait {
 
 	// Добавляет обработчики событий
 	function addEventHandlers() {
+		Event.add('use_key', () -> {
+			spawnItemAtRandomPlace(Key);
+		});
+
 		Event.add('huggy_dead', () -> {
 			var deadPos = Scene.global.properties['huggy_dead_pos'];
 			// Случайным образом создаёт вещь
@@ -144,6 +150,8 @@ class GameMasterLogic extends iron.Trait {
 				'ФизикаПатронов';
 			case Medkit:
 				'ФизикаАптечки';
+			case Key:
+				'ФизикаКлюча';
 		}
 	}
 
@@ -163,14 +171,18 @@ class GameMasterLogic extends iron.Trait {
 	// Создаёт вещь в произвольном месте
 	function spawnItemAtRandomPlace(item:PickUpType) {
 		Data.getSceneRaw("SpawnScene", function(raw:TSceneFormat) {
-			var spawnObject = getItemRandomSpawnObject();
+			var spawnObject:Object;
 			var itemName = getItemName(item);
 
 			switch item {
 				case Ammo:
+					spawnObject = getItemRandomSpawnObject();
 					spawnedAmmo += 1;
 				case Medkit:
+					spawnObject = getItemRandomSpawnObject();
 					spawnedHealth += 1;
+				case Key:
+					spawnObject = getKeyRandomSpawnObject();
 			}
 
 			Scene.active.spawnObject(itemName, spawnObject, function(o:Object) {
@@ -199,6 +211,14 @@ class GameMasterLogic extends iron.Trait {
 		return spawnObject;
 	}
 
+	// Возвращает объект для появления ключа
+	function getKeyRandomSpawnObject():Object {
+		var col = Scene.active.getGroup('Ключи');
+		var ind = Random.getIn(0, col.length - 1);
+		var spawnObject = col[ind];
+		return spawnObject;
+	}
+
 	// Создаёт произвольную вещь, в произвольном месте
 	function spawnRandomItem() {
 		var spawnObject = getItemRandomSpawnObject();
@@ -219,6 +239,7 @@ class GameMasterLogic extends iron.Trait {
 			// Располагает вещи: патроны и аптечку
 			spawnItemAtRandomPlace(Ammo);
 			spawnItemAtRandomPlace(Medkit);
+			spawnItemAtRandomPlace(Key);
 
 			// Располагает монстра
 			spawnMonster();

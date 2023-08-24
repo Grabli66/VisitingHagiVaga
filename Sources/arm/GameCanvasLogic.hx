@@ -56,6 +56,16 @@ class GameCanvasLogic extends iron.Trait {
 		}
 	}
 
+	// Устанавливает что ключ подобран
+	public function setKey() {
+		canvas.getElement("KeyImage").visible = true;
+	}
+
+	// Удаляет ключ
+	public function removeKey() {
+		canvas.getElement("KeyImage").visible = false;
+	}
+
 	// Отображает текст взаимодейтсвия с объектом
 	public function showObjectAction() {
 		canvas.getElement("ActionText").visible = true;

@@ -63,40 +63,42 @@
 -D kha_version=1810
 -D kha_project_name=Game_1_0_0
 -js krom\krom.js.temp
+arm.EntryDoorLogic
+--macro keep('arm.EntryDoorLogic')
+armory.trait.physics.bullet.RigidBody
+--macro keep('armory.trait.physics.bullet.RigidBody')
+arm.GameCanvasLogic
+--macro keep('arm.GameCanvasLogic')
+armory.trait.internal.UniformsManager
+--macro keep('armory.trait.internal.UniformsManager')
+arm.GameMasterLogic
+--macro keep('arm.GameMasterLogic')
+armory.trait.NavAgent
+--macro keep('armory.trait.NavAgent')
+armory.trait.NavMesh
+--macro keep('armory.trait.NavMesh')
+arm.node.FistLogic
+--macro keep('arm.node.FistLogic')
+arm.DoorOpenTrigger
+--macro keep('arm.DoorOpenTrigger')
+arm.PickLogic
+--macro keep('arm.PickLogic')
+arm.MenuCanvasLogic
+--macro keep('arm.MenuCanvasLogic')
+arm.PlayerLogic
+--macro keep('arm.PlayerLogic')
 armory.trait.internal.CanvasScript
 --macro keep('armory.trait.internal.CanvasScript')
 armory.trait.navigation.Navigation
 --macro keep('armory.trait.navigation.Navigation')
-armory.trait.NavMesh
---macro keep('armory.trait.NavMesh')
-armory.trait.physics.bullet.PhysicsWorld
---macro keep('armory.trait.physics.bullet.PhysicsWorld')
 arm.DoorLogic
 --macro keep('arm.DoorLogic')
-armory.trait.NavAgent
---macro keep('armory.trait.NavAgent')
 arm.SyncWithParent
 --macro keep('arm.SyncWithParent')
-arm.node.FistLogic
---macro keep('arm.node.FistLogic')
-armory.trait.physics.bullet.RigidBody
---macro keep('armory.trait.physics.bullet.RigidBody')
 armory.trait.WalkNavigation
 --macro keep('armory.trait.WalkNavigation')
 arm.node.BoneIK
 --macro keep('arm.node.BoneIK')
-arm.DoorOpenTrigger
---macro keep('arm.DoorOpenTrigger')
-arm.GameCanvasLogic
---macro keep('arm.GameCanvasLogic')
-arm.PickLogic
---macro keep('arm.PickLogic')
-armory.trait.internal.UniformsManager
---macro keep('armory.trait.internal.UniformsManager')
-arm.MenuCanvasLogic
---macro keep('arm.MenuCanvasLogic')
-arm.GameMasterLogic
---macro keep('arm.GameMasterLogic')
-arm.PlayerLogic
---macro keep('arm.PlayerLogic')
+armory.trait.physics.bullet.PhysicsWorld
+--macro keep('armory.trait.physics.bullet.PhysicsWorld')
 -main Main

@@ -12,12 +12,6 @@ class DoorOpenTrigger extends iron.Trait {
 		super();
 
 		notifyOnInit(function() {});
-
-		// notifyOnUpdate(function() {
-		// });
-
-		// notifyOnRemove(function() {
-		// });
 	}
 
 	// Приводит триггер в действие

@@ -339,6 +339,14 @@ class PlayerLogic extends CameraController {
 
 	// Добавляет обработчики событий
 	function addEventListeners() {
+		Event.add('pick_key', () -> {
+			canvas.setKey();
+		});
+
+		Event.add('use_key', () -> {
+			canvas.removeKey();
+		});
+
 		Event.add('pick_ammo', () -> {
 			currentAmmoPack += 1;
 			canvas.setAmmoPackCount(currentAmmoPack);

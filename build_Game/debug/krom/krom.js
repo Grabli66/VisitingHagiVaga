@@ -530,6 +530,48 @@ Object.assign(arm_DoorOpenTrigger.prototype, {
 	__class__: arm_DoorOpenTrigger
 	,door: null
 });
+var arm_EntryDoorLogicState = $hxEnums["arm.EntryDoorLogicState"] = { __ename__:true,__constructs__:null
+	,NeedKey: {_hx_name:"NeedKey",_hx_index:0,__enum__:"arm.EntryDoorLogicState",toString:$estr}
+	,HaveKey: {_hx_name:"HaveKey",_hx_index:1,__enum__:"arm.EntryDoorLogicState",toString:$estr}
+};
+arm_EntryDoorLogicState.__constructs__ = [arm_EntryDoorLogicState.NeedKey,arm_EntryDoorLogicState.HaveKey];
+class arm_EntryDoorLogic extends common_ObjectWithActionTrait {
+	constructor() {
+		iron_Trait._hx_skip_constructor = true;
+		super();
+		iron_Trait._hx_skip_constructor = false;
+		this._hx_constructor();
+	}
+	_hx_constructor() {
+		this.state = arm_EntryDoorLogicState.NeedKey;
+		super._hx_constructor();
+		let _gthis = this;
+		this.notifyOnInit(function() {
+			armory_system_Event.add("pick_key",function() {
+				_gthis.state = arm_EntryDoorLogicState.HaveKey;
+			});
+		});
+	}
+	start() {
+		this.state = arm_EntryDoorLogicState.NeedKey;
+		armory_system_Event.send("use_key");
+	}
+	getActionText() {
+		switch(this.state._hx_index) {
+		case 0:
+			return "Нужен ключ";
+		case 1:
+			return "[E] Использовать ключ";
+		}
+	}
+}
+$hxClasses["arm.EntryDoorLogic"] = arm_EntryDoorLogic;
+arm_EntryDoorLogic.__name__ = true;
+arm_EntryDoorLogic.__super__ = common_ObjectWithActionTrait;
+Object.assign(arm_EntryDoorLogic.prototype, {
+	__class__: arm_EntryDoorLogic
+	,state: null
+});
 class arm_GameCanvasLogic extends iron_Trait {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
@@ -572,6 +614,12 @@ class arm_GameCanvasLogic extends iron_Trait {
 			this.canvas.getElement("Heart3").asset = empty;
 		}
 	}
+	setKey() {
+		this.canvas.getElement("KeyImage").visible = true;
+	}
+	removeKey() {
+		this.canvas.getElement("KeyImage").visible = false;
+	}
 	showObjectAction() {
 		this.canvas.getElement("ActionText").visible = true;
 	}
@@ -606,8 +654,9 @@ Object.assign(arm_GameCanvasLogic.prototype, {
 var arm_PickUpType = $hxEnums["arm.PickUpType"] = { __ename__:true,__constructs__:null
 	,Ammo: {_hx_name:"Ammo",_hx_index:0,__enum__:"arm.PickUpType",toString:$estr}
 	,Medkit: {_hx_name:"Medkit",_hx_index:1,__enum__:"arm.PickUpType",toString:$estr}
+	,Key: {_hx_name:"Key",_hx_index:2,__enum__:"arm.PickUpType",toString:$estr}
 };
-arm_PickUpType.__constructs__ = [arm_PickUpType.Ammo,arm_PickUpType.Medkit];
+arm_PickUpType.__constructs__ = [arm_PickUpType.Ammo,arm_PickUpType.Medkit,arm_PickUpType.Key];
 class arm_GameMasterLogic extends iron_Trait {
 	constructor() {
 		iron_Trait._hx_skip_constructor = true;
@@ -629,6 +678,7 @@ class arm_GameMasterLogic extends iron_Trait {
 			iron_Scene.global.properties = new haxe_ds_StringMap();
 			_gthis.spawnItemAtRandomPlace(arm_PickUpType.Ammo);
 			_gthis.spawnItemAtRandomPlace(arm_PickUpType.Medkit);
+			_gthis.spawnItemAtRandomPlace(arm_PickUpType.Key);
 			_gthis.spawnMonster();
 			_gthis.addEventHandlers();
 			_gthis.respawnAfterDeathTimer = new common_TickTimer(_gthis.respawnTimeSec,function() {
@@ -665,6 +715,9 @@ class arm_GameMasterLogic extends iron_Trait {
 	}
 	addEventHandlers() {
 		let _gthis = this;
+		armory_system_Event.add("use_key",function() {
+			_gthis.spawnItemAtRandomPlace(arm_PickUpType.Key);
+		});
 		armory_system_Event.add("huggy_dead",function() {
 			let deadPos = iron_Scene.global.properties.h["huggy_dead_pos"];
 			if(kha_math_Random.getIn(0,100) >= 90) {
@@ -735,7 +788,7 @@ class arm_GameMasterLogic extends iron_Trait {
 				trait.playerObject = iron_Scene.active.getChild("Игрок");
 				o.addTrait(trait);
 				_gthis.spawnedMonster += 1;
-				haxe_Log.trace("Monster spawned",{ fileName : "arm/GameMasterLogic.hx", lineNumber : 126, className : "arm.GameMasterLogic", methodName : "spawnMonster"});
+				haxe_Log.trace("Monster spawned",{ fileName : "arm/GameMasterLogic.hx", lineNumber : 132, className : "arm.GameMasterLogic", methodName : "spawnMonster"});
 			},true,raw);
 		});
 	}
@@ -752,6 +805,8 @@ class arm_GameMasterLogic extends iron_Trait {
 			return "ФизикаПатронов";
 		case 1:
 			return "ФизикаАптечки";
+		case 2:
+			return "ФизикаКлюча";
 		}
 	}
 	spawnRandomItemAtPos(pos) {
@@ -773,18 +828,23 @@ class arm_GameMasterLogic extends iron_Trait {
 	spawnItemAtRandomPlace(item) {
 		let _gthis = this;
 		iron_data_Data.getSceneRaw("SpawnScene",function(raw) {
-			let spawnObject = _gthis.getItemRandomSpawnObject();
+			let spawnObject;
 			let itemName = _gthis.getItemName(item);
 			switch(item._hx_index) {
 			case 0:
+				spawnObject = _gthis.getItemRandomSpawnObject();
 				_gthis.spawnedAmmo += 1;
 				break;
 			case 1:
+				spawnObject = _gthis.getItemRandomSpawnObject();
 				_gthis.spawnedHealth += 1;
+				break;
+			case 2:
+				spawnObject = _gthis.getKeyRandomSpawnObject();
 				break;
 			}
 			iron_Scene.active.spawnObject(itemName,spawnObject,function(o) {
-				haxe_Log.trace("" + itemName,{ fileName : "arm/GameMasterLogic.hx", lineNumber : 177, className : "arm.GameMasterLogic", methodName : "spawnItemAtRandomPlace"});
+				haxe_Log.trace("" + itemName,{ fileName : "arm/GameMasterLogic.hx", lineNumber : 189, className : "arm.GameMasterLogic", methodName : "spawnItemAtRandomPlace"});
 			},true,raw);
 		});
 	}
@@ -805,6 +865,12 @@ class arm_GameMasterLogic extends iron_Trait {
 			name = "ПодвалВ";
 		}
 		let col = iron_Scene.active.getGroup(name);
+		let ind = kha_math_Random.getIn(0,col.length - 1);
+		let spawnObject = col[ind];
+		return spawnObject;
+	}
+	getKeyRandomSpawnObject() {
+		let col = iron_Scene.active.getGroup("Ключи");
 		let ind = kha_math_Random.getIn(0,col.length - 1);
 		let spawnObject = col[ind];
 		return spawnObject;
@@ -1407,6 +1473,12 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 	}
 	addEventListeners() {
 		let _gthis = this;
+		armory_system_Event.add("pick_key",function() {
+			_gthis.canvas.setKey();
+		});
+		armory_system_Event.add("use_key",function() {
+			_gthis.canvas.removeKey();
+		});
 		armory_system_Event.add("pick_ammo",function() {
 			_gthis.currentAmmoPack += 1;
 			_gthis.canvas.setAmmoPackCount(_gthis.currentAmmoPack);
