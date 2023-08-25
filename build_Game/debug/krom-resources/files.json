@@ -653,6 +653,39 @@
 			"types": []
 		},
 		{
+			"name": "MessageMaterial_mesh_frag",
+			"files": [
+				"MessageMaterial_mesh.frag.d3d11"
+			],
+			"file_sizes": [
+				1
+			],
+			"type": "shader",
+			"inputs": [
+				{
+					"name": "wnormal",
+					"type": "vec3"
+				},
+				{
+					"name": "texCoord",
+					"type": "vec2"
+				}
+			],
+			"outputs": [
+				{
+					"name": "fragColor",
+					"type": "vec4[]"
+				}
+			],
+			"uniforms": [
+				{
+					"name": "ImageTexture",
+					"type": "sampler2D"
+				}
+			],
+			"types": []
+		},
+		{
 			"name": "Metal_mesh_frag",
 			"files": [
 				"Metal_mesh.frag.d3d11"

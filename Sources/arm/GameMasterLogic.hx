@@ -1,5 +1,7 @@
 package arm;
 
+import kha.Image;
+import iron.object.MeshObject;
 import iron.object.BoneAnimation;
 import common.TickTimer;
 import armory.trait.physics.RigidBody;
@@ -56,9 +58,24 @@ class GameMasterLogic extends iron.Trait {
 	// Количество помещённых аптечек
 	var spawnedHealth = 0;
 
+	// Количество принесённых ключей
+	var keyCount = 0;
+
 	// Добавляет обработчики событий
 	function addEventHandlers() {
 		Event.add('use_key', () -> {
+			keyCount += 1;
+
+			if (keyCount > 10) {
+				//startWin();
+				return;
+			}
+
+			var mesh:MeshObject = cast Scene.active.getChild('Табличка');
+			var messageNameImg = 'Message${keyCount + 1}.png';
+			iron.data.Data.getImage(messageNameImg, (image:Image) -> {
+				mesh.materials[1].contexts[0].textures[0] = image;
+			});
 			spawnItemAtRandomPlace(Key);
 		});
 
