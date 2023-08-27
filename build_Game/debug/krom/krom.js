@@ -553,8 +553,10 @@ class arm_EntryDoorLogic extends common_ObjectWithActionTrait {
 		});
 	}
 	start() {
-		this.state = arm_EntryDoorLogicState.NeedKey;
-		armory_system_Event.send("use_key");
+		if(this.state == arm_EntryDoorLogicState.HaveKey) {
+			this.state = arm_EntryDoorLogicState.NeedKey;
+			armory_system_Event.send("use_key");
+		}
 	}
 	getActionText() {
 		switch(this.state._hx_index) {
@@ -640,7 +642,9 @@ class arm_GameCanvasLogic extends iron_Trait {
 	}
 	showGameOver() {
 		this.canvas.getElement("GameOver").visible = true;
-		this.canvas.getElement("RestartButton").visible = true;
+	}
+	showWin() {
+		this.canvas.getElement("WinImage").visible = true;
 	}
 }
 $hxClasses["arm.GameCanvasLogic"] = arm_GameCanvasLogic;
@@ -665,6 +669,7 @@ class arm_GameMasterLogic extends iron_Trait {
 		this._hx_constructor();
 	}
 	_hx_constructor() {
+		this.isEnd = false;
 		this.keyCount = 0;
 		this.spawnedHealth = 0;
 		this.spawnedAmmo = 0;
@@ -707,25 +712,40 @@ class arm_GameMasterLogic extends iron_Trait {
 			});
 			_gthis.respawnOnLiveTimer.set_enabled(true);
 			_gthis.player = iron_Scene.active.getChild("Игрок").getTrait(arm_PlayerLogic);
+			_gthis.canvas = iron_Scene.active.getTrait(arm_GameCanvasLogic);
+			_gthis.setMessageNumber(1);
 		});
 		this.notifyOnUpdate(function() {
+			if(_gthis.isEnd) {
+				return;
+			}
 			_gthis.respawnAfterDeathTimer.update();
 			_gthis.itemSpawnTimer.update();
 			_gthis.respawnOnLiveTimer.update();
+		});
+	}
+	startWin() {
+		this.isEnd = true;
+		this.canvas.showWin();
+		armory_system_Event.send("win");
+		armory_system_Event.send("game_over");
+	}
+	setMessageNumber(number) {
+		let mesh = iron_Scene.active.getChild("Табличка");
+		let messageNameImg = "Message" + number + ".png";
+		iron_data_Data.getImage(messageNameImg,function(image) {
+			mesh.materials[1].contexts[0].textures[0] = image;
 		});
 	}
 	addEventHandlers() {
 		let _gthis = this;
 		armory_system_Event.add("use_key",function() {
 			_gthis.keyCount += 1;
-			if(_gthis.keyCount > 10) {
+			if(_gthis.keyCount >= 10) {
+				_gthis.startWin();
 				return;
 			}
-			let mesh = iron_Scene.active.getChild("Табличка");
-			let messageNameImg = "Message" + (_gthis.keyCount + 1) + ".png";
-			iron_data_Data.getImage(messageNameImg,function(image) {
-				mesh.materials[1].contexts[0].textures[0] = image;
-			});
+			_gthis.setMessageNumber(_gthis.keyCount + 1);
 			_gthis.spawnItemAtRandomPlace(arm_PickUpType.Key);
 		});
 		armory_system_Event.add("huggy_dead",function() {
@@ -798,7 +818,7 @@ class arm_GameMasterLogic extends iron_Trait {
 				trait.playerObject = iron_Scene.active.getChild("Игрок");
 				o.addTrait(trait);
 				_gthis.spawnedMonster += 1;
-				haxe_Log.trace("Monster spawned",{ fileName : "arm/GameMasterLogic.hx", lineNumber : 149, className : "arm.GameMasterLogic", methodName : "spawnMonster"});
+				haxe_Log.trace("Monster spawned",{ fileName : "arm/GameMasterLogic.hx", lineNumber : 172, className : "arm.GameMasterLogic", methodName : "spawnMonster"});
 			},true,raw);
 		});
 	}
@@ -854,7 +874,7 @@ class arm_GameMasterLogic extends iron_Trait {
 				break;
 			}
 			iron_Scene.active.spawnObject(itemName,spawnObject,function(o) {
-				haxe_Log.trace("" + itemName,{ fileName : "arm/GameMasterLogic.hx", lineNumber : 206, className : "arm.GameMasterLogic", methodName : "spawnItemAtRandomPlace"});
+				haxe_Log.trace("" + itemName,{ fileName : "arm/GameMasterLogic.hx", lineNumber : 229, className : "arm.GameMasterLogic", methodName : "spawnItemAtRandomPlace"});
 			},true,raw);
 		});
 	}
@@ -912,6 +932,8 @@ Object.assign(arm_GameMasterLogic.prototype, {
 	,spawnedAmmo: null
 	,spawnedHealth: null
 	,keyCount: null
+	,canvas: null
+	,isEnd: null
 });
 var arm_HuggyState = $hxEnums["arm.HuggyState"] = { __ename__:true,__constructs__:null
 	,None: {_hx_name:"None",_hx_index:0,__enum__:"arm.HuggyState",toString:$estr}
@@ -936,6 +958,9 @@ class arm_HuggyLogic extends iron_Trait {
 		super._hx_constructor();
 		let _gthis = this;
 		this.notifyOnInit(function() {
+			armory_system_Event.add("win",function() {
+				_gthis.startDead();
+			});
 			_gthis.object.properties = new haxe_ds_StringMap();
 			_gthis.animimations = _gthis.findAnimation(_gthis.object);
 			_gthis.navAgent = _gthis.object.getTrait(armory_trait_NavAgent);
@@ -1196,8 +1221,9 @@ var arm_PlayerState = $hxEnums["arm.PlayerState"] = { __ename__:true,__construct
 	,Shoot: {_hx_name:"Shoot",_hx_index:3,__enum__:"arm.PlayerState",toString:$estr}
 	,Reload: {_hx_name:"Reload",_hx_index:4,__enum__:"arm.PlayerState",toString:$estr}
 	,Dead: {_hx_name:"Dead",_hx_index:5,__enum__:"arm.PlayerState",toString:$estr}
+	,GameOver: {_hx_name:"GameOver",_hx_index:6,__enum__:"arm.PlayerState",toString:$estr}
 };
-arm_PlayerState.__constructs__ = [arm_PlayerState.None,arm_PlayerState.Idle,arm_PlayerState.Walk,arm_PlayerState.Shoot,arm_PlayerState.Reload,arm_PlayerState.Dead];
+arm_PlayerState.__constructs__ = [arm_PlayerState.None,arm_PlayerState.Idle,arm_PlayerState.Walk,arm_PlayerState.Shoot,arm_PlayerState.Reload,arm_PlayerState.Dead,arm_PlayerState.GameOver];
 class arm_ShootAnimData {
 	constructor() {
 	}
@@ -1384,6 +1410,9 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		this.animations.play("Walk_Policeman",null,1.0,0.5);
 	}
 	startShooting() {
+		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.GameOver) {
+			return;
+		}
 		if(this.currentAmmo < 1) {
 			return;
 		}
@@ -1429,7 +1458,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		}});
 	}
 	startDead() {
-		if(this.state == arm_PlayerState.Dead) {
+		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.GameOver) {
 			return;
 		}
 		this.state = arm_PlayerState.Dead;
@@ -1438,6 +1467,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			let mouse = iron_system_Input.getMouse();
 			mouse.unlock();
 			_gthis.canvas.showGameOver();
+			_gthis.state = arm_PlayerState.GameOver;
 		},0.2,1.0,false);
 	}
 	startShakeCamera() {
@@ -1505,6 +1535,9 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 			_gthis.currentHuggyKill += 1;
 			_gthis.canvas.setHuggyKill(_gthis.currentHuggyKill);
 		});
+		armory_system_Event.add("game_over",function() {
+			_gthis.state = arm_PlayerState.GameOver;
+		});
 		armory_system_Event.add("restart_game",function() {
 			armory_system_Event.events.h = Object.create(null);
 			iron_Scene.setActive("GameScene",function(o) {
@@ -1542,10 +1575,15 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		} else if(kb.started("escape") && mouse.locked) {
 			mouse.unlock();
 		}
+		if(mouse.started() && this.state == arm_PlayerState.GameOver) {
+			mouse.unlock();
+			armory_system_Event.send("restart_game");
+			return;
+		}
 		if(!mouse.locked) {
 			return;
 		}
-		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.Reload) {
+		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.Reload || this.state == arm_PlayerState.GameOver) {
 			return;
 		}
 		this.processActionWithObject();
@@ -1579,7 +1617,7 @@ class arm_PlayerLogic extends armory_trait_internal_CameraController {
 		if(!this.body.ready) {
 			return;
 		}
-		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.Reload) {
+		if(this.state == arm_PlayerState.Dead || this.state == arm_PlayerState.Reload || this.state == arm_PlayerState.GameOver) {
 			return;
 		}
 		let _this = this.dir;
@@ -60627,6 +60665,7 @@ Main.projectPackage = "arm";
 iron_Trait._hx_skip_constructor = false;
 arm_DoorLogic.openValue = 0.07;
 arm_DoorOpenTrigger.__meta__ = { fields : { door : { prop : null}}};
+arm_GameMasterLogic.keysToWin = 10;
 arm_HuggyLogic.__meta__ = { fields : { playerObject : { prop : null}, speed : { prop : null}, attackDistance : { prop : null}, maxHealth : { prop : null}}};
 arm_HuggyLogic.navTimerInterval = 0.5;
 arm_PickLogic.__meta__ = { fields : { removeObject : { prop : null}, pickEvent : { prop : null}}};

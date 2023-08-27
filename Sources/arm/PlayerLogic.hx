@@ -24,6 +24,7 @@ enum PlayerState {
 	Shoot;
 	Reload;
 	Dead;
+	GameOver;
 }
 
 // Данные анимации выстрела
@@ -225,6 +226,9 @@ class PlayerLogic extends CameraController {
 
 	// Производит анимацию стрельбы
 	function startShooting() {
+		if (state == Dead || state == GameOver)
+			return;
+
 		if (currentAmmo < 1)
 			return;
 
@@ -299,14 +303,15 @@ class PlayerLogic extends CameraController {
 
 	// Начинает помирать
 	function startDead() {
-		if (state == Dead)
+		if (state == Dead || state == GameOver)
 			return;
 
 		state = Dead;
 		animations.play('Die', () -> {
 			var mouse = Input.getMouse();
 			mouse.unlock();
-			canvas.showGameOver();
+			canvas.showGameOver();	
+			state = GameOver;		
 		}, 0.2, 1.0, false);
 	}
 
@@ -363,6 +368,10 @@ class PlayerLogic extends CameraController {
 		Event.add('huggy_dead', () -> {
 			currentHuggyKill += 1;
 			canvas.setHuggyKill(currentHuggyKill);
+		});
+
+		Event.add('game_over', () -> {
+			state = GameOver;
 		});
 
 		Event.add('restart_game', () -> {
@@ -425,11 +434,19 @@ class PlayerLogic extends CameraController {
 			mouse.unlock();
 		}
 
+		if (mouse.started() && state == GameOver) {
+			mouse.unlock();
+			Event.send('restart_game');			
+			return;
+		}
+
 		if (!mouse.locked)
 			return;
-
-		// Если игрок помер
-		if (state == Dead || state == Reload)
+		
+		// Если игрок помер 
+		// Или перезаряжает
+		// Или гамовер
+		if (state == Dead || state == Reload || state == GameOver)
 			return;
 
 		// Обрабатывает действие
@@ -483,7 +500,7 @@ class PlayerLogic extends CameraController {
 			return;
 
 		// Если игрок помер
-		if (state == Dead || state == Reload)
+		if (state == Dead || state == Reload || state == GameOver)
 			return;
 
 		// Move

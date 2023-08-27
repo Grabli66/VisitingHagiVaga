@@ -199,6 +199,10 @@ class HuggyLogic extends iron.Trait {
 		super();
 
 		notifyOnInit(function() {
+			Event.add('win', () -> {
+				startDead();
+			});
+
 			object.properties = new Map<String, Dynamic>();
 			animimations = findAnimation(object);
 			

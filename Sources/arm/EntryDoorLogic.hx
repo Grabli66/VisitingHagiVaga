@@ -30,8 +30,10 @@ class EntryDoorLogic extends ObjectWithActionTrait {
 
 	// Запускает
 	public override function start() {
-		state = NeedKey;
-		Event.send('use_key');
+		if (state == HaveKey) {
+			state = NeedKey;		
+			Event.send('use_key');
+		}
 	}
 
 	// Возвращает текст взаимодействия

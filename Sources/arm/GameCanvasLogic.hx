@@ -98,7 +98,11 @@ class GameCanvasLogic extends iron.Trait {
 
 	// Отображает Game Over
 	public function showGameOver() {
-		canvas.getElement('GameOver').visible = true;
-		canvas.getElement('RestartButton').visible = true;
+		canvas.getElement('GameOver').visible = true;		
+	}
+
+	// Отображает Win
+	public function showWin() {
+		canvas.getElement('WinImage').visible = true;		
 	}
 }

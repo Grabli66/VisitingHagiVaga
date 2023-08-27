@@ -1,5 +1,6 @@
 package arm;
 
+import armory.trait.internal.CanvasScript;
 import kha.Image;
 import iron.object.MeshObject;
 import iron.object.BoneAnimation;
@@ -25,6 +26,9 @@ enum PickUpType {
 
 // Логика управляющего игрой
 class GameMasterLogic extends iron.Trait {
+	// Количество ключей для победы
+	static inline var keysToWin = 10;
+
 	// Период работы логики появления вещей
 	var spawnTimePeriodSec = 10;
 
@@ -61,21 +65,40 @@ class GameMasterLogic extends iron.Trait {
 	// Количество принесённых ключей
 	var keyCount = 0;
 
+	// Логика canvas
+	var canvas:GameCanvasLogic;
+
+	// Состояние конца игры
+	var isEnd = false;
+
+	// Запускает выигрышь
+	function startWin() {
+		isEnd = true;
+		canvas.showWin();
+		Event.send('win');
+		Event.send('game_over');
+	}
+
+	// Устанавливает табличку сообщения с номером
+	function setMessageNumber(number:Int) {
+		var mesh:MeshObject = cast Scene.active.getChild('Табличка');
+		var messageNameImg = 'Message${number}.png';
+		iron.data.Data.getImage(messageNameImg, (image:Image) -> {
+			mesh.materials[1].contexts[0].textures[0] = image;
+		});
+	}
+
 	// Добавляет обработчики событий
 	function addEventHandlers() {
 		Event.add('use_key', () -> {
 			keyCount += 1;
 
-			if (keyCount > 10) {
-				//startWin();
+			if (keyCount >= keysToWin) {
+				startWin();
 				return;
 			}
 
-			var mesh:MeshObject = cast Scene.active.getChild('Табличка');
-			var messageNameImg = 'Message${keyCount + 1}.png';
-			iron.data.Data.getImage(messageNameImg, (image:Image) -> {
-				mesh.materials[1].contexts[0].textures[0] = image;
-			});
+			setMessageNumber(keyCount + 1);			
 			spawnItemAtRandomPlace(Key);
 		});
 
@@ -146,7 +169,7 @@ class GameMasterLogic extends iron.Trait {
 				trait.playerObject = Scene.active.getChild('Игрок');
 				o.addTrait(trait);
 				spawnedMonster += 1;
-				trace('Monster spawned');
+				//trace('Monster spawned');
 			}, true, raw);
 		});
 	}
@@ -203,7 +226,7 @@ class GameMasterLogic extends iron.Trait {
 			}
 
 			Scene.active.spawnObject(itemName, spawnObject, function(o:Object) {
-				trace('${itemName}');
+				//trace('${itemName}');
 			}, true, raw);
 		});
 	}
@@ -291,9 +314,15 @@ class GameMasterLogic extends iron.Trait {
 			respawnOnLiveTimer.enabled = true;
 
 			player = Scene.active.getChild('Игрок').getTrait(PlayerLogic);
+			canvas = Scene.active.getTrait(GameCanvasLogic);
+
+			setMessageNumber(1);
 		});
 
 		notifyOnUpdate(function() {
+			if (isEnd)
+				return;
+
 			respawnAfterDeathTimer.update();
 			itemSpawnTimer.update();
 			respawnOnLiveTimer.update();
