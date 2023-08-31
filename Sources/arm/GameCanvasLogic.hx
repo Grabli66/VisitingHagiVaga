@@ -21,9 +21,9 @@ class GameCanvasLogic extends iron.Trait {
 
 			var player = Scene.active.getChild('Игрок').getTrait(PlayerLogic);
 
-			setAmmoPackCount(player.currentAmmoPack);
-		 	setAmmoCount(player.currentAmmo);
-		 	setHealth(player.currentHealth);
+			//setAmmoPackCount(player.currentAmmoPack);
+		 	//setAmmoCount(player.currentAmmo);
+		 	//setHealth(player.currentHealth);
 		});	
 	}
 

@@ -9,7 +9,7 @@ class TickTimer {
 	var onTimer:Void->Void;
 
 	// Дельта
-	var delta:Float;
+	var delta:Float = 0.0;
 
 	var _enabled:Bool = false;
 
@@ -39,9 +39,9 @@ class TickTimer {
 		if (!enabled)
 			return;
 
-		delta += iron.system.Time.delta;
+		delta += iron.system.Time.delta;		
 		if (delta >= intervalSec) {
-			delta = 0;
+			delta = 0;			
 			onTimer();
 		}
 	}

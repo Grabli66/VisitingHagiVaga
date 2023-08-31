@@ -149,7 +149,7 @@ class HuggyLogic extends iron.Trait {
 			return;
 
 		// Хаги идёт к игроку
-		Navigation.active.navMeshes[0].findPath(from, to, function(path:Array<iron.math.Vec4>) {
+		Navigation.active.navMeshes[0].findPath(from, to, function(path:Array<iron.math.Vec4>) {			
 			var agent:NavAgent = object.getTrait(armory.trait.NavAgent);
 			agent.speed = speed;
 			agent.turnDuration = 0.4;
@@ -209,10 +209,10 @@ class HuggyLogic extends iron.Trait {
 			navAgent = object.getTrait(NavAgent);
 			monsterBody = object.getChild('Physics').getTrait(RigidBody);
 
-			currentHealth = maxHealth;
+			currentHealth = maxHealth;			
 
 			// Таймер навигации
-			navTimer = new TickTimer(navTimerInterval, () -> {
+			navTimer = new TickTimer(navTimerInterval, () -> {				
 				var from = object.transform.world.getLoc();
 				var to = playerObject.transform.world.getLoc();
 

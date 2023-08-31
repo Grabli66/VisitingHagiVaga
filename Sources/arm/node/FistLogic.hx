@@ -8,6 +8,7 @@ package arm.node;
 
 	public function new() {
 		super();
+		name = "FistLogic";
 		this.functionNodes = new Map();
 		this.functionOutputNodes = new Map();
 		notifyOnAdd(add);

@@ -6,14 +6,11 @@
 #define _Sun
 #define _Clusters
 #define _Brdf
-#define _SMAA
 #define _EmissionShaded
 #define _Deferred
 #define _Clusters
-#define _SMAA
 #define _Deferred
 #define _Clusters
-#define _SMAA
 #define _CToneFilmic
 #define GBUF_SIZE 3
 #define GBUF_IDX_0 0
