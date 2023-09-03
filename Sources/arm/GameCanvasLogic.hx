@@ -1,39 +1,37 @@
 package arm;
 
-import armory.ui.Canvas;
-import zui.Zui;
 import iron.Scene;
 import armory.trait.internal.CanvasScript;
 
 // Логика работы UI
 class GameCanvasLogic extends iron.Trait {
 	// UI
-	var canvas:CanvasScript;	
+	var canvas:CanvasScript;
 
-	var isCanvasReady = false;
-
+	// Конструктор
 	public function new() {
 		super();
 
 		notifyOnInit(function() {
 			canvas = Scene.active.getTrait(CanvasScript);
-			isCanvasReady = true;
+		});
+	}
 
-			var player = Scene.active.getChild('Игрок').getTrait(PlayerLogic);
-
-			//setAmmoPackCount(player.currentAmmoPack);
-		 	//setAmmoCount(player.currentAmmo);
-		 	//setHealth(player.currentHealth);
-		});	
+	// Оповещает когда canvas подготовлен
+	public function notifyOnReady(f:Void->Void) {
+		canvas.notifyOnReady(f);
 	}
 
 	// Признак что логика готова
 	public function isReady() {
-		return isCanvasReady;
+		if (canvas == null)
+			return false;
+
+		return canvas.ready;
 	}
 
 	// Устанавливает здоровье
-	public function setHealth(val : Int) {
+	public function setHealth(val:Int) {
 		var full = 'heart-full.png';
 		var empty = 'heart-empty.png';
 
@@ -72,12 +70,12 @@ class GameCanvasLogic extends iron.Trait {
 	}
 
 	// Скрывает текст взаимодейтсвия с объектом
-	public function hideObjectAction() {		
+	public function hideObjectAction() {
 		canvas.getElement("ActionText").visible = false;
 	}
 
 	// Устанавливает текст взаимодейтсвия с объектом
-	public function setObjectActionText(val : String) {
+	public function setObjectActionText(val:String) {
 		canvas.getElement("ActionText").text = val;
 	}
 
@@ -88,6 +86,7 @@ class GameCanvasLogic extends iron.Trait {
 
 	// Устанавливает количество коробок патронов
 	public function setAmmoPackCount(val:Int) {
+		trace(canvas == null);
 		canvas.getElement("AmmoBoxCount").text = '${val}';
 	}
 
@@ -98,11 +97,11 @@ class GameCanvasLogic extends iron.Trait {
 
 	// Отображает Game Over
 	public function showGameOver() {
-		canvas.getElement('GameOver').visible = true;		
+		canvas.getElement('GameOver').visible = true;
 	}
 
 	// Отображает Win
 	public function showWin() {
-		canvas.getElement('WinImage').visible = true;		
+		canvas.getElement('WinImage').visible = true;
 	}
 }

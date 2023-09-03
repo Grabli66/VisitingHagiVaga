@@ -74,7 +74,7 @@ class PlayerLogic extends CameraController {
 
 	// Данные анимации стрельбы
 	var shootingAnimData:ShootAnimData;
-	
+
 	// Максимальное количество патрон
 	public static inline var maxAmmo = 15;
 
@@ -156,7 +156,7 @@ class PlayerLogic extends CameraController {
 		var kb = Input.getKeyboard();
 
 		if (currentAmmo < 1 && contactObject == null) {
-			canvas.setObjectActionText('[R] Перезарядить');
+			canvas.setObjectActionText('[К] Перезарядить');
 			canvas.showObjectAction();
 		}
 
@@ -308,10 +308,10 @@ class PlayerLogic extends CameraController {
 
 		state = Dead;
 		animations.play('Die', () -> {
-			var mouse = Input.getMouse();
-			mouse.unlock();
-			canvas.showGameOver();	
-			state = GameOver;		
+			// var mouse = Input.getMouse();
+			// mouse.unlock();
+			canvas.showGameOver();
+			state = GameOver;
 		}, 0.2, 1.0, false);
 	}
 
@@ -393,7 +393,7 @@ class PlayerLogic extends CameraController {
 
 		object.properties = new Map<String, Dynamic>();
 
-		canvas = Scene.active.getTrait(GameCanvasLogic);		
+		canvas = Scene.active.getTrait(GameCanvasLogic);
 
 		head = object.getChildOfType(CameraObject);
 
@@ -436,14 +436,14 @@ class PlayerLogic extends CameraController {
 
 		if (mouse.started() && state == GameOver) {
 			mouse.unlock();
-			Event.send('restart_game');			
+			Event.send('restart_game');
 			return;
 		}
 
 		if (!mouse.locked)
 			return;
-		
-		// Если игрок помер 
+
+		// Если игрок помер
 		// Или перезаряжает
 		// Или гамовер
 		if (state == Dead || state == Reload || state == GameOver)
@@ -483,7 +483,9 @@ class PlayerLogic extends CameraController {
 		}
 
 		// Обрабатывает поворот игрока
-		head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);
+		// trace(head.transform.rot);
+		var lastRot = head.transform.rot;
+		head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);		
 		transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
 		body.syncTransform();
 	}

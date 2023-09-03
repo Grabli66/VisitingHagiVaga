@@ -55,7 +55,7 @@ class HuggyLogic extends iron.Trait {
 
 	// Скорость движения
 	@prop
-	public var speed:Float = 1.0;
+	public var speed:Float = 1.5;
 
 	// Дистанция до атаки
 	@prop
@@ -93,7 +93,7 @@ class HuggyLogic extends iron.Trait {
 
 		animimations.play("Die_Huggy", () -> {
 			object.remove();
-		}, 0.2, 1.0, false);
+		}, 0.2, 1.2, false);
 
 		Scene.global.properties['huggy_dead_pos'] = object.transform.loc;
 		Event.send('huggy_dead');
@@ -118,7 +118,7 @@ class HuggyLogic extends iron.Trait {
 
 		animimations.play("Hit_Huggy", () -> {
 			startWalking();
-		}, 0.2, 1.5, false);
+		}, 0.2, 1.8, false);
 	}
 
 	// Начинает атаку
@@ -131,7 +131,7 @@ class HuggyLogic extends iron.Trait {
 		navAgent.stop();
 		animimations.play("Attack_Huggy", () -> {
 			startWalking();
-		});
+		}, 0.2, 1.2);
 	}
 
 	// Начинает идти
@@ -140,7 +140,11 @@ class HuggyLogic extends iron.Trait {
 			return;
 
 		state = Walk;
+		#if kha_html5
+		animimations.play("Move_Huggy", 0.2, 0.8);
+		#else		
 		animimations.play("Move_Huggy", 0.2, 0.6);
+		#end
 	}
 
 	// Начинает навигацию

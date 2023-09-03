@@ -52,9 +52,13 @@ class DoorLogic extends ObjectWithActionTrait {
 			props: {fromValue: toValue},
 			duration: 1.0,
 			tick: () -> {
-				object.transform.rot.mult(fromValue);
-				object.transform.buildMatrix();
-				body.syncTransform();
+				try {
+					object.transform.rot.mult(fromValue);
+					object.transform.buildMatrix();
+					body.syncTransform();
+				} catch(_) {
+					//
+				}
 			},
 			done: () -> {
 				inAction = false;
@@ -65,9 +69,9 @@ class DoorLogic extends ObjectWithActionTrait {
 	// Возвращает текст взаимодействия
 	public override function getActionText():String {
 		return if (isOpen) {
-			'[E] Закрыть дверь';
+			'[У] Закрыть дверь';
 		} else {
-			'[E] Открыть дверь';
+			'[У] Открыть дверь';
 		}
 	}
 }

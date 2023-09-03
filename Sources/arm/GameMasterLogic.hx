@@ -98,7 +98,7 @@ class GameMasterLogic extends iron.Trait {
 				return;
 			}
 
-			setMessageNumber(keyCount + 1);			
+			setMessageNumber(keyCount + 1);
 			spawnItemAtRandomPlace(Key);
 		});
 
@@ -169,7 +169,7 @@ class GameMasterLogic extends iron.Trait {
 				trait.playerObject = Scene.active.getChild('Игрок');
 				o.addTrait(trait);
 				spawnedMonster += 1;
-				//trace('Monster spawned');
+				// trace('Monster spawned');
 			}, true, raw);
 		});
 	}
@@ -226,7 +226,7 @@ class GameMasterLogic extends iron.Trait {
 			}
 
 			Scene.active.spawnObject(itemName, spawnObject, function(o:Object) {
-				//trace('${itemName}');
+				// trace('${itemName}');
 			}, true, raw);
 		});
 	}
@@ -315,6 +315,12 @@ class GameMasterLogic extends iron.Trait {
 
 			player = Scene.active.getChild('Игрок').getTrait(PlayerLogic);
 			canvas = Scene.active.getTrait(GameCanvasLogic);
+
+			canvas.notifyOnReady(() -> {
+				canvas.setAmmoPackCount(player.currentAmmoPack);
+				canvas.setAmmoCount(player.currentAmmo);
+				canvas.setHealth(player.currentHealth);
+			});
 
 			setMessageNumber(1);
 		});
