@@ -75,6 +75,9 @@ class PlayerLogic extends CameraController {
 	// Данные анимации стрельбы
 	var shootingAnimData:ShootAnimData;
 
+	// Угол поворота камеры
+	var rotateAngle = 0.0;
+
 	// Максимальное количество патрон
 	public static inline var maxAmmo = 15;
 
@@ -308,8 +311,6 @@ class PlayerLogic extends CameraController {
 
 		state = Dead;
 		animations.play('Die', () -> {
-			// var mouse = Input.getMouse();
-			// mouse.unlock();
 			canvas.showGameOver();
 			state = GameOver;
 		}, 0.2, 1.0, false);
@@ -455,17 +456,6 @@ class PlayerLogic extends CameraController {
 		// Обрабатывает перезарядку
 		processReload();
 
-		// Обрабатывает прицеливание
-		if (mouse.moved) {
-			var d = -mouse.movementY / 250;
-			aimNode.transform.translate(0, 0, d);
-		}
-
-		// Обрабатывает выстрел
-		if (mouse.started() && mouseLocked) {
-			startShooting();
-		}
-
 		// Проверяет удар Хаги
 		if (object.properties["is_hit"]) {
 			object.properties["is_hit"] = false;
@@ -482,11 +472,28 @@ class PlayerLogic extends CameraController {
 			}
 		}
 
-		// Обрабатывает поворот игрока
-		// trace(head.transform.rot);
-		var lastRot = head.transform.rot;
-		head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);		
+		// Обрабатывает выстрел
+		if (mouse.started() && mouseLocked) {
+			startShooting();
+		}
+
+		// Обрабатывает поворот игрока			
+		var moveY = -mouse.movementY / 250 * rotationSpeed;
+
+		if (rotateAngle < 1.3 && rotateAngle > -1.2) {
+			// Обрабатывает прицеливание
+			if (mouse.moved) {
+				var d = -mouse.movementY / 250;
+				aimNode.transform.translate(0, 0, d);
+			}
+
+			head.transform.rotate(xVec, moveY);
+		}		
+
+		rotateAngle += moveY;
+
 		transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
+
 		body.syncTransform();
 	}
 

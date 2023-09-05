@@ -11,6 +11,7 @@ enum MenuCanvasLogicState {
 	Init;
 	Start;
 	Complete;
+	Load;
 }
 
 class MenuCanvasLogic extends iron.Trait {
@@ -29,16 +30,24 @@ class MenuCanvasLogic extends iron.Trait {
 
 			Event.add('start_game', () -> {
 				canvas.getElement('StartButton').visible = false;
-
 				canvas.getElement('StoryImage').visible = true;
 			});
 
 			Event.add('story_next', () -> {
-				iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});
-			});
+				canvas.getElement('StoryImage').visible = false;
+				canvas.getElement('LoadingText').visible = true;				
+				state = Load;
+			});			
 		});
 
 		notifyOnUpdate(function() {
+			if (state == Load) {
+				Event.events.clear();
+				state = Complete;
+				iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});				
+				return;				
+			}
+
 			if (state == Complete)
 				return;
 

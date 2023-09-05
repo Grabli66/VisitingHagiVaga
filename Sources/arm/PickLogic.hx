@@ -31,6 +31,6 @@ class PickLogic extends ObjectWithActionTrait {
 
 	// Возвращает текст взаимодействия
 	public override function getActionText():String {
-		return '[E] Подобрать';
+		return '[У] Подобрать';
 	}
 }

@@ -255,7 +255,7 @@ class GameMasterLogic extends iron.Trait {
 	function getKeyRandomSpawnObject():Object {
 		var col = Scene.active.getGroup('Ключи');
 		var ind = Random.getIn(0, col.length - 1);
-		var spawnObject = col[ind];
+		var spawnObject = col[ind];		
 		return spawnObject;
 	}
 
