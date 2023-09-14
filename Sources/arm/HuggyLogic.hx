@@ -85,6 +85,8 @@ class HuggyLogic extends iron.Trait {
 		if (state == Dead)
 			return;
 
+		object.getChild('Кулак').getTrait(RigidBody).remove();
+
 		navTimer.enabled = false;
 
 		state = Dead;
