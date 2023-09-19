@@ -35,17 +35,26 @@ class MenuCanvasLogic extends iron.Trait {
 
 			Event.add('story_next', () -> {
 				canvas.getElement('StoryImage').visible = false;
-				canvas.getElement('LoadingText').visible = true;				
+				canvas.getElement('LoadingText').visible = true;
 				state = Load;
-			});			
+			});
 		});
 
 		notifyOnUpdate(function() {
+			var canva = Scene.active.getTrait(CanvasScript);
+			if (canva != null) {
+				if (canva.getCanvas().height > canva.getCanvas().width) {
+					canva.setUiScale(canva.getCanvas().width / 1920);
+				} else {
+					canva.setUiScale(canva.getCanvas().height / 1080);
+				}
+			}
+
 			if (state == Load) {
 				Event.events.clear();
 				state = Complete;
-				iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});				
-				return;				
+				iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});
+				return;
 			}
 
 			if (state == Complete)

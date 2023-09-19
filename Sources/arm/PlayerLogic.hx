@@ -477,7 +477,7 @@ class PlayerLogic extends CameraController {
 			startShooting();
 		}
 
-		// Обрабатывает поворот игрока			
+		// Обрабатывает поворот игрока
 		var moveY = -mouse.movementY / 250 * rotationSpeed;
 
 		if (rotateAngle < 1.3 && rotateAngle > -1.2) {
@@ -488,7 +488,7 @@ class PlayerLogic extends CameraController {
 			}
 
 			head.transform.rotate(xVec, moveY);
-		}		
+		}
 
 		rotateAngle += moveY;
 
@@ -505,6 +505,15 @@ class PlayerLogic extends CameraController {
 
 	// Обновляет логику
 	function update() {
+		var canva = Scene.active.getTrait(CanvasScript);
+		if (canva != null) {
+			if (canva.getCanvas().height > canva.getCanvas().width) {
+				canva.setUiScale(canva.getCanvas().width / 1920);
+			} else {
+				canva.setUiScale(canva.getCanvas().height / 1080);
+			}
+		}
+
 		if (!body.ready)
 			return;
 

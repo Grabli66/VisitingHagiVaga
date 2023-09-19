@@ -4,15 +4,15 @@
 #define _Rad
 #define _Deferred
 #define _Sun
-#define _Clusters
+#define _SinglePoint
 #define _Brdf
 #define _SMAA
 #define _EmissionShaded
 #define _Deferred
-#define _Clusters
+#define _SinglePoint
 #define _SMAA
 #define _Deferred
-#define _Clusters
+#define _SinglePoint
 #define _SMAA
 #define _CToneFilmic
 #define GBUF_SIZE 3
@@ -29,8 +29,5 @@ const vec2 shadowmapSize = vec2(0, 0);
 const float shadowmapCubePcfSize = 0.001;
 const int shadowmapCascades = 4;
 const int skinMaxBones = 65;
-const int maxLights = 4;
-const int maxLightsCluster = 4;
-const float clusterNear = 3.0;
 
 #endif // _COMPILED_GLSL_
