@@ -41,12 +41,13 @@ class MenuCanvasLogic extends iron.Trait {
 		});
 
 		notifyOnUpdate(function() {
-			var canva = Scene.active.getTrait(CanvasScript);
+			var canvasScript = Scene.active.getTrait(CanvasScript);
+			var canva = canvasScript.getCanvas();
 			if (canva != null) {
-				if (canva.getCanvas().height > canva.getCanvas().width) {
-					canva.setUiScale(canva.getCanvas().width / 1920);
+				if (canva.height > canva.width) {
+					canvasScript.setUiScale(canva.width / 1920);
 				} else {
-					canva.setUiScale(canva.getCanvas().height / 1080);
+					canvasScript.setUiScale(canva.height / 1080);
 				}
 			}
 
