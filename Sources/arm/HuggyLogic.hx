@@ -86,6 +86,7 @@ class HuggyLogic extends iron.Trait {
 			return;
 
 		object.getChild('Кулак').getTrait(RigidBody).remove();
+		object.getChild('Physics').getTrait(RigidBody).remove();
 
 		navTimer.enabled = false;
 

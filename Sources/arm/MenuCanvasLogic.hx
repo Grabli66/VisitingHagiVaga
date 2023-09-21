@@ -5,6 +5,7 @@ import iron.object.Object;
 import armory.system.Event;
 import iron.Scene;
 import armory.trait.internal.CanvasScript;
+import common.ArmoryHelper;
 
 // Состояние меню
 enum MenuCanvasLogicState {
@@ -54,7 +55,7 @@ class MenuCanvasLogic extends iron.Trait {
 			if (state == Load) {
 				Event.events.clear();
 				state = Complete;
-				iron.Scene.setActive('GameScene', function(o:iron.object.Object) {});
+				ArmoryHelper.loadScene('GameScene');
 				return;
 			}
 
