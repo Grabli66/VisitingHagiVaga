@@ -2,13 +2,13 @@
 package ;
 class Main {
     public static inline var projectName = 'Game';
-    public static inline var projectVersion = '1.0.45';
+    public static inline var projectVersion = '1.0.65';
     public static inline var projectPackage = 'arm';
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = 65;armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;
         armory.system.Starter.main(
             'MenuScene',
-            0,
+            1,
             true,
             true,
             true,

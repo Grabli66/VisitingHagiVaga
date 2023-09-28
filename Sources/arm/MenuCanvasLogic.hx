@@ -27,17 +27,18 @@ class MenuCanvasLogic extends iron.Trait {
 		super();
 
 		notifyOnInit(function() {
-			canvas = Scene.active.getTrait(CanvasScript);
+			canvas = Scene.active.getTrait(CanvasScript);			
 
 			Event.add('start_game', () -> {
 				canvas.getElement('StartButton').visible = false;
-				canvas.getElement('StoryImage').visible = true;
+				canvas.getElement('StoryImage').visible = true;				
 			});
 
 			Event.add('story_next', () -> {
 				canvas.getElement('StoryImage').visible = false;
 				canvas.getElement('LoadingText').visible = true;
 				state = Load;
+				ArmoryHelper.loadScene('GameScene');
 			});
 		});
 
@@ -55,7 +56,6 @@ class MenuCanvasLogic extends iron.Trait {
 			if (state == Load) {
 				Event.events.clear();
 				state = Complete;
-				ArmoryHelper.loadScene('GameScene');
 				return;
 			}
 
